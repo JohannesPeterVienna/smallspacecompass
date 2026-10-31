@@ -76,11 +76,11 @@ export const TOOLS = [
 <li><b>Export</b> the drawing as SVG for printing or sending to a landlord, or as JSON to continue on another device. Import accepts the same JSON.</li>
 <li>Switch the units at any time; the plan is stored in inches internally and converted exactly (1 in = 2.54 cm).</li></ul>
 <h2 id="limits">What the planner does not do</h2>
-<p>It treats every piece as a rectangle at floor level, so a wall-mounted shelf above a desk, a radiator under a window or a sloped ceiling is not modelled. It does not know about building codes, fire egress, the swing of a window sash or the weight of anything. It is a geometric aid that makes the space between objects visible – read more in <a href="/about/">About and method</a>.</p>`,
+<p>It treats every piece as a rectangle at floor level, so a wall-mounted shelf above a desk, a radiator under a window or a sloped ceiling is not modeled. It does not know about building codes, fire egress, the swing of a window sash or the weight of anything. It is a geometric aid that makes the space between objects visible – read more in <a href="/about/">About and method</a>.</p>`,
     faq: [
       ['Is the planner free and do I need an account?', 'Yes, it is free and there is no account. Your plan is stored only in your own browser (localStorage) and can be exported as JSON or SVG.'],
       ['Why is my walkway shown as narrower than the gap I measured?', 'The planner adds use zones: a desk chair, an open drawer or the swing of the door take space even when they are not drawn as furniture. Select the piece to see or reduce its zone.'],
-      ['Can I use centimetres?', 'Yes. Use the in/cm switch. All inputs and results change unit; the stored plan keeps full precision.'],
+      ['Can I use centimeters?', 'Yes. Use the in/cm switch. All inputs and results change unit; the stored plan keeps full precision.'],
       ['Does a result of 36 in mean my home is accessible?', 'No. 36 in is a reference taken from ADA 2010 §403.5.1. Accessibility also depends on turning space, door hardware, thresholds and much more that the planner does not model.']
     ],
     sources: [['2010 ADA Standards for Accessible Design, §403.5.1, §404.2.3 (U.S. Access Board)', ADA + '#ada-403_5_1'], ['NKBA Kitchen Planning Guidelines with Access Standards (PDF)', 'https://kb.nkba.org/uploads/2022/05/Kitchen-Planning-Guidelines.pdf', 'guidelines 6, 7 and 8']]
@@ -146,7 +146,7 @@ export const TOOLS = [
   },
   {
     path: '/tools/storage-wall/', short: 'Storage Wall Audit', script: 'storage.js',
-    title: 'Storage Wall Audit – shelf volume by reach height (cu ft and litres)',
+    title: 'Storage Wall Audit – shelf volume by reach height (cu ft and liters)',
     description: 'Draw a storage wall, add shelves and cabinets and see how much volume sits within easy reach (15–48 in), above it and below it – plus an equal-compartment divider calculator.',
     h1: 'Storage Wall Audit', lede: 'How much of your storage can you actually reach? Draw the wall, add the units, and the audit splits their volume into three bands: below 15 in, 15–48 in, and above 48 in – the reach range from the ADA Standards.',
     app: storageApp,
@@ -163,7 +163,7 @@ export const TOOLS = [
     faq: [
       ['What do 15 and 48 inches mean?', 'They are the low and high limits of the unobstructed reach range in ADA 2010 §308.2.1 (forward reach) and §308.3.1 (side reach): 15 in minimum and 48 in maximum above the floor.'],
       ['Are the volumes usable capacity?', 'No, they are gross volumes of the unit outlines. They are best used to compare layouts.'],
-      ['Can I enter centimetres?', 'Yes, switch to cm. Volumes are then shown in litres.']
+      ['Can I enter centimeters?', 'Yes, switch to cm. Volumes are then shown in liters.']
     ],
     sources: [['2010 ADA Standards, §308.2.1 and §308.3.1 Unobstructed reach', ADA + '#ada-308_2_1']]
   }

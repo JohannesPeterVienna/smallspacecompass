@@ -8,7 +8,7 @@ export const layoutNotes = {
 <p>The measured results above show the width of the widest route to each target, and the markers on the plan show where each route is tightest. Those marked points are the first places to check if you choose a deeper sofa, a larger coffee table or a wider TV unit.</p>`
   },
   'studio-18x14-full-alcove': {
-    description: 'Measured 18 × 14 ft studio with a full bed tucked behind a bookshelf divider – route widths, chair zones and free floor in inches and centimetres.',
+    description: 'Measured 18 × 14 ft studio with a full bed tucked behind a bookshelf divider – route widths, chair zones and free floor in inches and centimeters.',
     lede: 'A bookshelf placed at right angles to the wall turns the top-right corner into a sleeping alcove. The full bed fits behind it with a 24 in walk-in strip, while the loveseat, table and desk share the rest of the room.',
     body: `<p>At 216 × 168 in (5.49 × 4.27 m) this studio is 252 sq ft. The door sits on the bottom wall, roughly in the middle, and swings in towards the right. The bed is pushed into the top-right corner so that only its left side is open; the 62 in bookshelf, 12 in deep, stands at right angles to the top wall and screens the bed from the living area without blocking daylight from the left-hand window.</p>
 <p>A full bed (53 × 75 in) rather than a queen leaves 47 in between the bed's open side and the shelf, which is enough for a 24 in bedside strip plus a comfortable approach. With a queen (60 × 80 in) that space would drop to 40 in and the alcove would start to feel like a corridor – see <a href="/guides/full-vs-queen-bed-small-bedroom/">Full vs. queen in a small bedroom</a>.</p>

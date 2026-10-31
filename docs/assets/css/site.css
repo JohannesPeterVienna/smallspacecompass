@@ -205,3 +205,9 @@ details.more summary{cursor:pointer;font:600 .8rem/1.2 var(--mono);text-transfor
 article>h2:first-child,article>.ad+h2{margin-top:0}
 label.f span{white-space:nowrap}
 @media (min-width:1000px){.delivery-in{order:2}.delivery-out{order:1}}
+/* reserve tool drawing space before JS renders (prevents layout shift) */
+[data-stage="plan"]:empty{aspect-ratio:354/281}
+[data-stage="day"]:empty,[data-stage="night"]:empty{aspect-ratio:1/1}
+[data-wall]:empty{aspect-ratio:358/290}
+@media (max-width:999px){[data-bands]:empty{min-height:247px}}
+@media (min-width:1000px){[data-bands]:empty{min-height:196px}}

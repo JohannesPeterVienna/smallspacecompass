@@ -50,7 +50,7 @@ ${figPlan(room(120, 96, [it('t', 'Table for 2', 0, 30, 30, 30, { zones: [{ side:
 <h2 id="shapes">Odd rooms and corners</h2>
 <p>In an L-shaped corner, a banquette or corner bench with a table saves the most floor: the bench side needs no pull-out zone, and the table can be pushed into the corner. In a long, narrow room, a narrow rectangular table (24–30 in wide) along the wall leaves the walkway clear; a round table in the same room usually ends up in the route. Under a window, keep the table low enough not to block the sill and make sure an inward-opening sash still clears it.</p>
 <h2 id="lighting">Light above the table</h2>
-<p>A pendant light fixes the table's position. Before you drill, place the table and its chair zones on the plan and mark the centre of the table, not the centre of the room – in a small space the two are rarely the same.</p>`,
+<p>A pendant light fixes the table's position. Before you drill, place the table and its chair zones on the plan and mark the center of the table, not the center of the room – in a small space the two are rarely the same.</p>`,
     faq: [
       ['How much space do you need around a dining table?', '32 in from the table edge to a wall where nobody passes, 36 in if people edge past and 44 in if they walk past (NKBA Kitchen Planning Guideline 8).'],
       ['What size table fits a 10x10 room?', 'A 36 in square or round table for four fits with 32 in chair zones on all sides, but nobody can pass behind a seated diner. For walking space, push it against a wall or choose a narrow table.'],
@@ -124,7 +124,7 @@ ${table(['Entry width', 'Storage depth that keeps 36 in', 'Fits'], [
     related: ['divide-a-studio-without-walls', 'studio-apartment-layouts', 'dining-table-small-space'],
     tool: `the 5 × 8 ft rug preset in the ${a('/tools/clearance-planner/', 'Clearance Planner')} sits under furniture without counting as an obstacle.`,
     body: `<h2 id="sizes">Common sizes</h2>
-${table(['Nominal size', 'Inches', 'Centimetres (approx.)'], [
+${table(['Nominal size', 'Inches', 'Centimeters (approx.)'], [
   ['4 × 6 ft', '48 × 72 in', '120 × 180 cm'],
   ['5 × 8 ft', '60 × 96 in', '150 × 240 cm'],
   ['6 × 9 ft', '72 × 108 in', '180 × 270 cm'],
@@ -172,48 +172,48 @@ ${figPlan(room(144, 120, [it('rug', 'Rug 5×8', 24, 28, 96, 60, { floor: true })
     title: 'Small Bathroom Layout Dimensions: Toilet, Vanity and Shower Clearances',
     h1: 'Small bathroom layout dimensions',
     description: 'Small bathroom clearances with sources: toilet centerline 15/18 in, 21/30 in in front of fixtures, basin spacing and the 30 × 30 in minimum shower (NKBA, IRC), with plans.',
-    lede: 'A small bathroom is a puzzle of a few fixed distances: from the toilet centreline to the wall, in front of each fixture, between two basins, and the inside of the shower. Here they are, with their sources and measured plans.',
+    lede: 'A small bathroom is a puzzle of a few fixed distances: from the toilet centerline to the wall, in front of each fixture, between two basins, and the inside of the shower. Here they are, with their sources and measured plans.',
     related: ['small-kitchen-clearances', 'how-to-measure-a-room-for-furniture', 'walkway-space-around-furniture'],
     body: `<h2 id="source">Sources</h2>
 <p>The figures come from the ${a(NKBA_B, 'NKBA Bathroom Planning Guidelines with Access Standards')}. The guidelines give a <b>recommended</b> value for good design and, where one exists, the <b>code requirement</b> from the International Residential Code (IRC) that the NKBA cites. Local codes may differ – this page is for planning, not for approval.</p>
 <h2 id="toilet">Toilet</h2>
-${rule('15 in', 'Toilet centreline to wall or fixture, code minimum (381 mm)', 'IRC, cited in NKBA Bathroom Planning Guideline 20 – 18 in (457 mm) recommended')}
-<p>Measure from the centreline of the toilet to the nearest wall, fixture or obstacle on either side. The code minimum cited by the NKBA is 15 in; the recommendation is 18 in. A toilet between two walls therefore needs at least 30 in, better 36 in, of wall-to-wall width.</p>
+${rule('15 in', 'Toilet centerline to wall or fixture, code minimum (381 mm)', 'IRC, cited in NKBA Bathroom Planning Guideline 20 – 18 in (457 mm) recommended')}
+<p>Measure from the centerline of the toilet to the nearest wall, fixture or obstacle on either side. The code minimum cited by the NKBA is 15 in; the recommendation is 18 in. A toilet between two walls therefore needs at least 30 in, better 36 in, of wall-to-wall width.</p>
 <h2 id="front">In front of fixtures</h2>
 ${table(['Space in front of', 'Code minimum', 'NKBA recommended'], [
   ['Toilet, lavatory, bidet, tub', '21 in (533 mm)', '30 in (762 mm)'],
   ['Shower entry', '24 in (610 mm)', '30 in (762 mm)']])}
 <p>Guideline 4 recommends 30 in of clear floor space from the front edge of every fixture to any opposite fixture, wall or obstacle. The code minimums cited are 21 in in front of a lavatory, toilet, bidet and tub, and 24 in in front of a shower entry.</p>
 <h2 id="basin">Basins</h2>
-<ul><li><b>Single lavatory:</b> centreline at least 20 in from a side wall or tall obstacle (recommended); 15 in code minimum (guideline 5).</li>
-<li><b>Double lavatory:</b> centrelines at least 36 in apart (recommended), 30 in code minimum (guideline 6).</li>
-<li>For a 30 × 48 in clear floor space at the basin under the access standard, the centreline must be at least 24 in from the wall.</li></ul>
+<ul><li><b>Single lavatory:</b> centerline at least 20 in from a side wall or tall obstacle (recommended); 15 in code minimum (guideline 5).</li>
+<li><b>Double lavatory:</b> centerlines at least 36 in apart (recommended), 30 in code minimum (guideline 6).</li>
+<li>For a 30 × 48 in clear floor space at the basin under the access standard, the centerline must be at least 24 in from the wall.</li></ul>
 <h2 id="shower">Shower</h2>
 ${table(['Shower', 'Interior size', 'Source'], [
   ['Code minimum', '30 × 30 in (900 sq in) – a 30 in disc must fit', 'IRC, cited in NKBA guideline 9'],
   ['NKBA recommended', '36 × 36 in', 'guideline 9'],
   ['Transfer shower (access)', '36 × 36 in', 'access standard'],
-  ['Roll-in shower (preferred)', '36–42 × 60 in', 'access standard']])}
+  ['Roll-in shower (access)', 'at least 30 × 60 in, entry as wide as the shower', 'ICC A117.1, cited in NKBA guideline 9']])}
 <h2 id="plans">Three small layouts</h2>
-${figPlan(room(60, 96, [it('wc', 'Toilet', 12, 0, 20, 28), it('vn', 'Vanity', 36, 0, 24, 21), it('sh', 'Shower', 0, 60, 60, 36)], [door('W', 30, 28, 'start', 'in', { entry: true })]), '5 × 8 ft bathroom: toilet and vanity on the top wall, 60 × 36 in shower across the far end. Toilet centreline 22 in from the side wall.', { noPinch: true })}
+${figPlan(room(60, 96, [it('wc', 'Toilet', 12, 0, 20, 28), it('vn', 'Vanity', 36, 0, 24, 21), it('sh', 'Shower', 0, 60, 60, 36)], [door('W', 30, 28, 'start', 'in', { entry: true })]), '5 × 8 ft bathroom: toilet and vanity on the top wall, 60 × 36 in shower across the far end. Toilet centerline 22 in from the side wall.', { noPinch: true })}
 ${figPlan(room(60, 60, [it('wc', 'Toilet', 20, 0, 20, 28), it('vn', 'Vanity', 0, 36, 21, 24), it('sh', 'Shower', 30, 30, 30, 30)], [door('S', 0, 24, 'start', 'none')]), '5 × 5 ft compact bathroom with a 30 × 30 in shower – the code minimum. A sliding or outward-opening door is needed.', { noPinch: true })}
-<p>The first plan is the classic 5 × 8 ft bathroom: everything on one long wall except a full-width shower at the end. The toilet centreline 22 in from the wall is above the 18 in recommendation, and the 48 in from the front of the vanity to the opposite wall is well above 30 in.</p>
+<p>The first plan is the classic 5 × 8 ft bathroom: everything on one long wall except a full-width shower at the end. The toilet centerline 22 in from the wall is above the 18 in recommendation, and the 48 in from the front of the vanity to the opposite wall is well above 30 in.</p>
 <p>The second shows how tight the code minimums are: a 30 × 30 in shower, toilet and small vanity in 25 sq ft. An inward-opening door would hit the toilet; the plan assumes a sliding door.</p>
 <h2 id="door">Doors</h2>
 <p>Bathroom doors are often the narrowest in the home. The ADA Standards define a 32 in clear width (§404.2.3) – useful as a reference for accessible bathrooms; in many homes interior bathroom doors are narrower. An outward-opening door frees the inside but must not swing into a corridor where someone walks. A pocket door frees both.</p>
 <h2 id="check">Quick check</h2>
-<ol><li>Toilet centreline to each side: 15 in minimum, 18 in better.</li>
+<ol><li>Toilet centerline to each side: 15 in minimum, 18 in better.</li>
 <li>Front of every fixture to the opposite wall or fixture: 21 in minimum (24 in at a shower), 30 in better.</li>
 <li>Shower inside: 30 × 30 in minimum, 36 × 36 in better.</li>
 <li>Door swing: does it hit a fixture or a person standing at the basin?</li></ol>
 <h2 id="tub">Bathtubs</h2>
 <p>A standard alcove bathtub is about 60 in long and 30–32 in wide, which is why so many small bathrooms are 5 ft wide: the tub fits wall to wall across one end. The space in front of the tub follows the same rule as the other fixtures – 21 in code minimum and 30 in recommended according to the guideline cited above. A tub with a shower over it needs the shower's own minimums only if it is used as a shower; a curtain or a fixed glass panel then defines the wet area.</p>
 <h2 id="storage">Storage in a small bathroom</h2>
-<p>Floor space in front of fixtures cannot hold furniture, so storage moves up the walls. A mirror cabinet over the basin uses wall that is otherwise empty; shelves above the toilet should start high enough to clear the cistern and a standing person's head when bending. Apply the ${a('/guides/vertical-storage-by-reach/', 'reach bands')}: daily toiletries between 15 and 48 in, spares above or below. Keep any shelf above the toilet shallow so that it does not intrude on the 18 in recommended clearance from the centreline at head height.</p>
+<p>Floor space in front of fixtures cannot hold furniture, so storage moves up the walls. A mirror cabinet over the basin uses wall that is otherwise empty; shelves above the toilet should start high enough to clear the cistern and a standing person's head when bending. Apply the ${a('/guides/vertical-storage-by-reach/', 'reach bands')}: daily toiletries between 15 and 48 in, spares above or below. Keep any shelf above the toilet shallow so that it does not intrude on the 18 in recommended clearance from the centerline at head height.</p>
 <h2 id="measure">Measuring an existing bathroom</h2>
-<p>Measure from finished wall surface to finished wall surface – tiles count – and measure the toilet from the wall behind it to the centre of the outlet, which decides which toilets fit as a replacement. Note the position of the waste pipes before planning any change: moving a toilet is the most expensive change in a bathroom, and many small-bathroom layouts are fixed by the soil stack rather than by space.</p>`,
+<p>Measure from finished wall surface to finished wall surface – tiles count – and measure the toilet from the wall behind it to the center of the outlet, which decides which toilets fit as a replacement. Note the position of the waste pipes before planning any change: moving a toilet is the most expensive change in a bathroom, and many small-bathroom layouts are fixed by the soil stack rather than by space.</p>`,
     faq: [
-      ['How much space do you need beside a toilet?', 'At least 15 in from the centreline to any wall or fixture (IRC code minimum cited by the NKBA); 18 in is recommended.'],
+      ['How much space do you need beside a toilet?', 'At least 15 in from the centerline to any wall or fixture (IRC code minimum cited by the NKBA); 18 in is recommended.'],
       ['How much space in front of a toilet?', '21 in is the code minimum cited by the NKBA, 30 in is recommended.'],
       ['What is the minimum shower size?', '30 × 30 in (900 sq in) with room for a 30 in disc, under the IRC as cited in NKBA guideline 9. 36 × 36 in is recommended.'],
       ['What is the smallest bathroom with a shower?', 'With a 30 × 30 in shower, toilet and small vanity, about 5 × 5 ft is possible, but it needs a sliding or outward-opening door.']
