@@ -55,6 +55,7 @@ ${p.noindex ? '<meta name="robots" content="noindex, follow">\n' : ''}<meta name
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/assets/fonts/archivo-wdth.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/css/site.css?v=${VERSION}">
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});gtag('set','ads_data_redaction',true);window['ga-disable-G-T00HRG2YVF']=true;</script>
 ${ads ? '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7811071715414905" crossorigin="anonymous"></script>\n' : ''}${ld.map(o => `<script type="application/ld+json">${JSON.stringify(o)}</script>`).join('\n')}
 <script type="module" src="/assets/js/site.js?v=${VERSION}"></script>
 ${p.head || ''}</head>
@@ -231,7 +232,7 @@ const sm = pages.filter(p => !p.noindex).map(p => `<url><loc>${ORIGIN}${p.path}<
 writeFileSync(join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sm}\n</urlset>\n`);
 writeFileSync(join(OUT, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${ORIGIN}/sitemap.xml\n`);
 writeFileSync(join(OUT, 'ads.txt'), 'google.com, pub-7811071715414905, DIRECT, f08c47fec0942fa0\n');
-writeFileSync(join(OUT, 'CNAME'), 'smallspacecompass.com\n');
+writeFileSync(join(OUT, 'CNAME'), 'smallspacecompass.com');
 writeFileSync(join(OUT, '.nojekyll'), '');
 writeFileSync(join(OUT, 'favicon.svg'), LOGO.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '));
 writeFileSync(join(ROOT, 'build', 'pages.json'), JSON.stringify(pages.map(p => ({ path: p.path, ads: p.ads === true, noindex: !!p.noindex, kind: p.kind || (p.path.startsWith('/guides/') && p.path !== '/guides/' ? 'article' : p.path.startsWith('/tools/') && p.path !== '/tools/' ? 'tool' : p.path.startsWith('/layouts/') && p.path !== '/layouts/' ? 'layout' : 'other') })), null, 1));

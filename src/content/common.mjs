@@ -15,8 +15,8 @@ export const S = {
   ada304: ['2010 ADA Standards, §304.3 Turning space', ADA + '#ada-304_3'],
   ada305: ['2010 ADA Standards, §305.3 Clear floor space (30 × 48 in)', ADA + '#ada-305_3'],
   ada308: ['2010 ADA Standards, §308.2.1 and §308.3.1 Unobstructed reach', ADA + '#ada-308_2_1'],
-  nkbaK: ['NKBA Kitchen Planning Guidelines with Access Standards (PDF)', NKBA_K],
-  nkbaB: ['NKBA Bathroom Planning Guidelines with Access Standards (PDF)', NKBA_B],
+  nkbaK: ['NKBA Kitchen Planning Guidelines with Access Standards (PDF) – code references based on the 2015 IRC and IPC, access standards on ICC A117.1–2009; check the code edition in force locally', NKBA_K],
+  nkbaB: ['NKBA Bathroom Planning Guidelines with Access Standards (PDF) – code references based on the 2015 IRC and IPC, access standards on ICC A117.1–2009; check the code edition in force locally', NKBA_B],
   casper: ['Casper – Mattress sizes and bed dimensions guide (U.S. sizes)', CASPER],
   silent: ['Silentnight – Bed and mattress size guide (UK sizes)', SILENT]
 };

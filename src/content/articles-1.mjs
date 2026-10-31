@@ -228,7 +228,7 @@ ${figPlan(room(132, 120, [it('bed', 'Queen bed', 36, 0, 60, 80, { target: true, 
 <li>Two sleepers share one exit. Many couples will not accept this for a main bedroom.</li>
 <li>Cold exterior walls can cause condensation behind the mattress; leave a gap of an inch or two for air.</li></ul>
 <p>Pushing the head of the bed into a corner, so that only one long side and the foot are open, combines both savings. It works best for a single bed or a full used by one person.</p>
-${figPlan(room(120, 108, [it('bed', 'Full bed', 67, 0, 53, 75, { target: true, zones: [{ side: 'W', depth: 24, kind: 'bedside', walk: true }] }), it('desk', 'Desk', 0, 0, 42, 22, { target: true, zones: chair('S') }), it('sh', 'Bookshelf', 0, 77, 31, 12)], [door('S', 80, 28, 'end')]), 'Full bed in the corner of a 10 × 9 ft room: one bedside strip, room left for a desk.')}
+${figPlan(room(120, 108, [it('bed', 'Full bed', 67, 0, 53, 75, { target: true, zones: [{ side: 'W', depth: 24, kind: 'bedside', walk: true }] }), it('desk', 'Desk', 0, 0, 42, 22, { target: true, zones: chair('S') }), it('sh', 'Bookshelf', 0, 77, 31, 12)], [door('S', 30, 28, 'end')]), 'Full bed in the corner of a 10 × 9 ft room: one bedside strip, room left for a desk.')}
 <h2 id="headboard">Behind the headboard</h2>
 <p>A bed does not need space behind the headboard, but a few details change the numbers. A radiator under the window behind the bed needs air; leave the gap the radiator manufacturer recommends. Wall sockets and switches behind the headboard should stay reachable. A headboard that is thicker than the frame adds to the bed length – measure the whole bed, not the mattress.</p>
 <h2 id="mattress">Bed sizes to plan with</h2>

@@ -1,3 +1,5 @@
+import { layoutBySlug } from '../../docs/assets/js/layouts.js';
+const GK = layoutBySlug['galley-kitchen-8x12'].items, G_A = GK.find(i => i.id === 'runA'), G_B = GK.find(i => i.id === 'runB'), G_FR = GK.find(i => i.id === 'fridge');
 export const layoutNotes = {
   'studio-20x15-queen-corner': {
     description: 'Measured 20 × 15 ft studio plan with a queen bed in the far corner, sofa, desk and dresser – walkway widths, door swing and free floor computed.',
@@ -62,7 +64,7 @@ export const layoutNotes = {
     description: 'Measured 8 × 12 ft galley kitchen with two counter runs, a dishwasher and a fridge – NKBA aisle width, dishwasher door and route widths.',
     lede: 'A galley kitchen with two parallel 25 in counter runs and a 46 in aisle between them. The plan shows the open dishwasher door and the fridge door swing inside the aisle.',
     body: `<p>The room is 96 × 144 in (2.44 × 3.66 m). Two counter runs of standard 25 in depth leave a 46 in aisle – just under the 48 in that the <a href="https://kb.nkba.org/uploads/2022/05/Kitchen-Planning-Guidelines.pdf">NKBA guidelines</a> recommend for two cooks and above the 42 in for one cook (guideline 6). The kitchen is entered through an opening without a door at the bottom.</p>
-<p>The dishwasher sits within the left-hand run, about two-thirds of the way in. Its open door projects roughly 26 in into the aisle; that zone is shown as walk-through, because you stand beside it while loading, but nothing else should be there. The fridge stands at the end of the right-hand run; its door swing zone overlaps the aisle near the entry.</p>
+<p>The dishwasher sits within the left-hand run, about two-thirds of the way in. Its open door projects roughly 26 in into the aisle; that zone is shown as walk-through, because you stand beside it while loading, but nothing else should be there. The fridge stands at the end of the right-hand run; its door swing zone overlaps the aisle near the entry. Because the fridge is ${G_FR.w} in deep, the aisle narrows to ${G_FR.x - G_A.w} in beside it – ${42 - (G_FR.x - G_A.w)} in under the 42 in one-cook work aisle. A counter-depth fridge of about 25 in keeps the full ${G_B.x - G_A.w} in.</p>
 <p>The route figures show the widest walk to each counter run. The NKBA guidelines also ask for 21 in of standing space between the dishwasher edge and any counter or appliance at a right angle to it (guideline 13); in a straight galley that is automatically met. See <a href="/guides/small-kitchen-clearances/">Small kitchen clearances</a> for more.</p>`
   }
 };

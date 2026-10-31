@@ -1,5 +1,43 @@
 import { figPlan, figLayout, figRaw, figElev, room, door, rule, table, a, S, ADA, NKBA_K, NKBA_B, CASPER, SILENT, bs, chair, dimLine } from './common.mjs';
+import { sideClearance } from '../../docs/assets/js/geometry.js';
 const it = (id, label, x, y, w, d, extra = {}) => ({ id, label, x, y, w, d, ...extra });
+
+/* ---------- bathroom plans: one geometry source for drawing, clearance zones and stated measurements ----------
+   Code values as cited in the NKBA Bathroom Planning Guidelines (IRC 2015): guideline 4 (21 in in front of
+   toilet/lavatory/tub, 24 in in front of a shower entry), guideline 5 (lavatory centerline 15 in to a wall),
+   guideline 20 (toilet centerline 15 in to any fixture, wall or obstacle). NKBA recommendations: 30 / 20 / 18 in. */
+const BATH_CODE = { front: 21, shower: 24, wcCL: 15, lavCL: 15 };
+const BATH_REC = { front: 30, wcCL: 18, lavCL: 20 };
+const LAT = { N: ['W', 'E'], S: ['W', 'E'], E: ['N', 'S'], W: ['N', 'S'] };
+// fixture facing `face`; side zones reach exactly to the code minimum measured from the centerline
+function fixture(id, label, x, y, w, d, face, cl) {
+  const half = (face === 'N' || face === 'S' ? w : d) / 2;
+  return it(id, label, x, y, w, d, { zones: [{ side: face, depth: BATH_CODE.front, kind: 'code clear floor (21 in)' },
+    ...LAT[face].map(side => ({ side, depth: cl - half, kind: 'centerline clearance (' + cl + ' in)' }))] });
+}
+function bathFacts(plan, id, face) {
+  const f = plan.items.find(i => i.id === id), half = (face === 'N' || face === 'S' ? f.w : f.d) / 2;
+  return { front: sideClearance(plan, id, face), cl: LAT[face].map(s => sideClearance(plan, id, s) + half) };
+}
+const inch = (v) => `${Math.round(v * 10) / 10} in`;
+// 5 × 8 ft: vanity on the short wall, toilet on the long wall, full-width shower at the far end
+const BATH58 = room(60, 96, [
+  fixture('wc', 'Toilet', 0, 22, 28, 20, 'E', BATH_CODE.wcCL),
+  fixture('vn', 'Vanity', 28, 0, 24, 21, 'S', BATH_CODE.lavCL),
+  it('sh', 'Shower 60 × 36', 0, 60, 60, 36, { zones: [{ side: 'N', depth: BATH_CODE.shower, at: 28, len: 32, kind: 'shower entry (24 in)' }] })],
+  [door('E', 24, 28, 'start', 'out', { entry: true })]);
+const B58 = { wc: bathFacts(BATH58, 'wc', 'E'), vn: bathFacts(BATH58, 'vn', 'S') };
+// 5 × 5 ft: code-minimum layout – 30 × 30 in shower, toilet at exactly 15 in, small wall-hung basin
+const BATH55 = room(60, 60, [
+  fixture('wc', 'Toilet', 5, 32, 20, 28, 'N', BATH_CODE.wcCL),
+  fixture('bs', 'Basin 18 × 14', 46, 36, 14, 18, 'W', BATH_CODE.lavCL),
+  it('sh', 'Shower 30 × 30', 30, 0, 30, 30, { zones: [{ side: 'W', depth: BATH_CODE.shower, kind: 'shower entry (24 in)' }] })],
+  [door('W', 2, 26, 'start', 'none', { entry: true })]);
+const B55 = { wc: bathFacts(BATH55, 'wc', 'N'), bs: bathFacts(BATH55, 'bs', 'W'), sh: sideClearance(BATH55, 'sh', 'W') };
+// dining: the table is placed once; caption figures come from the same plan
+const DINE = room(120, 120, [it('t', 'Table for 4', 36, 45, 48, 30, { zones: [{ side: 'N', depth: 32, kind: 'chair' }, { side: 'S', depth: 32, kind: 'chair' }] })], [door('S', 6, 30)], [{ id: 'w', wall: 'E', offset: 30, width: 48 }]);
+const DINE_GAP = [sideClearance(DINE, 't', 'N'), sideClearance(DINE, 't', 'S')];
+export const BATH_PLANS = { BATH58, BATH55, B58, B55, BATH_CODE, BATH_REC };
 
 export const A3 = [
   {
@@ -28,8 +66,9 @@ ${table(['Table', 'Seats', 'Table size', 'Room needed (32 in zones)'], [
   ['Rectangle for 4, free-standing', '4', '48 × 30 in', '48 × 94 in'],
   ['Round for 4', '4', '36–42 in diameter', '≈ 100–106 in square'],
   ['Drop-leaf, leaves down', '2', '36 × 10 in', 'against wall, chairs stored']])}
-${figPlan(room(120, 120, [it('t', 'Table for 4', 36, 45, 48, 30, { zones: [{ side: 'N', depth: 32, kind: 'chair' }, { side: 'S', depth: 32, kind: 'chair' }] }), it('sb', 'Sideboard', 0, 0, 40, 16)], [door('S', 6, 30)], [{ id: 'w', wall: 'E', offset: 30, width: 48 }]), 'Table for four in a 10 × 10 ft space: 32 in chair zones on the long sides leave 13 in to each wall – nobody can pass behind a seated diner.')}
-<p>The plan shows the common mistake: the table fits, the chairs fit, but nobody can get past a seated person. In a 10 ft room with chairs on both long sides, the table may be at most 120 − 2 × 44 = 32 in wide if people should walk behind the chairs – a narrow table, or a bench along one wall.</p>
+${figPlan(DINE, `Table for four in a 10 × 10 ft space: ${inch(DINE_GAP[0])} and ${inch(DINE_GAP[1])} from the long table edges to the walls – more than the 44 in NKBA guideline 8 gives for walking behind seated diners.`)}
+<p>The NKBA figures of 32, 36 and 44 in are <b>total</b> distances from the table edge to the wall or obstacle; the chair is inside them, not added on top. In the plan the hatched strip shows the 32 in where the chair stands; the remaining ${inch(DINE_GAP[0] - 32)} beyond it is what makes the 44 in walk-behind clearance. In a 10 ft room with chairs on both long sides, the table may therefore be at most 120 − 2 × 44 = 32 in wide if people should walk behind the chairs, 120 − 2 × 36 = 48 in if they only need to edge past, and 120 − 2 × 32 = 56 in if nobody passes at all.</p>
+<p>The ${a('/tools/clearance-planner/', 'Clearance Planner')} is stricter than the guideline: it draws the 32 in chair zone and then asks for a separate 36 in walkway outside it (68 in from the table edge). That is a comfort assumption of the planner, not an NKBA requirement; if the planner flags a route behind a table, compare the total distance with the 36 and 44 in values above.</p>
 <h2 id="round">Round versus rectangular</h2>
 <p>A round table has no corners at hip height, so it is easier to edge past. It also seats one more person in a pinch. The cost: a round table cannot go flat against a wall without wasting space, and the same seating needs a slightly larger footprint than a rectangle with one long side against the wall. In a small space, use round tables in the middle of a zone and rectangles along walls.</p>
 <h2 id="wall">Against the wall</h2>
@@ -53,7 +92,7 @@ ${figPlan(room(120, 96, [it('t', 'Table for 2', 0, 30, 30, 30, { zones: [{ side:
 <p>A pendant light fixes the table's position. Before you drill, place the table and its chair zones on the plan and mark the center of the table, not the center of the room – in a small space the two are rarely the same.</p>`,
     faq: [
       ['How much space do you need around a dining table?', '32 in from the table edge to a wall where nobody passes, 36 in if people edge past and 44 in if they walk past (NKBA Kitchen Planning Guideline 8).'],
-      ['What size table fits a 10x10 room?', 'A 36 in square or round table for four fits with 32 in chair zones on all sides, but nobody can pass behind a seated diner. For walking space, push it against a wall or choose a narrow table.'],
+      ['What size table fits a 10x10 room?', 'A 36 in square or round table for four leaves 42 in from each edge to the wall: more than the 36 in NKBA guideline 8 gives for edging past a seated diner, but less than the 44 in for walking past. For a real walkway behind the chairs, push the table against a wall or choose a table no wider than 32 in.'],
       ['Is a round or square table better for a small space?', 'Round tables are easier to edge past and seat an extra person; square and rectangular tables use space better against a wall.'],
       ['How much width does each person need at a table?', '24 in per seated diner according to NKBA guideline 9.']
     ],
@@ -175,7 +214,7 @@ ${figPlan(room(144, 120, [it('rug', 'Rug 5×8', 24, 28, 96, 60, { floor: true })
     lede: 'A small bathroom is a puzzle of a few fixed distances: from the toilet centerline to the wall, in front of each fixture, between two basins, and the inside of the shower. Here they are, with their sources and measured plans.',
     related: ['small-kitchen-clearances', 'how-to-measure-a-room-for-furniture', 'walkway-space-around-furniture'],
     body: `<h2 id="source">Sources</h2>
-<p>The figures come from the ${a(NKBA_B, 'NKBA Bathroom Planning Guidelines with Access Standards')}. The guidelines give a <b>recommended</b> value for good design and, where one exists, the <b>code requirement</b> from the International Residential Code (IRC) that the NKBA cites. Local codes may differ – this page is for planning, not for approval.</p>
+<p>The figures come from the ${a(NKBA_B, 'NKBA Bathroom Planning Guidelines with Access Standards')}. The guidelines give a <b>recommended</b> value for good design and, where one exists, the <b>code requirement</b> that the NKBA cites from the 2015 International Residential Code (IRC) and International Plumbing Code; the access standards refer to ICC A117.1–2009. Your local code may be a later edition or differ – this page is for planning, not for approval.</p>
 <h2 id="toilet">Toilet</h2>
 ${rule('15 in', 'Toilet centerline to wall or fixture, code minimum (381 mm)', 'IRC, cited in NKBA Bathroom Planning Guideline 20 – 18 in (457 mm) recommended')}
 <p>Measure from the centerline of the toilet to the nearest wall, fixture or obstacle on either side. The code minimum cited by the NKBA is 15 in; the recommendation is 18 in. A toilet between two walls therefore needs at least 30 in, better 36 in, of wall-to-wall width.</p>
@@ -194,11 +233,12 @@ ${table(['Shower', 'Interior size', 'Source'], [
   ['NKBA recommended', '36 × 36 in', 'guideline 9'],
   ['Transfer shower (access)', '36 × 36 in', 'access standard'],
   ['Roll-in shower (access)', 'at least 30 × 60 in, entry as wide as the shower', 'ICC A117.1, cited in NKBA guideline 9']])}
-<h2 id="plans">Three small layouts</h2>
-${figPlan(room(60, 96, [it('wc', 'Toilet', 12, 0, 20, 28), it('vn', 'Vanity', 36, 0, 24, 21), it('sh', 'Shower', 0, 60, 60, 36)], [door('W', 30, 28, 'start', 'in', { entry: true })]), '5 × 8 ft bathroom: toilet and vanity on the top wall, 60 × 36 in shower across the far end. Toilet centerline 22 in from the side wall.', { noPinch: true })}
-${figPlan(room(60, 60, [it('wc', 'Toilet', 20, 0, 20, 28), it('vn', 'Vanity', 0, 36, 21, 24), it('sh', 'Shower', 30, 30, 30, 30)], [door('S', 0, 24, 'start', 'none')]), '5 × 5 ft compact bathroom with a 30 × 30 in shower – the code minimum. A sliding or outward-opening door is needed.', { noPinch: true })}
-<p>The first plan is the classic 5 × 8 ft bathroom: everything on one long wall except a full-width shower at the end. The toilet centerline 22 in from the wall is above the 18 in recommendation, and the 48 in from the front of the vanity to the opposite wall is well above 30 in.</p>
-<p>The second shows how tight the code minimums are: a 30 × 30 in shower, toilet and small vanity in 25 sq ft. An inward-opening door would hit the toilet; the plan assumes a sliding door.</p>
+<h2 id="plans">Two small layouts, checked against the minimums</h2>
+<p>Both plans are drawn from the same coordinates that produce the measurements below. The hatched strips are the code clear floor in front of each fixture and the side clearance to the code minimum from each centerline; nothing solid may stand in them. The site's test suite recalculates these strips for every plan before publishing.</p>
+${figPlan(BATH58, `5 × 8 ft bathroom: vanity on the short wall, toilet on the long wall, 60 × 36 in shower across the far end. Toilet centerline ${inch(B58.wc.cl[0])} and ${inch(B58.wc.cl[1])} from the nearest obstacles, ${inch(B58.wc.front)} clear in front of the toilet, ${inch(B58.vn.front)} clear in front of the vanity.`, { noPinch: true })}
+<p>The first plan is a 5 × 8 ft bathroom that meets the NKBA <b>recommended</b> values, not just the code minimums: the toilet centerline is ${inch(Math.min(...B58.wc.cl))} from the nearest wall or fixture (recommended ${BATH_REC.wcCL} in, code ${BATH_CODE.wcCL} in), there are ${inch(B58.wc.front)} of clear floor in front of the toilet and ${inch(B58.vn.front)} from the vanity front to the shower (recommended ${BATH_REC.front} in, code ${BATH_CODE.front} in), and the vanity centerline is ${inch(Math.min(...B58.vn.cl))} from the side wall (recommended ${BATH_REC.lavCL} in). The shower entry is on the right-hand part of the shower, where the floor in front is clear. The door opens outward; a pocket door works too.</p>
+${figPlan(BATH55, `5 × 5 ft bathroom at code minimums: 30 × 30 in shower, toilet centerline ${inch(B55.wc.cl[0])} from the wall, ${inch(B55.bs.front)} clear in front of the basin. Sliding door.`, { noPinch: true })}
+<p>The second plan shows how tight the code minimums are. It works only with a small wall-hung basin (about 18 × 14 in) and with every key distance at the code value rather than the recommendation: toilet centerline ${inch(B55.wc.cl[0])} from the side wall (recommended ${BATH_REC.wcCL} in), basin centerline ${inch(Math.min(...B55.bs.cl))} from the shower and from the wall (recommended ${BATH_REC.lavCL} in), ${inch(B55.bs.front)} between the basin front and the toilet (recommended ${BATH_REC.front} in). The toilet has ${inch(B55.wc.front)} of clear floor in front of it, the shower entry ${inch(B55.sh)} (code ${BATH_CODE.shower} in). An inward-opening door would cross the shower entry; the plan assumes a sliding door. Treat this as the lower limit, not as a comfortable bathroom.</p>
 <h2 id="door">Doors</h2>
 <p>Bathroom doors are often the narrowest in the home. The ADA Standards define a 32 in clear width (§404.2.3) – useful as a reference for accessible bathrooms; in many homes interior bathroom doors are narrower. An outward-opening door frees the inside but must not swing into a corridor where someone walks. A pocket door frees both.</p>
 <h2 id="check">Quick check</h2>
@@ -216,7 +256,7 @@ ${figPlan(room(60, 60, [it('wc', 'Toilet', 20, 0, 20, 28), it('vn', 'Vanity', 0,
       ['How much space do you need beside a toilet?', 'At least 15 in from the centerline to any wall or fixture (IRC code minimum cited by the NKBA); 18 in is recommended.'],
       ['How much space in front of a toilet?', '21 in is the code minimum cited by the NKBA, 30 in is recommended.'],
       ['What is the minimum shower size?', '30 × 30 in (900 sq in) with room for a 30 in disc, under the IRC as cited in NKBA guideline 9. 36 × 36 in is recommended.'],
-      ['What is the smallest bathroom with a shower?', 'With a 30 × 30 in shower, toilet and small vanity, about 5 × 5 ft is possible, but it needs a sliding or outward-opening door.']
+      ['What is the smallest bathroom with a shower?', 'At the code minimums cited by the NKBA, about 5 × 5 ft: a 30 × 30 in shower, a toilet whose centerline is exactly 15 in from the wall and a small wall-hung basin (about 18 × 14 in) with 21 in in front of it, plus a sliding or outward-opening door. The NKBA recommended clearances do not fit in that room; 5 × 8 ft meets them.']
     ],
     sources: [S.nkbaB, S.ada4042]
   },

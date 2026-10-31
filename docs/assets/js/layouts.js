@@ -103,6 +103,7 @@ export const LAYOUTS = [
   },
   {
     slug: 'bedroom-12x10-full-desk', title: '12 × 10 ft bedroom with a full bed and a desk', short: '12×10 full + desk',
+    acceptPinch: ['win'],   // disclosed in the layout note: window route squeezes between chair and drawer zones
     room: { W: 144, D: 120 }, kind: 'bedroom',
     doors: [{ id: 'entry', label: 'bedroom door', wall: 'S', offset: 6, width: 30, hinge: 'start', swing: 'in', entry: true }],
     windows: [{ id: 'win', label: 'Window', wall: 'E', offset: 14, width: 40 }],

@@ -24,9 +24,10 @@ function render() {
   const b = storageBands(S.units), tot = b.low + b.reach + b.high || 1;
   $('[data-bands]').innerHTML = `<table class="data"><thead><tr><th>Band</th><th>Volume</th><th>Share</th></tr></thead><tbody>
 <tr><td>Above ${fmtLen(REACH_HIGH, units)} – step stool</td><td class="num">${vol(b.high)}</td><td class="num">${Math.round(b.high / tot * 100)}%</td></tr>
-<tr><td>${fmtLen(REACH_LOW, units)}–${fmtLen(REACH_HIGH, units)} – everyday reach</td><td class="num">${vol(b.reach)}</td><td class="num">${Math.round(b.reach / tot * 100)}%</td></tr>
+<tr><td>${fmtLen(REACH_LOW, units)}–${fmtLen(REACH_HIGH, units)} – everyday height band</td><td class="num">${vol(b.reach)}</td><td class="num">${Math.round(b.reach / tot * 100)}%</td></tr>
 <tr><td>Below ${fmtLen(REACH_LOW, units)} – bend or kneel</td><td class="num">${vol(b.low)}</td><td class="num">${Math.round(b.low / tot * 100)}%</td></tr>
-<tr><th scope="row">Total</th><td class="num"><b>${vol(b.low + b.reach + b.high)}</b></td><td></td></tr></tbody></table>`;
+<tr><th scope="row">Total</th><td class="num"><b>${vol(b.low + b.reach + b.high)}</b></td><td></td></tr></tbody></table>
+<p class="note-small">Gross volume sorted by height only. Shelf depth, obstacles in front of a unit and reach to the back of deep shelves are not checked (ADA §308.2.2/§308.3.2 lower the high reach over an obstruction to 44 or 46 in).</p>`;
   const it = S.units.find(u => u.id === sel);
   $('[data-unit]').innerHTML = it ? `<h3>Selected: ${esc(it.label)}</h3><div class="fields">
 <label class="f">Label<input type="text" data-k="label" value="${esc(it.label)}"></label>

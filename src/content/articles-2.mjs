@@ -1,6 +1,13 @@
 import { figPlan, figLayout, figRaw, figElev, room, door, rule, table, a, S, ADA, NKBA_K, NKBA_B, CASPER, bs, chair, dimLine } from './common.mjs';
 const it = (id, label, x, y, w, d, extra = {}) => ({ id, label, x, y, w, d, ...extra });
 
+// L-shaped kitchen for the dishwasher example: dwX = left edge of the dishwasher on the top run.
+// Guideline 13: 21 in standing space between the dishwasher edge and a run at a right angle.
+const kitchenL = (dwX) => room(108, 96, [it('runA', 'Counter + sink', 0, 0, 108, 25, { target: true }),
+  it('dw', 'Dishwasher', dwX, 0, 24, 25, { stack: 'runA', zones: [{ side: 'S', depth: 26, kind: 'open door', walk: true }, { side: 'S', depth: 24, at: -21, len: 21, kind: 'standing space (21 in)', walk: true }] }),
+  it('runB', 'Counter', 0, 25, 25, 71)], [door('S', 60, 32, 'start', 'none')]);
+const kitchenGap = (dwX) => dwX - 25;
+
 export const A2 = [
   {
     slug: 'wall-bed-vs-sofa-bed', group: 'Fold-away furniture', kicker: 'Fold-away', short: 'Wall bed vs. sofa bed',
@@ -144,7 +151,8 @@ ${figLayout('galley-kitchen-8x12', 'Galley kitchen 96 × 144 in: two 25 in runs 
 <p>A galley with two 25 in deep counter runs in an 8 ft (96 in) wide room leaves a 46 in aisle: above the 42 in one-cook figure, below the 48 in for two cooks. In practice that means one person cooks and a second can pass but not work back to back. A 7 ft 4 in room (88 in) gives exactly 38 in – a walkway, but tight for cooking. Below that, consider a single-wall kitchen with the other side free.</p>
 <h2 id="dishwasher">Dishwasher placement</h2>
 <p>Guideline 13 recommends placing the dishwasher within 36 in of the edge of the cleanup sink, and providing at least 21 in of standing space between the edge of the dishwasher and any counter, appliance or cabinet placed at a right angle to it. That second rule matters in L- and U-shaped kitchens: a dishwasher tucked right into the corner leaves you nowhere to stand while loading. The open door of a standard dishwasher projects roughly the depth of the unit into the aisle – about 2 ft – so the aisle in front of it is effectively closed while it is open.</p>
-${figPlan(room(108, 96, [it('runA', 'Counter + sink', 0, 0, 108, 25, { target: true }), it('dw', 'Dishwasher', 6, 0, 24, 25, { zones: [{ side: 'S', depth: 26, kind: 'open door', walk: true }], stack: 'runA' }), it('runB', 'Counter', 0, 25, 25, 71)], [door('S', 60, 32, 'start', 'none')]), 'L-shaped kitchen: the dishwasher is 6 in from the corner run – less than the 21 in standing space of guideline 13.', { dims: [[25, 26, 6 + 25 - 0.01, 26, '6 in', 6]] })}
+${figPlan(kitchenL(31), `Counter-example – L-shaped kitchen: the dishwasher starts ${kitchenGap(31)} in from the face of the corner run, far short of the 21 in standing space of guideline 13. The hatched standing strip runs into the counter.`, { counter: true, dims: [[25, 27, 31, 27, `${kitchenGap(31)} in`, 6]] })}
+${figPlan(kitchenL(46), `Corrected: moved to start ${kitchenGap(46)} in from the corner run, the dishwasher leaves the full standing space and its open door clears the return.`, { dims: [[25, 27, 46, 27, `${kitchenGap(46)} in`, 6]] })}
 <h2 id="doors">Door and appliance interference</h2>
 <p>Guideline 2 says no entry door should interfere with the safe operation of appliances, and appliance doors should not interfere with one another. In a small kitchen, check three pairs: the oven door against the dishwasher door, the fridge door against the entry door, and any door against a person standing at the sink. Draw each appliance door as a zone and make sure no two overlap where both might be open at once.</p>
 <h2 id="seating">Seating at a counter or table</h2>
@@ -184,7 +192,7 @@ ${figPlan(room(192, 168, [it('bed', 'Full bed', 0, 0, 75, 53, { target: true, zo
 <h2 id="spot2">2. At the foot of the bed</h2>
 <p>If the bed is in a corner with its foot towards the room, a desk at the foot can share the bed's foot strip: the chair backs into the space you already keep free to walk round the bed. This is the arrangement in the ${a('/layouts/studio-20x15-queen-corner/', 'corner queen studio')}. It works when the foot strip is at least as deep as the chair zone; if it is only 24 in, the chair will touch the bed.</p>
 <h2 id="spot3">3. Behind the sofa</h2>
-${figPlan(room(192, 168, [it('sofa', 'Sofa', 57, 80, 78, 36, { zones: [{ side: 'N', depth: 18, kind: 'legroom' }] }), it('desk', 'Desk', 75, 116, 42, 22, { target: true, zones: chair('S'), zoneIgnore: [] }), it('tv', 'TV unit', 68, 0, 55, 16), it('bed', 'Full bed', 139, 115, 53, 53 + 22, { target: true })], [door('W', 120, 32, 'end')]), 'Desk against the back of a floating sofa: the desk faces away from the TV and its chair zone points to the free wall.')}
+${figPlan(room(192, 168, [it('sofa', 'Sofa', 57, 74, 78, 36, { zones: [{ side: 'N', depth: 18, kind: 'legroom' }] }), it('desk', 'Desk', 75, 110, 42, 22, { target: true, zones: chair('S'), zoneIgnore: [] }), it('tv', 'TV unit', 68, 0, 55, 16), it('bed', 'Full bed', 139, 93, 53, 75, { target: true })], [door('W', 120, 32, 'end')]), 'Desk against the back of a floating sofa: the desk faces away from the TV and its chair zone points to the free wall.')}
 <p>A sofa that floats in the middle of the room has a back that is otherwise wasted. A narrow desk (18–22 in deep) against it doubles as a divider between living and sleeping zones. The chair then sits on the far side, so check that the zone does not end in the walkway. This spot needs a room at least about 13 ft deep in that direction: sofa 36 in + desk 22 in + chair 32 in + legroom 18 in + TV unit 16 in + walkway.</p>
 <h2 id="spot4">4. The window wall</h2>
 <p>Daylight from the side or front is ideal for a desk, and a window wall often has nothing else against it. Watch three things: a radiator under the window (keep the gap its manufacturer specifies), inward-opening sashes (the desk must not block them), and glare on the screen when the window is directly behind it. A desk at right angles to the window wall often works better than one facing the glass.</p>
@@ -221,7 +229,7 @@ ${table(['Desk', 'Footprint', 'With 32 in chair zone'], [
     tool: `the ${a('/tools/storage-wall/', 'Storage Wall Audit')} computes the volume in each band for your own wall.`,
     body: `<h2 id="range">The reach range</h2>
 ${rule('15–48 in', 'Unobstructed reach range (380–1220 mm)', 'ADA 2010 §308.2.1 (forward) and §308.3.1 (side)')}
-<p>Sections 308.2.1 and 308.3.1 of the ${a(ADA + '#ada-308_2_1', '2010 ADA Standards')} set the unobstructed forward and side reach for operable parts and storage at 15 in minimum and 48 in maximum above the floor. The range was written for people using wheelchairs, but it works as a comfort zone for everyone: inside it, you reach without bending deeply or stretching up. Above 48 in, most standing adults still reach – just less comfortably, and not over a deep counter or shelf. Below 15 in, you bend or kneel.</p>
+<p>Sections 308.2.1 and 308.3.1 of the ${a(ADA + '#ada-308_2_1', '2010 ADA Standards')} set the unobstructed forward and side reach for operable parts and storage at 15 in minimum and 48 in maximum above the floor. That is a legal accessibility minimum for an <b>unobstructed</b> reach, written for people using wheelchairs. Over an obstruction the limits drop: 44 in for a forward reach deeper than 20 in (§308.2.2), 46 in for a side reach deeper than 10 in (§308.3.2). This guide uses 15–48 in as a <b>planning band</b>, not as a promise that everything inside it is easy to reach for everyone: a deep shelf, a counter in front of a cabinet or a person's own height and mobility change the real reach. Above 48 in, most standing adults still reach – less comfortably, and not over a deep counter or shelf. Below 15 in, you bend or kneel.</p>
 ${figElev({ W: 120, H: 96 }, [{ id: 'a', label: 'Bookcase', x: 0, w: 31, bottom: 0, top: 79, depth: 11, shelves: [15, 30, 45, 60] }, { id: 'b', label: 'Bench', x: 36, w: 36, bottom: 0, top: 18, depth: 14, shelves: [8] }, { id: 'c', label: 'Shelf', x: 40, w: 30, bottom: 66, top: 76, depth: 10, shelves: [] }, { id: 'd', label: 'Cabinet', x: 80, w: 36, bottom: 0, top: 84, depth: 16, shelves: [16, 32, 48, 64] }], 'Storage wall, 120 in wide and 96 in high. The yellow band is the 15–48 in reach range.')}
 <h2 id="bands">What goes in each band</h2>
 ${table(['Band', 'Height', 'Store here'], [
@@ -230,7 +238,7 @@ ${table(['Band', 'Height', 'Store here'], [
   ['Low', 'below 15 in', 'heavy items (tools, drinks), shoes, baskets, things children use']])}
 <p>The principle is frequency: the more often you use something, the closer it should be to the middle of the everyday band – roughly between hip and shoulder height. Heavy things go low regardless of frequency, because lifting them from above shoulder height is where accidents happen.</p>
 <h2 id="volume">How much volume is in each band?</h2>
-<p>For the example wall above, the audit tool computes the gross volume of each unit and splits it at 15 and 48 in:</p>
+<p>For the example wall above, the audit tool computes the gross volume of each unit and splits it by height at 15 and 48 in. The result is volume per height band, not proof of reach: it does not check how deep the shelf is, what stands in front of it or whether the back of a deep shelf can be reached.</p>
 ${table(['Band', 'Approx. volume', 'Share'], [
   ['Above 48 in', '≈ 19.9 cu ft', '≈ 39 %'],
   ['15–48 in', '≈ 18.4 cu ft', '≈ 36 %'],

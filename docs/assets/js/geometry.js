@@ -62,7 +62,29 @@ export function itemRect(item, state) {
 export function zoneRects(item, state) {
   const base = itemRect(item, state);
   return (item.zones || []).filter(z => !z.state || z.state === state)
-    .map(z => ({ ...sideStrip(base, z.side, z.depth), kind: z.kind || 'use', walk: !!z.walk, owner: item.id }));
+    .map(z => {
+      const r = sideStrip(base, z.side, z.depth);
+      // optional part of a side: z.at = offset from the item's start along that side, z.len = length
+      if (z.at != null || z.len != null) {
+        const along = z.side === 'N' || z.side === 'S' ? ['x', 'w'] : ['y', 'd'];
+        const at = z.at || 0, len = z.len ?? (r[along[1]] - at);
+        r[along[0]] = base[along[0]] + at; r[along[1]] = len;
+      }
+      return { ...r, kind: z.kind || 'use', walk: !!z.walk, owner: item.id };
+    });
+}
+/* Clear distance from one face of an item to the nearest wall or solid item straight in front of that face.
+   Used to state measured gaps in captions from the same geometry that draws the plan. */
+export function sideClearance(plan, id, side, state) {
+  const it = plan.items.find(i => i.id === id), r = itemRect(it, state), { W, D } = plan.room;
+  const others = plan.items.filter(o => o.id !== id && o.stack !== id && it.stack !== o.id && itemActive(o, state) && isObstacle(o)).map(o => itemRect(o, state));
+  const spanX = (o) => o.x < r.x + r.w - EPS && o.x + o.w > r.x + EPS, spanY = (o) => o.y < r.y + r.d - EPS && o.y + o.d > r.y + EPS;
+  let best;
+  if (side === 'S') { best = D - r.y - r.d; for (const o of others) if (spanX(o) && o.y >= r.y + r.d - EPS) best = Math.min(best, o.y - r.y - r.d); }
+  else if (side === 'N') { best = r.y; for (const o of others) if (spanX(o) && o.y + o.d <= r.y + EPS) best = Math.min(best, r.y - o.y - o.d); }
+  else if (side === 'E') { best = W - r.x - r.w; for (const o of others) if (spanY(o) && o.x >= r.x + r.w - EPS) best = Math.min(best, o.x - r.x - r.w); }
+  else { best = r.x; for (const o of others) if (spanY(o) && o.x + o.w <= r.x + EPS) best = Math.min(best, r.x - o.x - o.w); }
+  return best;
 }
 export const isObstacle = (item) => item.floor !== true;
 
