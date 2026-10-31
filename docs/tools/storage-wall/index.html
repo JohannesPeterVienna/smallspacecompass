@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en" data-ads="yes">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Storage Wall Audit – shelf volume by reach height (cu ft and litres)</title>
+<meta name="description" content="Draw a storage wall, add shelves and cabinets and see how much volume sits within easy reach (15–48 in), above it and below it – plus an equal-compartment divider calculator.">
+<link rel="canonical" href="https://smallspacecompass.com/tools/storage-wall/">
+<meta name="google-adsense-account" content="ca-pub-7811071715414905">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Storage Wall Audit – shelf volume by reach height (cu ft and litres)">
+<meta property="og:description" content="Draw a storage wall, add shelves and cabinets and see how much volume sits within easy reach (15–48 in), above it and below it – plus an equal-compartment divider calculator.">
+<meta property="og:url" content="https://smallspacecompass.com/tools/storage-wall/">
+<meta property="og:site_name" content="Small Space Compass">
+<meta name="theme-color" content="#1C2127">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/assets/fonts/archivo-wdth.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/css/site.css?v=20261031">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7811071715414905" crossorigin="anonymous"></script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://smallspacecompass.com/"},{"@type":"ListItem","position":2,"name":"Tools","item":"https://smallspacecompass.com/tools/"},{"@type":"ListItem","position":3,"name":"Storage Wall Audit","item":"https://smallspacecompass.com/tools/storage-wall/"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Storage Wall Audit","url":"https://smallspacecompass.com/tools/storage-wall/","applicationCategory":"DesignApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What do 15 and 48 inches mean?","acceptedAnswer":{"@type":"Answer","text":"They are the low and high limits of the unobstructed reach range in ADA 2010 §308.2.1 (forward reach) and §308.3.1 (side reach): 15 in minimum and 48 in maximum above the floor."}},{"@type":"Question","name":"Are the volumes usable capacity?","acceptedAnswer":{"@type":"Answer","text":"No, they are gross volumes of the unit outlines. They are best used to compare layouts."}},{"@type":"Question","name":"Can I enter centimetres?","acceptedAnswer":{"@type":"Answer","text":"Yes, switch to cm. Volumes are then shown in litres."}}]}</script>
+<script type="module" src="/assets/js/site.js?v=20261031"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><div class="wrap"><a class="brand" href="/"><svg viewBox="0 0 34 34" aria-hidden="true"><rect x="1" y="1" width="32" height="32" fill="#F2C230" stroke="#EFF0EC" stroke-width="2"/><path d="M6 27V7h22" fill="none" stroke="#1C2127" stroke-width="3"/><path d="M6 27h4M6 22h2.5M6 17h4M6 12h2.5M11 7v4M16 7v2.5M21 7v4" stroke="#1C2127" stroke-width="1.6"/><path d="M13 27a14 14 0 0 1 14-14" fill="none" stroke="#1C2127" stroke-width="1.6" stroke-dasharray="2 2"/></svg><span>Small Space Compass</span></a><nav class="nav" aria-label="Main"><a href="/tools/clearance-planner/">Planner</a><a href="/tools/will-it-fit/">Will it fit?</a><a href="/layouts/">Layouts</a><a href="/guides/">Guides</a><a href="/about/">About</a></nav></div></header>
+
+<main id="main"><div class="wrap">
+<ol class="crumbs"><li><a href="/">Home</a></li><li><a href="/tools/">Tools</a></li><li aria-current="page">Storage Wall Audit</li></ol>
+<header class="titleblock"><span class="kicker">Free tool · runs in your browser</span><h1>Storage Wall Audit</h1><p class="lede">How much of your storage can you actually reach? Draw the wall, add the units, and the audit splits their volume into three bands: below 15 in, 15–48 in, and above 48 in – the reach range from the ADA Standards.</p></header>
+<section class="tool" data-storage aria-label="Storage wall audit">
+<div style="min-width:0"><div class="stage" data-wall></div><div data-bands class="table-scroll" style="margin-top:1rem"></div></div>
+<div class="panel">
+<div class="row"><div class="seg" role="group" aria-label="Units"><button type="button" data-units="in" aria-pressed="true">in</button><button type="button" data-units="cm" aria-pressed="false">cm</button></div><button class="btn small" type="button" data-act="add">Add unit</button><button class="btn small ghost" type="button" data-act="reset">Reset</button></div>
+<div class="fields"><label class="f">Wall width (<span data-unit-label>in</span>)<input type="number" data-wall-w step="1"></label><label class="f">Ceiling height (<span data-unit-label>in</span>)<input type="number" data-wall-h step="1"></label></div>
+<div data-unit class="item-editor"></div>
+<div data-divider class="item-editor"><h3>Equal compartments</h3><div class="fields"><label class="f">Inside opening<input type="number" name="opening" value="30" step="0.25"></label><label class="f">Compartments<input type="number" name="parts" value="3" min="1" max="20" step="1"></label><label class="f">Divider thickness<input type="number" name="thick" value="0.75" step="0.0625"></label></div><div data-div aria-live="polite"></div></div>
+<p class="note-small" style="margin:0">Saved in this browser only.</p></div>
+</section>
+<div class="cols" style="margin-top:2.5rem"><article class="sheet" data-words><h2 id="bands">Why three bands</h2>
+<p>Section 308 of the <a href="https://www.access-board.gov/ada/#ada-308_2_1">2010 ADA Standards</a> sets the unobstructed reach range for forward and side reach at 15 in minimum and 48 in maximum above the floor (§308.2.1 and §308.3.1). The figure was written for wheelchair users, but it is also a useful line for everyone: inside it you can put things away without bending deeply or stretching up. Above 48 in most adults can still reach, but less comfortably and not over a deep obstruction; below 15 in you bend or kneel.</p>
+<p>The audit computes the gross volume of each unit (width × depth × height) and splits it at 15 and 48 in. It does not subtract shelf thickness or drawer boxes, so treat the figures as a comparison between arrangements rather than as a capacity a manufacturer would quote. The value of the tool is in seeing the <em>share</em>: a wall where 60 % of the volume sits above 48 in is a wall for suitcases and seasonal things, not for everyday use.</p>
+<h2 id="divider">Equal compartments</h2>
+<p>The divider calculator below the unit settings was previously a separate site, Shelf Measure. It divides an inside opening into equal clear compartments: clear width = (opening − dividers × thickness) ÷ compartments. It also lists where to mark the left edge of each divider, measured from the left inside face. Typical board thicknesses are 3/4 in (19 mm) for plywood and 5/8 in (16 mm) for melamine shelving.</p>
+<h2 id="how">How to use the audit</h2>
+<ol><li>Measure the wall: width between corners or obstructions, and the ceiling height.</li>
+<li>For each unit, enter its distance from the left, width, bottom and top height above the floor, and inside depth. Wall shelves start at their mounting height.</li>
+<li>List the shelf heights above the floor so the drawing shows them; the volume does not depend on them.</li>
+<li>Move units and shelves until the everyday band holds what you use every day – see the <a href="/guides/vertical-storage-by-reach/">guide to vertical storage by reach</a>.</li></ol>
+<h2 id="faq">Frequently asked questions</h2><div class="faq"><details><summary>What do 15 and 48 inches mean?</summary><div><p>They are the low and high limits of the unobstructed reach range in ADA 2010 §308.2.1 (forward reach) and §308.3.1 (side reach): 15 in minimum and 48 in maximum above the floor.</p></div></details><details><summary>Are the volumes usable capacity?</summary><div><p>No, they are gross volumes of the unit outlines. They are best used to compare layouts.</p></div></details><details><summary>Can I enter centimetres?</summary><div><p>Yes, switch to cm. Volumes are then shown in litres.</p></div></details></div>
+<div data-nocount><h2 id="sources">Sources</h2><ol class="sources"><li><a href="https://www.access-board.gov/ada/#ada-308_2_1" rel="noopener">2010 ADA Standards, §308.2.1 and §308.3.1 Unobstructed reach</a></li></ol><p class="reviewed">Last reviewed: October 2026. Geometric aid only.</p></div></article>
+<aside class="aside"><div class="ad ad-side" data-slot="side"></div></aside></div>
+</div></main>
+<footer class="foot"><div class="wrap">
+<div><h2>Small Space Compass</h2><p>Small-space planning from the tape measure up: guides that state their measurements and tools that check whether you can still move once the furniture is in. A geometric aid only – check building rules and your own measurements before you buy or build.</p></div>
+<div><h2>Tools</h2><ul><li><a href="/tools/clearance-planner/">Clearance Planner</a></li><li><a href="/tools/will-it-fit/">Will It Fit? Delivery Check</a></li><li><a href="/tools/day-night-swap/">Day/Night Floor Swap</a></li><li><a href="/tools/storage-wall/">Storage Wall Audit</a></li><li><a href="/layouts/">Measured Layout Library</a></li></ul></div>
+<div><h2>Site</h2><ul><li><a href="/guides/">All guides</a></li><li><a href="/about/">About &amp; method</a></li><li><a href="/contact/">Contact</a></li><li><a href="/imprint/">Imprint</a></li><li><a href="/privacy/">Privacy</a></li><li><button type="button" class="linklike" data-privacy-settings>Privacy settings</button></li></ul></div>
+</div></footer>
+<script type="module" src="/assets/js/storage.js?v=20261031"></script>
+</body>
+</html>

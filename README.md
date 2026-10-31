@@ -1,0 +1,10 @@
+# smallspacecompass.com
+
+Static site, published from `docs/` (GitHub Pages, CNAME `smallspacecompass.com`).
+
+- Source: `build/build.mjs` + `src/content/*.mjs` → `node build/build.mjs` regenerates `docs/`.
+- Browser code (vanilla JS + SVG): `docs/assets/js/` – `geometry.js` (collision, door swings, distance field, widest route/A*, delivery rotation), `render.js`, `planner.js`, `delivery.js`, `storage.js`, `site.js` (ad slots, consent-gated GA4).
+- Ad slots: fill the slot IDs in `docs/assets/js/site.js` (`ADSENSE.slots`). Empty ID = no slot rendered, no space reserved.
+- Tests: `npm test` (geometry), `npm run check` (pages), `PLAYWRIGHT=/opt/npm-tools/node_modules/playwright node tests/browser.mjs [paths|all]` (390/1366 px).
+- Fonts self-hosted (Archivo, IBM Plex Mono, OFL in `docs/assets/fonts/`).
+- Old URLs: see `REDIRECTS.md`.

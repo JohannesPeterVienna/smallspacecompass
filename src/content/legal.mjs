@@ -1,0 +1,90 @@
+const RIS = 'https://www.ris.bka.gv.at/GeltendeFassung.wxe?Abfrage=Bundesnormen&Gesetzesnummer=10007517';
+const sheet = (h1, kicker, html) => `<article class="sheet" style="max-width:78ch" data-words><header class="titleblock"><span class="kicker">${kicker}</span><h1>${h1}</h1></header>${html}</article>`;
+
+export const LEGAL = [
+  {
+    path: '/about/', title: 'About Small Space Compass – method, sources and limits', description: 'How Small Space Compass measures walkways, door swings and delivery routes, which published guidelines it uses, and what a geometric planning aid cannot tell you.',
+    crumbs: [['About', '/about/']], ads: false,
+    body: sheet('About Small Space Compass', 'About &amp; method', `<p class="lede">Small Space Compass is a small-space planning site built around one idea: in a small home, the space you need to <em>use</em> furniture matters as much as the furniture itself. Every guide states the measurements it relies on, and every tool checks movement – door swings, pull-out zones, walkways – not just whether the pieces fit on the floor.</p>
+<h2 id="who">Who runs the site</h2>
+<p>The site is published by AdStern, an advertising agency based in Vienna, Austria (see the <a href="/imprint/">imprint</a>). It is financed by advertising shown on guide and tool pages; no manufacturer or retailer pays for mentions, and there are no affiliate links.</p>
+<h2 id="method">How the measurements are chosen</h2>
+<p>Where a published guideline exists, we use it and link the primary document:</p>
+<ul><li><b>Walkways and doors:</b> the <a href="https://www.access-board.gov/ada/">2010 ADA Standards for Accessible Design</a> published by the U.S. Access Board – §403.5.1 (36 in clear width of walking surfaces), §404.2.3 (32 in door clear width and how to measure it), §304.3 (60 in turning space), §305.3 (30 × 48 in clear floor space) and §308 (15–48 in reach range).</li>
+<li><b>Kitchens and bathrooms:</b> the <a href="https://kb.nkba.org/uploads/2022/05/Kitchen-Planning-Guidelines.pdf">NKBA Kitchen Planning Guidelines</a> and <a href="https://kb.nkba.org/uploads/2022/05/Bath-Planning-Guidelines.pdf">Bathroom Planning Guidelines</a> of the National Kitchen &amp; Bath Association, which also cite the International Residential Code where a code minimum applies.</li>
+<li><b>Mattress sizes:</b> U.S. sizes as listed in <a href="https://casper.com/mattress-size-comparison/">Casper's size chart</a>, UK sizes as listed in <a href="https://www.silentnight.co.uk/guides/bed-mattress-size-guide">Silentnight's size guide</a>. Manufacturers vary by up to an inch, so always check the piece you are buying.</li></ul>
+<p>Where no published figure exists – the strip beside a bed, the depth of a drawer zone – we say that a number is a working assumption and explain how we arrived at it. Numbers we could not trace to a source are left out rather than repeated from other websites.</p>
+<h2 id="tools">How the tools calculate</h2>
+<p>The <a href="/tools/clearance-planner/">Clearance Planner</a> rasterises the floor into cells of about one inch, marks furniture, use zones and door swings as blocked, and computes an exact Euclidean distance transform – the distance from every free point to the nearest obstacle. A bottleneck search finds the route from the entry to each target whose narrowest point is as wide as possible; an A* search then picks the shortest route of that width. The narrowest point is re-measured exactly between the two surfaces that cause it. Door swings are quarter circles tested exactly against each rectangle.</p>
+<p>The <a href="/tools/will-it-fit/">delivery check</a> tests every orientation of a box through doorways using the exact condition for one rectangle fitting inside another, and evaluates the classic “moving a sofa around a corner” formula numerically, including tilting the item within the ceiling height. The geometry code is covered by automated tests that compare results with hand-calculated cases and closed-form solutions.</p>
+<h2 id="limits">Limits: a geometric aid only</h2>
+<p>The tools work with rectangles and quarter circles on a flat floor. They do not know about building codes, fire safety, structural loads, ventilation, wall anchors, the swing of window sashes, skirting boards, radiators or the weight of anything. A result that says “36 in” does not mean a home is accessible or compliant with any law; a delivery check that passes does not guarantee a piece can be carried in by two people. Check the manufacturer's dimensions, your lease and local rules before buying, drilling or building.</p>
+<h2 id="privacy">Your plans stay with you</h2>
+<p>Plans you draw are stored only in your own browser (localStorage) and are never sent to us. You can export them as SVG or JSON. Details on advertising and analytics are in the <a href="/privacy/">privacy policy</a>.</p>
+<h2 id="history">History</h2>
+<p>The site was rebuilt in October 2026. The earlier standalone tools Room Fit, Storage Atlas and Shelf Measure are now part of the Clearance Planner and the Storage Wall Audit on this domain.</p>
+<p class="reviewed">Last reviewed: October 2026</p>`)
+  },
+  {
+    path: '/imprint/', title: 'Imprint – Small Space Compass', description: 'Legal notice for smallspacecompass.com under the Austrian E-Commerce Act and Media Act.',
+    crumbs: [['Imprint', '/imprint/']], ads: false,
+    body: sheet('Imprint', 'Legal notice', `<p>Information pursuant to § 5 Austrian E-Commerce Act (ECG), § 14 Austrian Commercial Code (UGB) and § 25 Austrian Media Act (MedienG).</p>
+<h2 id="owner">Owner and publisher</h2>
+<p>AdStern<br>Seilerstätte 8<br>1010 Vienna<br>Austria</p>
+<p>Email: <a href="mailto:office@adstern.com">office@adstern.com</a></p>
+<h2 id="business">Business details</h2>
+<ul><li>Business: advertising agency (Werbeagentur)</li>
+<li>VAT identification number: ATU54682507</li>
+<li>Supervisory authority: Magistratisches Bezirksamt für den 1./8. Bezirk, Vienna</li>
+<li>Membership: Vienna Chamber of Commerce (WKO Wien), Fachgruppe Werbung und Marktkommunikation</li>
+<li>Applicable trade regulations: Austrian Trade Regulation Act (Gewerbeordnung, GewO), available at the <a href="${RIS}" rel="noopener">Austrian Legal Information System (RIS)</a></li></ul>
+<h2 id="media">Editorial line</h2>
+<p>Small Space Compass publishes measured guides and free planning tools for small homes. The content is information for planning purposes and does not replace advice from an architect, contractor or the manufacturer of a product.</p>
+<h2 id="liability">Links and liability</h2>
+<p>We check external links when we publish and review a page, but we have no influence over the content of external sites and accept no responsibility for it. If you find a broken or problematic link, please tell us via the <a href="/contact/">contact page</a>.</p>
+<h2 id="odr">Online dispute resolution</h2>
+<p>This website does not sell goods or services to consumers.</p>`)
+  },
+  {
+    path: '/privacy/', title: 'Privacy policy – Small Space Compass', description: 'How smallspacecompass.com handles data: GitHub Pages hosting, Google AdSense advertising and consent, optional Google Analytics, plans stored only in your browser, and your rights.',
+    crumbs: [['Privacy', '/privacy/']], ads: false,
+    body: sheet('Privacy policy', 'Privacy', `<p>This policy explains what data is processed when you visit smallspacecompass.com, why, and what rights you have. Last updated: October 2026.</p>
+<h2 id="controller">Controller</h2>
+<p>AdStern, Seilerstätte 8, 1010 Vienna, Austria (full details in the <a href="/imprint/">imprint</a>).</p>
+<h2 id="hosting">Hosting</h2>
+<p>The site is a static website hosted on GitHub Pages, a service of GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA. When you load a page, your browser sends technical data such as your IP address, the requested address, date and time, browser type and referring page to GitHub's servers. GitHub processes this data to deliver the site and to protect its service, and may store it in log files for a limited time. The legal basis is our legitimate interest in a secure and reliable website (Art. 6(1)(f) GDPR). GitHub's own privacy statement is available at <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">docs.github.com</a>. Data transfers to the USA are based on the EU–U.S. Data Privacy Framework, under which GitHub is certified, or on standard contractual clauses.</p>
+<h2 id="plans">Your plans and inputs</h2>
+<p>Everything you enter into the planning tools – room sizes, furniture, door positions – is processed only in your own browser. Plans are saved in your browser's local storage so they are still there on your next visit; they are not sent to us or to anyone else. You can delete them at any time with the tool's reset button or by clearing your browser's site data. Files you export or import are handled entirely on your device.</p>
+<h2 id="ads">Advertising (Google AdSense)</h2>
+<p>Guide and tool pages show advertising from Google AdSense, a service of Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ireland (for users in the EEA and UK) and Google LLC, USA (elsewhere). AdSense uses cookies and similar technologies to show ads, limit how often you see them, measure their performance and prevent fraud.</p>
+<p><b>Third-party vendors, including Google, use cookies to serve ads based on a user's prior visits to this website or other websites.</b> Google's use of advertising cookies enables it and its partners to serve ads to you based on your visits to this and/or other sites on the internet.</p>
+<p>You can opt out of personalised advertising in Google's <a href="https://adssettings.google.com" rel="noopener">Ads Settings</a>. You can also opt out of the use of cookies by third-party vendors for personalised advertising at <a href="https://www.aboutads.info/choices/" rel="noopener">www.aboutads.info</a> or, in Europe, at <a href="https://www.youronlinechoices.eu/" rel="noopener">www.youronlinechoices.eu</a>. More information on how Google uses data is available at <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">policies.google.com/technologies/partner-sites</a>.</p>
+<p><b>Consent.</b> For visitors in the European Economic Area, the United Kingdom and Switzerland, a consent message from Google's certified consent management platform (IAB Transparency &amp; Consent Framework) asks for your choices before personalised ads or cookies that require consent are used. The legal basis is your consent (Art. 6(1)(a) GDPR, § 165(3) Austrian Telecommunications Act). If you do not consent, Google may still show non-personalised or limited ads as described in its documentation. You can change or withdraw your consent at any time with the <button type="button" class="linklike" data-privacy-settings style="color:inherit">Privacy settings</button> link, which is also in the footer of every page.</p>
+<h2 id="analytics">Analytics (Google Analytics 4)</h2>
+<p>We use Google Analytics 4 to understand which guides and tools are used, so we can improve them. In the EEA, UK and Switzerland, Google Analytics is loaded only after you have given consent for storing and accessing information on your device (TCF purpose 1) and for Google as a vendor in the consent message. Outside those regions, where no such consent is legally required, it is loaded directly. IP addresses are not stored by Google Analytics 4. The legal basis in Europe is your consent (Art. 6(1)(a) GDPR). Data may be transferred to Google LLC in the USA under the EU–U.S. Data Privacy Framework.</p>
+<h2 id="fonts">Fonts and other resources</h2>
+<p>The fonts (Archivo and IBM Plex Mono) are hosted on this website itself. No font, script or style is loaded from third-party content delivery networks except the Google advertising and analytics scripts described above.</p>
+<h2 id="email">Contacting us by email</h2>
+<p>If you write to us, we use your email address and message only to answer you, and delete them when they are no longer needed for that purpose, unless legal retention periods apply (Art. 6(1)(b) and (f) GDPR).</p>
+<h2 id="rights">Your rights</h2>
+<p>Under the GDPR you have the right of access (Art. 15), rectification (Art. 16), erasure (Art. 17), restriction of processing (Art. 18), data portability (Art. 20) and to object to processing based on legitimate interests (Art. 21). Where processing is based on consent, you can withdraw it at any time with effect for the future, for example with the Privacy settings link.</p>
+<p>Because we do not store any personal data about you ourselves, most requests concern Google; Google's privacy controls are available at <a href="https://myaccount.google.com/data-and-privacy" rel="noopener">myaccount.google.com</a>.</p>
+<p>You have the right to lodge a complaint with a supervisory authority. In Austria this is the Datenschutzbehörde (Austrian Data Protection Authority), Barichgasse 40–42, 1030 Vienna, Austria, <a href="https://www.dsb.gv.at/" rel="noopener">www.dsb.gv.at</a>. You can also contact the authority in your own country of residence.</p>
+<h2 id="us">Notice for U.S. residents</h2>
+<p>Some U.S. state privacy laws, including the California Consumer Privacy Act as amended by the CPRA, treat the use of advertising cookies for cross-context behavioural advertising as “selling” or “sharing” personal information. Where these laws apply, Google's consent management platform shows a “Do Not Sell or Share My Personal Information” message on this site, through which you can opt out. You can open it again at any time via the Privacy settings link. We do not sell personal information in any other way, and we do not knowingly collect personal information from children under 16.</p>
+<h2 id="changes">Changes</h2>
+<p>We will update this policy when the services used on the site change. The date at the top shows the latest version.</p>`)
+  },
+  {
+    path: '/contact/', title: 'Contact – Small Space Compass', description: 'How to reach Small Space Compass with corrections, measurement questions or feedback on the tools.',
+    crumbs: [['Contact', '/contact/']], ads: false,
+    body: sheet('Contact', 'Contact', `<p>Found a measurement that looks wrong, a source that has moved, or a bug in one of the tools? We read every message.</p>
+<p>Email: <a href="mailto:office@adstern.com">office@adstern.com</a></p>
+<h2 id="useful">What helps us</h2>
+<ul><li>The address of the page and the figure or sentence in question.</li>
+<li>For tool problems: your browser and device, and – if you are happy to share it – the exported plan JSON so we can reproduce the result.</li>
+<li>For corrections: the source you are relying on, ideally the primary document.</li></ul>
+<p>We cannot give individual design, building or accessibility advice for a specific home, and we do not accept paid placements or product samples.</p>
+<p>For legal details see the <a href="/imprint/">imprint</a>; for data handling see the <a href="/privacy/">privacy policy</a>.</p>`)
+  }
+];

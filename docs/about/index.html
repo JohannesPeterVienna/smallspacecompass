@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en" data-ads="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About Small Space Compass – method, sources and limits</title>
+<meta name="description" content="How Small Space Compass measures walkways, door swings and delivery routes, which published guidelines it uses, and what a geometric planning aid cannot tell you.">
+<link rel="canonical" href="https://smallspacecompass.com/about/">
+<meta name="google-adsense-account" content="ca-pub-7811071715414905">
+<meta property="og:type" content="website">
+<meta property="og:title" content="About Small Space Compass – method, sources and limits">
+<meta property="og:description" content="How Small Space Compass measures walkways, door swings and delivery routes, which published guidelines it uses, and what a geometric planning aid cannot tell you.">
+<meta property="og:url" content="https://smallspacecompass.com/about/">
+<meta property="og:site_name" content="Small Space Compass">
+<meta name="theme-color" content="#1C2127">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/assets/fonts/archivo-wdth.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/css/site.css?v=20261031">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://smallspacecompass.com/"},{"@type":"ListItem","position":2,"name":"About","item":"https://smallspacecompass.com/about/"}]}</script>
+<script type="module" src="/assets/js/site.js?v=20261031"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><div class="wrap"><a class="brand" href="/"><svg viewBox="0 0 34 34" aria-hidden="true"><rect x="1" y="1" width="32" height="32" fill="#F2C230" stroke="#EFF0EC" stroke-width="2"/><path d="M6 27V7h22" fill="none" stroke="#1C2127" stroke-width="3"/><path d="M6 27h4M6 22h2.5M6 17h4M6 12h2.5M11 7v4M16 7v2.5M21 7v4" stroke="#1C2127" stroke-width="1.6"/><path d="M13 27a14 14 0 0 1 14-14" fill="none" stroke="#1C2127" stroke-width="1.6" stroke-dasharray="2 2"/></svg><span>Small Space Compass</span></a><nav class="nav" aria-label="Main"><a href="/tools/clearance-planner/">Planner</a><a href="/tools/will-it-fit/">Will it fit?</a><a href="/layouts/">Layouts</a><a href="/guides/">Guides</a><a href="/about/" aria-current="page">About</a></nav></div></header>
+
+<main id="main"><div class="wrap">
+<ol class="crumbs"><li><a href="/">Home</a></li><li aria-current="page">About</li></ol>
+<article class="sheet" style="max-width:78ch" data-words><header class="titleblock"><span class="kicker">About &amp; method</span><h1>About Small Space Compass</h1></header><p class="lede">Small Space Compass is a small-space planning site built around one idea: in a small home, the space you need to <em>use</em> furniture matters as much as the furniture itself. Every guide states the measurements it relies on, and every tool checks movement – door swings, pull-out zones, walkways – not just whether the pieces fit on the floor.</p>
+<h2 id="who">Who runs the site</h2>
+<p>The site is published by AdStern, an advertising agency based in Vienna, Austria (see the <a href="/imprint/">imprint</a>). It is financed by advertising shown on guide and tool pages; no manufacturer or retailer pays for mentions, and there are no affiliate links.</p>
+<h2 id="method">How the measurements are chosen</h2>
+<p>Where a published guideline exists, we use it and link the primary document:</p>
+<ul><li><b>Walkways and doors:</b> the <a href="https://www.access-board.gov/ada/">2010 ADA Standards for Accessible Design</a> published by the U.S. Access Board – §403.5.1 (36 in clear width of walking surfaces), §404.2.3 (32 in door clear width and how to measure it), §304.3 (60 in turning space), §305.3 (30 × 48 in clear floor space) and §308 (15–48 in reach range).</li>
+<li><b>Kitchens and bathrooms:</b> the <a href="https://kb.nkba.org/uploads/2022/05/Kitchen-Planning-Guidelines.pdf">NKBA Kitchen Planning Guidelines</a> and <a href="https://kb.nkba.org/uploads/2022/05/Bath-Planning-Guidelines.pdf">Bathroom Planning Guidelines</a> of the National Kitchen &amp; Bath Association, which also cite the International Residential Code where a code minimum applies.</li>
+<li><b>Mattress sizes:</b> U.S. sizes as listed in <a href="https://casper.com/mattress-size-comparison/">Casper's size chart</a>, UK sizes as listed in <a href="https://www.silentnight.co.uk/guides/bed-mattress-size-guide">Silentnight's size guide</a>. Manufacturers vary by up to an inch, so always check the piece you are buying.</li></ul>
+<p>Where no published figure exists – the strip beside a bed, the depth of a drawer zone – we say that a number is a working assumption and explain how we arrived at it. Numbers we could not trace to a source are left out rather than repeated from other websites.</p>
+<h2 id="tools">How the tools calculate</h2>
+<p>The <a href="/tools/clearance-planner/">Clearance Planner</a> rasterises the floor into cells of about one inch, marks furniture, use zones and door swings as blocked, and computes an exact Euclidean distance transform – the distance from every free point to the nearest obstacle. A bottleneck search finds the route from the entry to each target whose narrowest point is as wide as possible; an A* search then picks the shortest route of that width. The narrowest point is re-measured exactly between the two surfaces that cause it. Door swings are quarter circles tested exactly against each rectangle.</p>
+<p>The <a href="/tools/will-it-fit/">delivery check</a> tests every orientation of a box through doorways using the exact condition for one rectangle fitting inside another, and evaluates the classic “moving a sofa around a corner” formula numerically, including tilting the item within the ceiling height. The geometry code is covered by automated tests that compare results with hand-calculated cases and closed-form solutions.</p>
+<h2 id="limits">Limits: a geometric aid only</h2>
+<p>The tools work with rectangles and quarter circles on a flat floor. They do not know about building codes, fire safety, structural loads, ventilation, wall anchors, the swing of window sashes, skirting boards, radiators or the weight of anything. A result that says “36 in” does not mean a home is accessible or compliant with any law; a delivery check that passes does not guarantee a piece can be carried in by two people. Check the manufacturer's dimensions, your lease and local rules before buying, drilling or building.</p>
+<h2 id="privacy">Your plans stay with you</h2>
+<p>Plans you draw are stored only in your own browser (localStorage) and are never sent to us. You can export them as SVG or JSON. Details on advertising and analytics are in the <a href="/privacy/">privacy policy</a>.</p>
+<h2 id="history">History</h2>
+<p>The site was rebuilt in October 2026. The earlier standalone tools Room Fit, Storage Atlas and Shelf Measure are now part of the Clearance Planner and the Storage Wall Audit on this domain.</p>
+<p class="reviewed">Last reviewed: October 2026</p></article>
+</div></main>
+<footer class="foot"><div class="wrap">
+<div><h2>Small Space Compass</h2><p>Small-space planning from the tape measure up: guides that state their measurements and tools that check whether you can still move once the furniture is in. A geometric aid only – check building rules and your own measurements before you buy or build.</p></div>
+<div><h2>Tools</h2><ul><li><a href="/tools/clearance-planner/">Clearance Planner</a></li><li><a href="/tools/will-it-fit/">Will It Fit? Delivery Check</a></li><li><a href="/tools/day-night-swap/">Day/Night Floor Swap</a></li><li><a href="/tools/storage-wall/">Storage Wall Audit</a></li><li><a href="/layouts/">Measured Layout Library</a></li></ul></div>
+<div><h2>Site</h2><ul><li><a href="/guides/">All guides</a></li><li><a href="/about/">About &amp; method</a></li><li><a href="/contact/">Contact</a></li><li><a href="/imprint/">Imprint</a></li><li><a href="/privacy/">Privacy</a></li><li><button type="button" class="linklike" data-privacy-settings>Privacy settings</button></li></ul></div>
+</div></footer>
+
+</body>
+</html>
