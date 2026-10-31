@@ -157,10 +157,10 @@ function toolPages() {
       ...(t.faq ? [{ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: t.faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a.replace(/<[^>]+>/g, '') } })) }] : [])],
     body: `<header class="titleblock"><span class="kicker">Free tool · runs in your browser</span><h1>${esc(t.h1)}</h1><p class="lede">${t.lede}</p></header>
 ${t.app}
-<div class="cols" style="margin-top:2.5rem"><article class="sheet" data-words>${t.body}
+<div class="tool-text" style="margin-top:2.5rem"><article class="sheet" data-words>${t.body}
 ${t.faq ? `<h2 id="faq">Frequently asked questions</h2><div class="faq">${t.faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><div><p>${a}</p></div></details>`).join('')}</div>` : ''}
 <div data-nocount>${t.sources ? `<h2 id="sources">Sources</h2><ol class="sources">${t.sources.map(([n, u, d]) => `<li><a href="${u}" rel="noopener">${esc(n)}</a>${d ? ' – ' + d : ''}</li>`).join('')}</ol>` : ''}<p class="reviewed">Last reviewed: ${REVIEWED}. Geometric aid only.</p></div></article>
-<aside class="aside">${ad('side')}</aside></div>`,
+${ad('inline')}</div>`,
     scripts: `<script type="module" src="/assets/js/${t.script}?v=${VERSION}"></script>`
   });
   page({
