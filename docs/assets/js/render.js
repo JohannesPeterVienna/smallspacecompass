@@ -111,7 +111,7 @@ export function elevationSVG(wall, units, opt = {}) {
   }
   o.push(`<line x1="${-pad}" x2="${W + pad}" y1="${H}" y2="${H}" class="floorline"/>`);
   o.push(dimLine(0, H, W, H, `${fmtLen(W, u)} wall`, 12));
-  o.push(dimLine(W, H, W, 0, `${fmtLen(H, u)}`, -12));
+  o.push(dimLine(W, H, W, 0, `${fmtLen(H, u)}`, 12));
   o.push('</svg>');
   return o.join('');
 }

@@ -28,7 +28,7 @@ export const LEGAL = [
   {
     path: '/imprint/', title: 'Imprint – Small Space Compass', description: 'Legal notice for smallspacecompass.com under the Austrian E-Commerce Act and Media Act.',
     crumbs: [['Imprint', '/imprint/']], ads: false,
-    body: sheet('Imprint', 'Legal notice', `<p>Information pursuant to § 5 Austrian E-Commerce Act (ECG), § 14 Austrian Commercial Code (UGB) and § 25 Austrian Media Act (MedienG).</p>
+    body: sheet('Imprint', 'Legal notice', `<p>Information pursuant to § 5 Austrian E-Commerce Act (ECG) and § 25 Austrian Media Act (MedienG).</p>
 <h2 id="owner">Owner and publisher</h2>
 <p>AdStern<br>Seilerstätte 8<br>1010 Vienna<br>Austria</p>
 <p>Email: <a href="mailto:office@adstern.com">office@adstern.com</a></p>

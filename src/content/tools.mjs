@@ -1,4 +1,6 @@
 const ADA = 'https://www.access-board.gov/ada/';
+// label text as one element (label.f is a grid) – the unit never breaks away from the last word
+const lab = (text) => { const i = text.lastIndexOf(' '); return `<span class="lb">${i < 0 ? '' : text.slice(0, i + 1)}<span class="nw">${text.slice(i + 1)}&nbsp;(<span data-unit-label>in</span>)</span></span>`; };
 const unitSeg = `<div class="seg" role="group" aria-label="Units"><button type="button" data-units="in" aria-pressed="true">in</button><button type="button" data-units="cm" aria-pressed="false">cm</button></div>`;
 const legend = `<div class="legend"><span><i class="sw route"></i>widest route from the entry</span><span><i class="sw zone"></i>use zone (chair, drawer, bedside)</span><span><i class="sw bad"></i>conflict</span><span>dashed arc: door swing</span></div>`;
 
@@ -9,7 +11,7 @@ const plannerApp = (mode) => `<section class="tool" data-planner data-mode="${mo
 <noscript><p class="status bad">The planner needs JavaScript. The measured layouts in the library work without it.</p></noscript></div>
 <div class="panel">
 <div class="row">${unitSeg}<select data-load aria-label="Load a measured layout"></select></div>
-<div class="fields"><label class="f">Room width (<span data-unit-label>in</span>)<input type="number" min="24" step="1" data-room-w></label><label class="f">Room depth (<span data-unit-label>in</span>)<input type="number" min="24" step="1" data-room-d></label></div>
+<div class="fields"><label class="f">${lab('Room width')}<input type="number" min="24" step="1" data-room-w></label><label class="f">${lab('Room depth')}<input type="number" min="24" step="1" data-room-d></label></div>
 <div data-report aria-live="polite"></div>
 <div class="row"><label class="sr" for="preset-${mode}">Furniture preset</label><select id="preset-${mode}" data-preset style="flex:1 1 180px"></select><button class="btn small" type="button" data-act="add">Add</button></div>
 <div data-editor class="item-editor"></div>
@@ -19,13 +21,13 @@ ${mode === 'plan' ? `<details class="more"><summary>Compare two versions</summar
 <p class="note-small" style="margin:0">Saved in this browser only (localStorage). Nothing is uploaded.</p>
 </div></section>`;
 
-const num = (name, label, val, extra = '') => `<label class="f">${label} (<span data-unit-label>in</span>)<input type="number" step="0.5" min="0" name="${name}" value="${val}" ${extra}></label>`;
+const num = (name, label, val, extra = '') => `<label class="f">${lab(label)}<input type="number" step="0.5" min="0" name="${name}" value="${val}" ${extra}></label>`;
 const deliveryApp = `<section class="tool" data-delivery aria-label="Delivery check">
 <div class="panel delivery-in">
 <div class="row">${unitSeg}</div>
 <h2>1 · The item (outside dimensions)</h2>
 <div class="row">${['sofa', 'loveseat', 'queenmattress', 'kingbox', 'wardrobe', 'fridge'].map(k => `<button class="btn small ghost" type="button" data-preset="${k}">${{ sofa: 'Sofa', loveseat: 'Loveseat', queenmattress: 'Queen mattress', kingbox: 'Box spring', wardrobe: 'Wardrobe', fridge: 'Fridge' }[k]}</button>`).join('')}</div>
-<div class="fields">${num('W', 'Length / width', 84)}${num('D', 'Depth', 37)}${num('H', 'Height', 34)}${num('diag', 'Diagonal depth (sofas)', 31)}</div>
+<div class="fields">${num('W', 'Length / width', 84)}${num('D', 'Depth', 35)}${num('H', 'Height', 34)}${num('diag', 'Diagonal depth (sofas)', 31)}</div>
 <label class="row note-small"><input type="checkbox" name="upright"> Must stay upright (wardrobe with glass, fridge)</label>
 <h2>2 · The route</h2>
 <fieldset><legend class="row note-small"><label><input type="checkbox" name="useDoor" checked> Entry door</label></legend><div class="fields">${num('doorW', 'Clear width', 32)}${num('doorH', 'Clear height', 80)}</div></fieldset>
@@ -40,7 +42,7 @@ const storageApp = `<section class="tool" data-storage aria-label="Storage wall 
 <div style="min-width:0"><div class="stage" data-wall></div><div data-bands class="table-scroll" style="margin-top:1rem"></div></div>
 <div class="panel">
 <div class="row">${unitSeg}<button class="btn small" type="button" data-act="add">Add unit</button><button class="btn small ghost" type="button" data-act="reset">Reset</button></div>
-<div class="fields"><label class="f">Wall width (<span data-unit-label>in</span>)<input type="number" data-wall-w step="1"></label><label class="f">Ceiling height (<span data-unit-label>in</span>)<input type="number" data-wall-h step="1"></label></div>
+<div class="fields"><label class="f">${lab('Wall width')}<input type="number" data-wall-w step="1"></label><label class="f">${lab('Ceiling height')}<input type="number" data-wall-h step="1"></label></div>
 <div data-unit class="item-editor"></div>
 <div data-divider class="item-editor"><h3>Equal compartments</h3><div class="fields"><label class="f">Inside opening<input type="number" name="opening" value="30" step="0.25"></label><label class="f">Compartments<input type="number" name="parts" value="3" min="1" max="20" step="1"></label><label class="f">Divider thickness<input type="number" name="thick" value="0.75" step="0.0625"></label></div><div data-div aria-live="polite"></div></div>
 <p class="note-small" style="margin:0">Saved in this browser only.</p></div>
@@ -106,7 +108,8 @@ export const TOOLS = [
 <li><b>Ceiling or headroom:</b> at the corner itself, including any light fitting or soffit.</li>
 <li><b>Item:</b> the outside dimensions with packaging if it arrives boxed; feet and cushions that can be removed can be left out.</li></ol>
 <h2 id="read">Reading the result</h2>
-<p>Each checkpoint shows whether it passes and how: which side leads, which side is vertical, how far the item has to be tilted and how much room is left. If a corner fails, the result says by how much the item is too long even when tilted within the ceiling height. That number tells you what to ask the retailer: a sofa with removable arms or legs, a split box spring, a modular or “sofa-in-a-box” design.</p>`,
+<p>Each checkpoint shows whether it passes and how: which side leads, which side is vertical, how far the item has to be tilted and how much room is left. If a corner fails, the result says by how much the item is too long even when tilted within the ceiling height. That number tells you what to ask the retailer: a sofa with removable arms or legs, a split box spring, a modular or “sofa-in-a-box” design.</p>
+<p>The form opens with a sofa that makes it: 84 in long, 35 in deep, 34 in high, 31 in diagonal depth, through a 32 in door and around a corner between two 36 in halls. Change the depth to 37 in – the <a href="/guides/will-my-sofa-fit-through-the-door/#example">worked example in the sofa guide</a> – and the same sofa still passes the door but fails at the hallway corner by about an inch. Those 2 in of depth are exactly what to ask the retailer about.</p>`,
     faq: [
       ['What is the diagonal depth of a sofa?', 'The distance from the top of the back frame to the front edge of the seat, measured in a straight line from the side. Many retailers list it; otherwise measure with a straightedge across the side profile.'],
       ['Does the check account for people carrying the item?', 'No. It checks the rigid geometry of a box with the dimensions you enter. Allow a couple of inches for hands, straps and packaging.'],

@@ -33,7 +33,7 @@ p,ul,ol,table,figure{margin:0 0 1.1em}
 .nav{margin-left:auto;display:flex;gap:.2rem;flex-wrap:wrap}
 .nav a{color:var(--paper);text-decoration:none;font:500 .82rem/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:.65rem .6rem;border:1px solid transparent}
 .nav a:hover,.nav a[aria-current]{border-color:var(--tape);background:none;color:var(--tape)}
-@media (max-width:760px){.nav{width:100%;margin:0 0 .6rem;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}.nav a{padding:.55rem .5rem;white-space:nowrap}}
+@media (max-width:760px){.nav{width:100%;margin:0 0 .6rem;flex-wrap:wrap;row-gap:.1rem}.nav a{padding:.55rem .5rem;white-space:nowrap}}
 /* layout */
 main{display:block;padding:1.4rem 0 3rem}
 .crumbs{font:500 .78rem/1.4 var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);margin:0 0 1rem;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:.3rem}
@@ -203,7 +203,7 @@ legend{padding:0}
 details.more summary{cursor:pointer;font:600 .8rem/1.2 var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:.4rem 0}
 
 article>h2:first-child,article>.ad+h2{margin-top:0}
-label.f span{white-space:nowrap}
+label.f span{white-space:nowrap}label.f span.lb{white-space:normal}
 @media (min-width:1000px){.delivery-in{order:2}.delivery-out{order:1}}
 /* reserve tool drawing space before JS renders (prevents layout shift) */
 [data-stage="plan"]:empty{aspect-ratio:354/281}

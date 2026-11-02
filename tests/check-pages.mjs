@@ -31,12 +31,20 @@ for (const p of all) {
   const desc = h.match(/<meta name="description" content="([^"]*)"/)?.[1] || '';
   if (desc.length < 50 || desc.length > 200) err(p.path, `description length ${desc.length}`);
   const can = h.match(/<link rel="canonical" href="([^"]+)"/)?.[1];
-  if (can !== 'https://smallspacecompass.com' + p.path) err(p.path, `canonical ${can}`);
+  if (p.path === '/404.html') { if (can) err(p.path, '404 page must not have a canonical'); }
+  else if (can !== 'https://smallspacecompass.com' + p.path) err(p.path, `canonical ${can}`);
   if (!h.includes('<html lang="en"')) err(p.path, 'lang');
   if (!h.includes('content="ca-pub-7811071715414905"')) err(p.path, 'adsense meta');
   const hasAdScript = h.includes('adsbygoogle.js');
   const slots = (h.match(/class="ad ad-/g) || []).length;
-  if (NO_AD.includes(p.path) && (hasAdScript || slots)) err(p.path, 'ads on a page that must have none');
+  if (NO_AD.includes(p.path) && slots) err(p.path, 'ad slot on a page that must have none');
+  if (NO_AD.includes(p.path) && p.path !== '/' && hasAdScript) err(p.path, 'ad script on a page that must have none');
+  if (p.path === '/') {
+    if (!hasAdScript) err(p.path, 'home page needs the AdSense loader (CMP)');
+    else if (h.indexOf('adsbygoogle.js') < h.indexOf("gtag('consent','default'")) err(p.path, 'AdSense loader before consent defaults');
+  }
+  // guides: the leaderboard comes after the H1 and the lede, never between menu and heading
+  if (/class="ad ad-leader"/.test(h) && h.indexOf('class="ad ad-leader"') < h.indexOf('class="lede"')) err(p.path, 'leaderboard above H1/lede');
   if (p.kind === 'layout' && (hasAdScript || slots)) err(p.path, 'ads on layout page');
   // tool pages: no ad inside the tool section
   const tool = h.match(/<section class="tool"[\s\S]*?<\/section>/)?.[0] || '';

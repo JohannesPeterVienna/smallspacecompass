@@ -31,11 +31,11 @@ function render() {
   const it = S.units.find(u => u.id === sel);
   $('[data-unit]').innerHTML = it ? `<h3>Selected: ${esc(it.label)}</h3><div class="fields">
 <label class="f">Label<input type="text" data-k="label" value="${esc(it.label)}"></label>
-<label class="f">From left (${units})<input type="number" step="0.5" data-k="x" value="${toU(it.x)}"></label>
-<label class="f">Width (${units})<input type="number" step="0.5" min="1" data-k="w" value="${toU(it.w)}"></label>
-<label class="f">Bottom (${units})<input type="number" step="0.5" min="0" data-k="bottom" value="${toU(it.bottom)}"></label>
-<label class="f">Top (${units})<input type="number" step="0.5" min="1" data-k="top" value="${toU(it.top)}"></label>
-<label class="f">Depth (${units})<input type="number" step="0.5" min="1" data-k="depth" value="${toU(it.depth)}"></label>
+<label class="f">From left&nbsp;(${units})<input type="number" step="0.5" data-k="x" value="${toU(it.x)}"></label>
+<label class="f">Width&nbsp;(${units})<input type="number" step="0.5" min="1" data-k="w" value="${toU(it.w)}"></label>
+<label class="f">Bottom&nbsp;(${units})<input type="number" step="0.5" min="0" data-k="bottom" value="${toU(it.bottom)}"></label>
+<label class="f">Top&nbsp;(${units})<input type="number" step="0.5" min="1" data-k="top" value="${toU(it.top)}"></label>
+<label class="f">Depth&nbsp;(${units})<input type="number" step="0.5" min="1" data-k="depth" value="${toU(it.depth)}"></label>
 <label class="f" style="grid-column:1/-1">Shelf heights above floor (${units}, comma separated)<input type="text" data-k="shelves" value="${it.shelves.map(toU).join(', ')}"></label></div>
 <div class="row"><button class="btn small ghost" type="button" data-act="del">Remove</button></div>` : '<p class="note-small">Select a unit in the drawing.</p>';
   $('[data-wall-w]').value = toU(S.wall.W); $('[data-wall-h]').value = toU(S.wall.H);

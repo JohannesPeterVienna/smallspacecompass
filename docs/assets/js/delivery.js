@@ -5,7 +5,7 @@ import { esc, dimLine } from './render.js';
 const app = document.querySelector('[data-delivery]');
 const $ = (s) => app.querySelector(s);
 const PRESET = {
-  sofa: { W: 84, D: 37, H: 34, diag: 31, label: 'Sofa (3-seat)' },
+  sofa: { W: 84, D: 35, H: 34, diag: 31, label: 'Sofa (3-seat)' },
   loveseat: { W: 62, D: 35, H: 33, diag: 30, label: 'Loveseat' },
   queenmattress: { W: 80, D: 60, H: 12, label: 'Queen mattress' },
   kingbox: { W: 80, D: 38, H: 9, label: 'Split-king box spring' },
@@ -46,7 +46,7 @@ function sketch(r, item) {
     }
     return `<svg class="fit" viewBox="${-pad - 16} ${-pad} ${W + 2 * pad + 32} ${H + 2 * pad}" role="img" aria-label="Doorway elevation with the item's cross-section" style="--fs:5px">
 <rect x="-12" y="-8" width="${W + 24}" height="${H + 8}" class="jamb"/><rect x="0" y="0" width="${W}" height="${H}" class="hole"/>${shape}
-${dimLine(0, H, W, H, fmtLen(W, units), 10)}${dimLine(W, H, W, 0, fmtLen(H, units), -10)}</svg>`;
+${dimLine(0, H, W, H, fmtLen(W, units), 10)}${dimLine(W, H, W, 0, fmtLen(H, units), 22)}</svg>`;
   }
   // plan of the corner with the item at its critical angle
   const a = cp.kind === 'landing' ? cp.width : cp.a, b = cp.kind === 'landing' ? cp.width : cp.b;

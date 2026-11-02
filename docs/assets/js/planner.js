@@ -66,13 +66,13 @@ function editor() {
   const u = units;
   ed.innerHTML = `<h3>Selected: ${esc(it.label)}</h3>
 <div class="fields"><label class="f">Label<input type="text" data-k="label" value="${esc(it.label)}"></label>
-<label class="f">Width (${u})<input type="number" min="1" step="0.5" data-k="w" value="${toU(it.w)}"></label>
-<label class="f">Depth (${u})<input type="number" min="1" step="0.5" data-k="d" value="${toU(it.d)}"></label>
-<label class="f">From left (${u})<input type="number" step="0.5" data-k="x" value="${toU(it.x)}"></label>
-<label class="f">From top (${u})<input type="number" step="0.5" data-k="y" value="${toU(it.y)}"></label>
-${(it.zones || []).map((z, i) => `<label class="f">${esc(z.kind)} zone (${u})<input type="number" min="0" step="1" data-z="${i}" value="${toU(z.depth)}"></label>`).join('')}
+<label class="f">Width&nbsp;(${u})<input type="number" min="1" step="0.5" data-k="w" value="${toU(it.w)}"></label>
+<label class="f">Depth&nbsp;(${u})<input type="number" min="1" step="0.5" data-k="d" value="${toU(it.d)}"></label>
+<label class="f">From left&nbsp;(${u})<input type="number" step="0.5" data-k="x" value="${toU(it.x)}"></label>
+<label class="f">From top&nbsp;(${u})<input type="number" step="0.5" data-k="y" value="${toU(it.y)}"></label>
+${(it.zones || []).map((z, i) => `<label class="f">${esc(z.kind)} zone&nbsp;(${u})<input type="number" min="0" step="1" data-z="${i}" value="${toU(z.depth)}"></label>`).join('')}
 ${MODE === 'swap' ? `<label class="f">Present<select data-k="only"><option value="">day + night</option><option value="day"${it.only === 'day' ? ' selected' : ''}>day only (folded at night)</option><option value="night"${it.only === 'night' ? ' selected' : ''}>night only</option></select></label>
-${it.ext ? `<label class="f">Unfolds by (${u})<input type="number" min="0" step="1" data-ext="depth" value="${toU(it.ext.depth)}"></label>` : ''}` : ''}</div>
+${it.ext ? `<label class="f">Unfolds by&nbsp;(${u})<input type="number" min="0" step="1" data-ext="depth" value="${toU(it.ext.depth)}"></label>` : ''}` : ''}</div>
 <label class="row note-small"><input type="checkbox" data-k="target"${it.target ? ' checked' : ''}> Measure the walkway to this piece</label>
 <div class="row"><button class="btn small ghost" type="button" data-act="rotate">Rotate 90°</button><button class="btn small ghost" type="button" data-act="dup">Duplicate</button><button class="btn small ghost" type="button" data-act="del">Remove</button></div>`;
 }
@@ -86,8 +86,8 @@ function doorsList() {
   const rows = [...(plan.doors || []).map((d, i) => ({ d, i, kind: 'door' })), ...(plan.windows || []).map((d, i) => ({ d, i, kind: 'window' }))];
   list.innerHTML = rows.map(({ d, i, kind }) => `<fieldset class="item-editor" data-${kind}="${i}"><legend class="note-small">${kind === 'door' ? (d.entry ? 'Entry door' : 'Door') : 'Window'} ${i + 1}</legend><div class="fields">
 <label class="f">Wall<select data-f="wall">${['N', 'E', 'S', 'W'].map(w => `<option value="${w}"${d.wall === w ? ' selected' : ''}>${{ N: 'top', E: 'right', S: 'bottom', W: 'left' }[w]}</option>`).join('')}</select></label>
-<label class="f">Offset (${units})<input type="number" step="0.5" min="0" data-f="offset" value="${toU(d.offset)}"></label>
-<label class="f">Width (${units})<input type="number" step="0.5" min="12" data-f="width" value="${toU(d.width)}"></label>
+<label class="f">Offset&nbsp;(${units})<input type="number" step="0.5" min="0" data-f="offset" value="${toU(d.offset)}"></label>
+<label class="f">Width&nbsp;(${units})<input type="number" step="0.5" min="12" data-f="width" value="${toU(d.width)}"></label>
 ${kind === 'door' ? `<label class="f">Swing<select data-f="swing"><option value="in"${d.swing === 'in' ? ' selected' : ''}>into room</option><option value="out"${d.swing === 'out' ? ' selected' : ''}>out of room</option><option value="none"${d.swing === 'none' ? ' selected' : ''}>opening / sliding</option></select></label>
 <label class="f">Hinge<select data-f="hinge"><option value="start"${d.hinge !== 'end' ? ' selected' : ''}>left/top end</option><option value="end"${d.hinge === 'end' ? ' selected' : ''}>right/bottom end</option></select></label>` : ''}
 </div><button class="btn small ghost" type="button" data-remove>Remove</button></fieldset>`).join('');

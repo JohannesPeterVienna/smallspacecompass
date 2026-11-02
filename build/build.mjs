@@ -15,7 +15,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'docs');
 const ORIGIN = 'https://smallspacecompass.com';
 const REVIEWED = 'October 2026';
-const VERSION = '20261031c';
+const VERSION = '20261102a';
 const pages = [];
 
 const NAV = [['/tools/clearance-planner/', 'Planner'], ['/tools/will-it-fit/', 'Will it fit?'], ['/layouts/', 'Layouts'], ['/guides/', 'Guides'], ['/about/', 'About']];
@@ -36,6 +36,8 @@ function layout(p) {
   if (crumbs.length) ld.push({ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [['Home', '/'], ...crumbs].map(([n, u], i) => ({ '@type': 'ListItem', position: i + 1, name: n, item: ORIGIN + u })) });
   if (p.ld) ld.push(...p.ld);
   const ads = p.ads === true;
+  // AdSense loader (and with it the Google CMP) also on pages without ad slots, e.g. the home page
+  const loader = ads || p.loader === true;
   const nav = NAV.map(([u, t]) => `<a href="${u}"${p.path.startsWith(u) ? ' aria-current="page"' : ''}>${t}</a>`).join('');
   return `<!doctype html>
 <html lang="en" data-ads="${ads ? 'yes' : 'no'}">
@@ -44,8 +46,7 @@ function layout(p) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(p.title)}</title>
 <meta name="description" content="${esc(p.description)}">
-<link rel="canonical" href="${url}">
-${p.noindex ? '<meta name="robots" content="noindex, follow">\n' : ''}<meta name="google-adsense-account" content="ca-pub-7811071715414905">
+${p.canonical === false ? '' : `<link rel="canonical" href="${url}">\n`}${p.noindex ? '<meta name="robots" content="noindex, follow">\n' : ''}<meta name="google-adsense-account" content="ca-pub-7811071715414905">
 <meta property="og:type" content="${p.ogType || 'website'}">
 <meta property="og:title" content="${esc(p.title)}">
 <meta property="og:description" content="${esc(p.description)}">
@@ -56,13 +57,12 @@ ${p.noindex ? '<meta name="robots" content="noindex, follow">\n' : ''}<meta name
 <link rel="preload" href="/assets/fonts/archivo-wdth.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/css/site.css?v=${VERSION}">
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});gtag('set','ads_data_redaction',true);window['ga-disable-G-T00HRG2YVF']=true;</script>
-${ads ? '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7811071715414905" crossorigin="anonymous"></script>\n' : ''}${ld.map(o => `<script type="application/ld+json">${JSON.stringify(o)}</script>`).join('\n')}
+${loader ? '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7811071715414905" crossorigin="anonymous"></script>\n' : ''}${ld.map(o => `<script type="application/ld+json">${JSON.stringify(o)}</script>`).join('\n')}
 <script type="module" src="/assets/js/site.js?v=${VERSION}"></script>
 ${p.head || ''}</head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <header class="top"><div class="wrap"><a class="brand" href="/">${LOGO}<span>Small Space Compass</span></a><nav class="nav" aria-label="Main">${nav}</nav></div></header>
-${ads && p.leader !== false ? `<div class="wrap">${ad('leader')}</div>` : ''}
 <main id="main"><div class="wrap">
 ${crumbs.length ? `<ol class="crumbs"><li><a href="/">Home</a></li>${crumbs.map(([n, u], i) => i === crumbs.length - 1 ? `<li aria-current="page">${esc(n)}</li>` : `<li><a href="${u}">${esc(n)}</a></li>`).join('')}</ol>` : ''}
 ${p.body}
@@ -100,6 +100,7 @@ function articlePage(a) {
     body: `<div class="cols"><article class="sheet" data-words>
 <header class="titleblock"><span class="kicker">${esc(a.kicker || 'Measured guide')}</span><h1>${esc(a.h1)}</h1><p class="lede">${a.lede}</p>
 <p class="meta"><span>Last reviewed: ${REVIEWED}</span><span>${a.readMin || Math.max(5, Math.round(a.body.replace(/<svg[\s\S]*?<\/svg>/g, '').replace(/<[^>]+>/g, ' ').split(/\s+/).length / 220))} min read</span><span>Units: in + cm</span></p></header>
+${ad('leader')}
 ${body}
 ${faq}
 ${a.tool ? `<div class="callout"><p><b>Check your own room:</b> ${a.tool}</p></div>` : ''}
@@ -145,14 +146,19 @@ function layoutPages() {
   page({
     path: '/layouts/', title: 'Measured Layout Library – small studio, bedroom and kitchen plans', description: 'Nine measured small-space floor plans with walkway widths, door swings and free-floor figures. Open any of them in the Clearance Planner and adapt it to your room.',
     crumbs: [['Layouts', '/layouts/']], ads: false,
-    body: `<header class="titleblock"><span class="kicker">Measured Layout Library</span><h1>Measured layouts you can open and edit</h1><p class="lede">Each plan below is drawn to the inch, with door swings, chair and drawer zones and the narrowest point on the way from the entry to the bed, desk and window. Use them as starting points: open one in the planner, type in your own wall lengths and see what changes.</p></header><div class="cards">${cards}</div>`
+    body: `<header class="titleblock"><span class="kicker">Measured Layout Library</span><h1>Measured layouts you can open and edit</h1><p class="lede">Each plan below is drawn to the inch, with door swings, chair and drawer zones and the narrowest point on the way from the entry to the bed, desk and window. Use them as starting points: open one in the planner, type in your own wall lengths and see what changes.</p></header>
+<div class="intro" style="max-width:74ch"><h2 id="read">How to read the plans</h2>
+<p>Every plan is measured on the inside faces of the walls and drawn at the same scale on its own page. Furniture appears as its real footprint; the lighter areas in front of it are use zones – the 32 in a desk chair rolls back, the 24 in strip beside a bed, the 18 in a dresser drawer needs, the arc of each door. The yellow line is the widest route from the entry to the bed, the desk and the window, and the marker sits where that route is narrowest. Each page lists that narrowest width in inches and centimeters and compares it with the 36 in clear width from §403.5.1 of the 2010 ADA Standards, used here as a reference line, not as a compliance test.</p>
+<p>Below the drawing you also find the floor area, the furniture footprint, the area taken by use zones and the free floor that is left, plus a short note on why the pieces sit where they do. The library covers six studios between 15 × 15 ft and 24 × 14 ft, two 12 × 10 ft bedrooms and a galley kitchen; the wall-bed and sofa-bed studios are checked twice, in their day and their night position.</p>
+<p>To adapt a plan, open it in the <a href="/tools/clearance-planner/">Clearance Planner</a> (or the <a href="/tools/day-night-swap/">Day/Night Floor Swap</a> for fold-away furniture), change the room size and the pieces to your own measurements and watch the route widths update. For the reasoning behind the numbers, start with the guide to <a href="/guides/studio-apartment-layouts/">studio apartment layouts</a>.</p></div>
+<div class="cards">${cards}</div>`
   });
 }
 
 /* ---------- tools ---------- */
 function toolPages() {
   for (const t of TOOLS) page({
-    path: t.path, title: t.title, description: t.description, ads: true, leader: false,
+    path: t.path, title: t.title, description: t.description, ads: true,
     crumbs: [['Tools', '/tools/'], [t.short, t.path]],
     ld: [{ '@context': 'https://schema.org', '@type': 'WebApplication', name: t.h1, url: ORIGIN + t.path, applicationCategory: 'DesignApplication', operatingSystem: 'Any (web browser)', offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' } },
       ...(t.faq ? [{ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: t.faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a.replace(/<[^>]+>/g, '') } })) }] : [])],
@@ -167,7 +173,11 @@ ${ad('inline')}</div>`,
   page({
     path: '/tools/', title: 'Free small-space planning tools – Small Space Compass', description: 'Four free browser tools that check clearances, delivery routes, fold-away furniture and storage by reach height. No account, nothing uploaded.',
     crumbs: [['Tools', '/tools/']], ads: false,
-    body: `<header class="titleblock"><span class="kicker">Tools</span><h1>Planning tools that check movement, not just footprints</h1><p class="lede">All four tools run entirely in your browser. Plans are kept on your device only and can be exported as SVG or JSON.</p></header><div class="cards">${TOOLS.map(t => `<a class="card" href="${t.path}"><span class="k">Tool</span><h3>${esc(t.h1)}</h3><p>${esc(t.description)}</p></a>`).join('')}<a class="card" href="/layouts/"><span class="k">Library</span><h3>Measured Layout Library</h3><p>Nine measured plans that open straight in the planner.</p></a></div>`
+    body: `<header class="titleblock"><span class="kicker">Tools</span><h1>Planning tools that check movement, not just footprints</h1><p class="lede">All four tools run entirely in your browser. Plans are kept on your device only and can be exported as SVG or JSON.</p></header>
+<div class="intro" style="max-width:74ch"><h2 id="which">Which tool answers which question</h2>
+<p>Use the <a href="/tools/clearance-planner/">Clearance Planner</a> when you are arranging a room: it draws furniture as measured rectangles, adds door swings and the space a chair, drawer or wardrobe door needs, then finds the widest route from the entry to the bed, desk and window and measures its narrowest point. Use <a href="/tools/will-it-fit/">Will It Fit?</a> before you order a sofa, mattress or wardrobe: it tests the item straight, on its side, on end and tilted through your door, around a 90° hallway corner and over a stair landing. The <a href="/tools/day-night-swap/">Day/Night Floor Swap</a> runs the planner's checks twice for wall beds, sofa beds and drop-leaf tables, once folded and once open. The <a href="/tools/storage-wall/">Storage Wall Audit</a> splits the volume of shelves and cabinets into what sits below 15 in, within the 15–48 in reach range and above it.</p>
+<p>All tools work in inches or centimeters and convert exactly. Measure the inside faces of walls and the clear width of doors with the door open 90°; the <a href="/guides/how-to-measure-a-room-for-furniture/">room measuring guide</a> shows where. The tools are geometric aids: they check rectangles, arcs and heights, not building codes, structural loads or how a piece is carried. Each tool page explains its method, its sources and its limits below the tool.</p></div>
+<div class="cards">${TOOLS.map(t => `<a class="card" href="${t.path}"><span class="k">Tool</span><h3>${esc(t.h1)}</h3><p>${esc(t.description)}</p></a>`).join('')}<a class="card" href="/layouts/"><span class="k">Library</span><h3>Measured Layout Library</h3><p>Nine measured plans that open straight in the planner.</p></a></div>`
   });
 }
 
@@ -184,7 +194,7 @@ ${Object.entries(groups).map(([g, list]) => `<h2>${esc(g)}</h2><div class="cards
   const hero = layoutBySlug['studio-20x15-queen-corner'];
   page({
     path: '/', title: 'Small Space Compass – small-space planning from the tape measure up', description: 'Free clearance planner, delivery check and measured guides for studios and small rooms. See door swings, chair pull-out zones and the narrowest point of every walkway.',
-    ads: false,
+    ads: false, loader: true,
     ld: [{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'Small Space Compass', url: ORIGIN + '/', inLanguage: 'en' }],
     body: `<section class="hero"><div><p class="titleblock"><span class="kicker">Small living, measured</span></p><h1>Will you still be able to walk through it?</h1>
 <p class="lede">Most room planners stop at “the bed fits on the floor”. Small Space Compass draws door swings, chair and drawer zones and the route from your door to the bed, desk and window – then measures its narrowest point and compares it with the 36 in clear width from the 2010 ADA Standards.</p>
@@ -226,7 +236,7 @@ toolPages();
 indexes();
 for (const l of LEGAL) page(l);
 redirects();
-write('/404.html', layout({ path: '/404.html', title: 'Page not found – Small Space Compass', description: 'The page you were looking for does not exist on smallspacecompass.com. It may have moved when the site was rebuilt.', noindex: true, ads: false,
+write('/404.html', layout({ path: '/404.html', title: 'Page not found – Small Space Compass', description: 'The page you were looking for does not exist on smallspacecompass.com. It may have moved when the site was rebuilt.', noindex: true, ads: false, canonical: false,
   body: `<div class="sheet" style="max-width:60ch"><h1>Nothing measured here.</h1><p>This address does not lead to a page. It may have moved when the site was rebuilt in October 2026.</p><p class="row"><a class="btn" href="/">Home</a><a class="btn ghost" href="/guides/">All guides</a><a class="btn ghost" href="/tools/clearance-planner/">Clearance Planner</a></p></div>` }));
 const sm = pages.filter(p => !p.noindex).map(p => `<url><loc>${ORIGIN}${p.path}</loc><lastmod>2026-10-31</lastmod></url>`).join('\n');
 writeFileSync(join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sm}\n</urlset>\n`);
