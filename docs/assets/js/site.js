@@ -46,6 +46,7 @@ const CM = { UNKNOWN: 0, GRANTED: 1, DENIED: 2, NOT_APPLICABLE: 3, NOT_CONFIGURE
 const US_DOES_NOT_APPLY = 1, US_NOT_OPTED_OUT = 2;
 const gtag = window.gtag || function () { (window.dataLayer = window.dataLayer || []).push(arguments); };
 const consent = { tc: null, cmReady: false, usOptOut: null, gppOptOut: false, last: '' };
+let lastTc = null;                                         // latest TCF data the CMP reported
 
 // 'yes' = TCF consent for purpose 1 + vendor 755, 'no' = anything else in the GDPR branch, 'outside' = GDPR does not apply
 function tcfSignal(tc) {
@@ -170,6 +171,7 @@ function watchConsent() {
       watchGpp();
       if (typeof window.__tcfapi === 'function') window.__tcfapi('addEventListener', 2, (tc, ok) => {
         consent.tc = ok ? tc : null;
+        if (ok && tc) lastTc = tc;                           // kept across the click-time withdrawal
         // after a new decision in the message the CMP's consent-mode values are current again
         if (ok && tc && tc.eventStatus === 'useractioncomplete' && typeof window.googlefc.getGoogleConsentModeValues === 'function') consent.cmReady = true;
         applyConsent();
@@ -189,15 +191,22 @@ function watchConsent() {
 }
 
 /* Where the CMP reports that a U.S. state privacy law applies, "Privacy settings" opens Google's U.S.
-   opt-out dialog ("Do Not Sell or Share"); everywhere else it reopens the consent message. */
+   opt-out dialog ("Do Not Sell or Share"); everywhere else it reopens the consent message.
+   The U.S. dialog opens only for a known U.S. status (NOT_OPTED_OUT or OPTED_OUT) and only when the latest
+   TCF data does not say the GDPR applies; UNKNOWN (0) or an EU visitor gets the consent message, so consent
+   can always be withdrawn. */
 const US_OPTED_OUT = 3;
 function openPrivacyChoice(before) {
   const fc = window.googlefc;
   const us = fc.usstatesoptout;
   if (us && typeof us.getInitialUsStatesOptOutStatus === 'function') {
-    const doesNotApply = us.InitialUsStatesOptOutStatusEnum && us.InitialUsStatesOptOutStatusEnum.DOES_NOT_APPLY !== undefined
-      ? us.InitialUsStatesOptOutStatusEnum.DOES_NOT_APPLY : US_DOES_NOT_APPLY;
-    if (us.getInitialUsStatesOptOutStatus() !== doesNotApply) {
+    const E = us.InitialUsStatesOptOutStatusEnum || {};
+    const notOptedOut = E.NOT_OPTED_OUT !== undefined ? E.NOT_OPTED_OUT : US_NOT_OPTED_OUT;
+    const optedOut = E.OPTED_OUT !== undefined ? E.OPTED_OUT : US_OPTED_OUT;
+    const tc = lastTc || (before && before.tc);
+    const gdpr = !!(tc && tc.gdprApplies === true);
+    const status = us.getInitialUsStatesOptOutStatus();
+    if ((status === notOptedOut || status === optedOut) && !gdpr) {
       us.openConfirmationDialog((userDidOptOut) => {
         if (userDidOptOut) {
           consent.usOptOut = US_OPTED_OUT;                    // ad personalisation and analytics stay denied

@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 let n = 0;
-async function loadPage(usStatus, { withEnum = true, gpp } = {}) {
+async function loadPage(usStatus, { withEnum = true, gpp, gdprApplies = false } = {}) {
   const calls = [], updates = [];
   let onClick = null, tcfListener = null;
   const us = {
@@ -42,7 +42,7 @@ async function loadPage(usStatus, { withEnum = true, gpp } = {}) {
     }
   };
   runQueue();
-  tcfListener({ gdprApplies: false, eventStatus: 'tcloaded' }, true);   // visitor outside the GDPR
+  tcfListener({ gdprApplies, eventStatus: 'tcloaded' }, true);   // visitor outside the GDPR
   return { calls, us, scripts, window: globalThis.window, runQueue, click: () => onClick(), last: () => updates[updates.length - 1] };
 }
 
@@ -73,6 +73,31 @@ test('U.S. state law does not apply: the consent (revocation) message opens', as
     const p = await loadPage(1, { withEnum });
     p.click(); p.runQueue();
     assert.deepEqual(p.calls, ['revocation']);
+  }
+});
+
+test('EU + status 0 (UNKNOWN) → consent (revocation) message, so consent can be withdrawn', async () => {
+  for (const withEnum of [true, false]) {
+    const p = await loadPage(0, { withEnum, gdprApplies: true });
+    p.click(); p.runQueue();
+    assert.deepEqual(p.calls, ['revocation']);
+  }
+});
+
+test('status 0 (UNKNOWN) outside the GDPR → consent message, not the U.S. dialog', async () => {
+  const p = await loadPage(0);
+  p.click(); p.runQueue();
+  assert.deepEqual(p.calls, ['revocation']);
+});
+
+test('U.S. status 2 or 3 → U.S. dialog; with gdprApplies → consent message', async () => {
+  for (const st of [2, 3]) {
+    const p = await loadPage(st);
+    p.click(); p.runQueue();
+    assert.deepEqual(p.calls, ['usDialog']);
+    const q = await loadPage(st, { gdprApplies: true });
+    q.click(); q.runQueue();
+    assert.deepEqual(q.calls, ['revocation']);
   }
 });
 

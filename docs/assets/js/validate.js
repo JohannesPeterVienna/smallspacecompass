@@ -90,6 +90,33 @@ export function validatePlan(p) {
   }
 }
 
+/* Repair for plans saved by an older version: after the room was made smaller, a door or window could
+   sit (partly) outside its wall, which validatePlan now rejects. Returns a copy with every opening
+   clamped onto its wall (width at most the wall length, offset from 0 to wall − width), or null when
+   nothing could be repaired. The result still has to pass validatePlan. Never throws. */
+export function repairPlan(p) {
+  try {
+    if (!isObj(p) || !isObj(p.room)) return null;
+    const W = p.room.W, D = p.room.D;
+    if (!num(W, LIMITS.roomMin, LIMITS.roomMax) || !num(D, LIMITS.roomMin, LIMITS.roomMax)) return null;
+    const out = JSON.parse(JSON.stringify(p));
+    let changed = false;
+    for (const k of ['doors', 'windows']) {
+      if (!Array.isArray(out[k])) continue;
+      for (const o of out[k]) {
+        if (!isObj(o) || !SIDES.includes(o.wall)) continue;
+        const len = o.wall === 'N' || o.wall === 'S' ? W : D;
+        if (typeof o.width === 'number' && Number.isFinite(o.width) && o.width > len) { o.width = len; changed = true; }
+        if (typeof o.offset === 'number' && Number.isFinite(o.offset) && typeof o.width === 'number' && Number.isFinite(o.width)) {
+          const c = Math.max(0, Math.min(len - o.width, o.offset));
+          if (c !== o.offset) { o.offset = c; changed = true; }
+        }
+      }
+    }
+    return changed ? out : null;
+  } catch (e) { return null; }
+}
+
 /* Validate a candidate in isolation and run the full analysis on it for every state the tool shows.
    Only if both succeed is the candidate safe to adopt (replace the current plan and save it). */
 export function preparePlan(candidate, states = [undefined], cell = 1) {

@@ -75,6 +75,36 @@ for (const width of [390, 1366]) {
   await p.evaluate(() => localStorage.setItem('ssc-planner-v1', JSON.stringify({ room: { W: 120, D: 120 }, items: [], doors: 'not-an-array', windows: [] })));
   await p.reload({ waitUntil: 'networkidle' });
   if (!/narrowest walkway/.test(await p.textContent('[data-report]'))) { fail++; console.log('✗ SSC02 corrupt saved plan broke the planner'); }
+  // SSC02: the old save is not overwritten; it can be discarded from the notice
+  if (await p.evaluate(() => localStorage.getItem('ssc-planner-v1')) !== JSON.stringify({ room: { W: 120, D: 120 }, items: [], doors: 'not-an-array', windows: [] })) { fail++; console.log('✗ SSC04 unloadable old save was overwritten'); }
+  if (!(await p.$('[data-stale-notice]'))) { fail++; console.log('✗ SSC04 no notice for an unloadable old save'); }
+  await p.focus('[data-stage] .item[data-id="desk"]'); await p.keyboard.press('ArrowLeft');
+  if (await p.evaluate(() => localStorage.getItem('ssc-planner-v1')) !== JSON.stringify({ room: { W: 120, D: 120 }, items: [], doors: 'not-an-array', windows: [] })) { fail++; console.log('✗ SSC04 edit overwrote the old save before it was discarded'); }
+  await p.click('[data-act="stale-discard"]');
+  const afterDiscard = await p.evaluate(() => JSON.parse(localStorage.getItem('ssc-planner-v1') || 'null'));
+  if (await p.$('[data-stale-notice]') || !afterDiscard || !Array.isArray(afterDiscard.doors)) { fail++; console.log('✗ SSC04 discarding the old save did not save the current plan'); }
+  // SSC04: a plan from the old version with a door outside the shrunk wall is repaired, not replaced
+  const oldPlan = { room: { W: 100, D: 90 }, items: [{ id: 'bedx', label: 'Bed', w: 60, d: 80, x: 0, y: 0 }], doors: [{ id: 'd1', label: 'door', wall: 'N', offset: 90, width: 30, entry: true }], windows: [] };
+  await p.evaluate((s) => localStorage.setItem('ssc-planner-v1', s), JSON.stringify(oldPlan));
+  await p.reload({ waitUntil: 'networkidle' });
+  const rep = await p.evaluate(() => JSON.parse(localStorage.getItem('ssc-planner-v1')));
+  if (!(await p.$('[data-stage] .item[data-id="bedx"]')) || rep?.doors?.[0]?.offset !== 70 || !(await p.$('[data-repaired-notice]'))) { fail++; console.log(`✗ SSC04 old plan not repaired (offset ${rep?.doors?.[0]?.offset})`); }
+  // SSC05: export a valid plan, change room.W by +12, import it again → applied (Clearance Planner and Day/Night Swap)
+  for (const [path, key] of [['/tools/clearance-planner/', 'ssc-planner-v1'], ['/tools/day-night-swap/', 'ssc-swap-v1']]) {
+    await p.goto(base + path, { waitUntil: 'networkidle' });
+    await p.evaluate((k) => localStorage.removeItem(k), key);
+    await p.reload({ waitUntil: 'networkidle' });
+    const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act="export-json"]')]);
+    const exported = JSON.parse(readFileSync(await dl.path(), 'utf8'));
+    const W0 = exported.room.W; exported.room.W = W0 + 12;
+    const alerts = []; const onDlg = (d) => alerts.push(d.message()); p.on('dialog', onDlg);
+    await p.setInputFiles('[data-file]', { name: 'plan.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(exported)) });
+    await p.waitForTimeout(300);
+    p.off('dialog', onDlg);
+    const stored = await p.evaluate((k) => JSON.parse(localStorage.getItem(k)), key);
+    const shownW = await p.inputValue('[data-room-w]');
+    if (alerts.length || stored?.room?.W !== W0 + 12 || +shownW !== W0 + 12) { fail++; console.log(`✗ SSC05 ${path} valid re-import not applied (W ${W0} → stored ${stored?.room?.W}, shown ${shownW}; ${alerts.join(' / ')})`); }
+  }
   // SSC03: 84 in → cm → reload must still be 84 in (shown as 213.4 cm)
   await p.goto(base + '/tools/will-it-fit/', { waitUntil: 'networkidle' });
   await p.evaluate(() => localStorage.removeItem('ssc-delivery-v2'));

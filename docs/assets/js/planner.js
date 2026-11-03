@@ -3,7 +3,9 @@ import { analyzePlan, findConflicts, fmtLen, CM, ADA_ROUTE } from './geometry.js
 import { planSVG, esc } from './render.js';
 import { PRESETS, presetByKey } from './catalog.js';
 import { layoutBySlug, LAYOUTS } from './layouts.js';
-import { preparePlan } from './validate.js';
+// namespace import: a cached older validate.js without repairPlan must not break the planner
+import * as VAL from './validate.js';
+const { preparePlan } = VAL;
 
 const app = document.querySelector('[data-planner]');
 const MODE = app.dataset.mode === 'swap' ? 'swap' : 'plan';
@@ -15,22 +17,36 @@ const ROT = { N: 'E', E: 'S', S: 'W', W: 'N' };
 const states = () => MODE === 'swap' ? ['day', 'night'] : [undefined];
 const DEFAULT = MODE === 'swap' ? layoutBySlug['studio-15x15-wall-bed'] : layoutBySlug['studio-20x15-queen-corner'];
 let plan, units = 'in', sel = null, snaps = { A: null, B: null }, results = {}, good = null, notice = '';
+// stale: the raw saved plan from an older version that could not be loaded or repaired. While it is set,
+// nothing is saved, so the old save stays untouched until the visitor downloads or discards it.
+// repaired: the saved plan was loaded after clamping doors/windows back onto their walls.
+let stale = null, repaired = false;
 
 // A candidate plan is validated in isolation and fully analysed before it replaces the current plan.
 // Only then is it adopted and saved, so a broken import or edit can never overwrite the last good plan.
 function adopt(candidate) {
   const r = preparePlan(candidate, states());
   if (!r.ok) return r;
-  plan = r.plan; results = r.results; good = JSON.stringify(plan); notice = ''; save();
+  plan = r.plan; results = r.results; good = JSON.stringify(plan); notice = ''; repaired = false; save();
   return r;
 }
 function load() {
   const q = new URLSearchParams(location.search).get('layout');
   if (q && layoutBySlug[q] && adopt(clone(layoutBySlug[q])).ok) return;
-  try { const s = localStorage.getItem(STORE); if (s && adopt(JSON.parse(s)).ok) return; } catch (e) { /* storage blocked or not JSON */ }
+  let raw = null;
+  try { raw = localStorage.getItem(STORE); } catch (e) { /* storage blocked */ }
+  if (raw) {
+    let saved = null;
+    try { saved = JSON.parse(raw); } catch (e) { /* not JSON */ }
+    if (saved !== null && adopt(saved).ok) return;
+    // an older version could leave doors/windows outside a wall that was shrunk later: clamp them back onto the wall
+    const fixed = typeof VAL.repairPlan === 'function' ? VAL.repairPlan(saved) : null;
+    if (fixed && adopt(fixed).ok) { repaired = true; return; }
+    stale = raw;                                    // keep the old save; load the default without overwriting it
+  }
   adopt(clone(DEFAULT));
 }
-function save() { try { localStorage.setItem(STORE, good); } catch (e) { /* ignore */ } }
+function save() { if (stale !== null) return; try { localStorage.setItem(STORE, good); } catch (e) { /* ignore */ } }
 const toU = (inch) => units === 'cm' ? +(inch * CM).toFixed(1) : +inch.toFixed(1);
 const fromU = (v) => units === 'cm' ? v / CM : v;
 
@@ -64,7 +80,10 @@ function report() {
 ${hard.map(c => `<li><span class="dot bad"></span>${esc(c.msg)}</li>`).join('')}${warn.map(c => `<li><span class="dot warn"></span>${esc(c.msg)}</li>`).join('')}</ul>
 <p class="note-small" style="margin:.6rem 0 0">Floor ${ft(a.area)} · furniture ${ft(a.footprint)} · use zones ${ft(a.zones)} · free ${ft(a.free)} (${Math.round(a.freePct * 100)}%)</p></div>`);
   }
-  box.innerHTML = (notice ? `<p class="status bad" role="alert">Change not applied: ${esc(notice)}. The last valid plan is kept.</p>` : '') + parts.join('');
+  const staleBox = stale !== null ? `<div class="status bad" role="alert" data-stale-notice><p style="margin:0">Your saved plan from an earlier visit could not be loaded, so the example plan is shown. The old save is still stored in this browser and is not overwritten – changes here are not saved until you discard it.</p>
+<div class="row"><button class="btn small ghost" type="button" data-act="stale-download">Download old save</button><button class="btn small ghost" type="button" data-act="stale-discard">Discard old save</button></div></div>` : '';
+  const repairedBox = repaired ? `<p class="status" role="status" data-repaired-notice>Your saved plan was loaded. A door or window lay outside its wall (the room had been made smaller) and was moved back onto the wall – please check the openings.</p>` : '';
+  box.innerHTML = staleBox + repairedBox + (notice ? `<p class="status bad" role="alert">Change not applied: ${esc(notice)}. The last valid plan is kept.</p>` : '') + parts.join('');
 }
 function editor() {
   const ed = $('[data-editor]'), it = plan.items.find(i => i.id === sel);
@@ -168,13 +187,19 @@ app.addEventListener('click', (e) => {
     download(svgs[0].replace(/(<svg[^>]*>)/, `$1${css}`), 'plan.svg', 'image/svg+xml');
   }
   else if (act === 'import') $('[data-file]').click();
+  else if (act === 'stale-download' && stale !== null) download(stale, 'old-saved-plan.json', 'application/json');
+  else if (act === 'stale-discard' && stale !== null) {
+    if (!confirm('Discard the old saved plan? It cannot be restored afterwards.')) return;
+    stale = null; try { localStorage.removeItem(STORE); } catch (e) { /* ignore */ }
+    save(); report();
+  }
   else if (act === 'snap-a' || act === 'snap-b') { const k = act === 'snap-a' ? 'A' : 'B'; snaps[k] = { plan: clone(plan), r: summary() }; compare(); }
   else if (act === 'load-a' && snaps.A) { if (adopt(clone(snaps.A.plan)).ok) { render(true, true); roomFields(); } }
   else if (act === 'load-b' && snaps.B) { if (adopt(clone(snaps.B.plan)).ok) { render(true, true); roomFields(); } }
 });
 $('[data-file]').addEventListener('change', async (e) => {
   const f = e.target.files[0]; if (!f) return;
-  try { const p = JSON.parse(await f.text()); if (!valid(p)) throw new Error('not a plan'); const r = adopt({ room: p.room, doors: p.doors, windows: p.windows, items: p.items }); if (!r.ok) throw new Error(r.error); sel = null; render(true, true); roomFields(); }
+  try { const p = JSON.parse(await f.text()); if (!p || typeof p !== 'object') throw new Error('not a plan'); const r = adopt({ room: p.room, doors: p.doors, windows: p.windows, items: p.items }); if (!r.ok) throw new Error(r.error); sel = null; render(true, true); roomFields(); }
   catch (err) { alert(`This file is not a valid Small Space Compass plan (JSON)${err && err.message ? ': ' + err.message : ''}. Your current plan is unchanged.`); }
   e.target.value = '';
 });

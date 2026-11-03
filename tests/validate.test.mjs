@@ -93,3 +93,20 @@ test('Storage wall: negative or zero physical values are rejected in JS', () => 
   assert.equal(V.validStorage({ wall: { W: 120, H: 96 }, units: [unit] }), false);
   assert.equal(V.validStorage({ wall: { W: 120, H: 96 }, units: [{ ...unit, w: 24 }] }), true);
 });
+
+test('SSC04: an old saved plan with openings outside a shrunk wall is repaired by clamping, then validates', () => {
+  const old = { room: { W: 100, D: 90 }, items: [], doors: [{ id: 'd1', wall: 'N', offset: 90, width: 30, entry: true }], windows: [{ id: 'w1', wall: 'E', offset: -4, width: 120 }] };
+  assert.equal(V.validatePlan(old).ok, false);
+  const fixed = V.repairPlan(old);
+  assert.ok(fixed);
+  assert.equal(fixed.doors[0].offset, 70);
+  assert.equal(fixed.windows[0].width, 90); assert.equal(fixed.windows[0].offset, 0);
+  assert.equal(V.validatePlan(fixed).ok, true);
+  assert.equal(old.doors[0].offset, 90, 'the input is not modified');
+  // nothing to clamp or not repairable → null; repairs that leave the plan invalid fail validation
+  assert.equal(V.repairPlan({ room: { W: 100, D: 90 }, items: [], doors: [{ wall: 'N', offset: 10, width: 30 }] }), null);
+  assert.equal(V.repairPlan(null), null);
+  assert.equal(V.repairPlan({ room: { W: 'x', D: 90 }, items: [] }), null);
+  const stillBad = V.repairPlan({ room: { W: 100, D: 90 }, items: 'nope', doors: [{ wall: 'N', offset: 90, width: 30 }] });
+  assert.equal(V.validatePlan(stillBad).ok, false);
+});
