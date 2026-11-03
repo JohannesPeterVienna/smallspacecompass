@@ -120,13 +120,42 @@ function watchConsent() {
   applyConsent();                                            // start from the denied state
 }
 
+/* Where the CMP reports that a U.S. state privacy law applies, "Privacy settings" opens Google's U.S.
+   opt-out dialog ("Do Not Sell or Share"); everywhere else it reopens the consent message. */
+const US_OPTED_OUT = 3;
+function openPrivacyChoice(before) {
+  const fc = window.googlefc;
+  const us = fc.usstatesoptout;
+  if (us && typeof us.getInitialUsStatesOptOutStatus === 'function') {
+    const doesNotApply = us.InitialUsStatesOptOutStatusEnum && us.InitialUsStatesOptOutStatusEnum.DOES_NOT_APPLY !== undefined
+      ? us.InitialUsStatesOptOutStatusEnum.DOES_NOT_APPLY : US_DOES_NOT_APPLY;
+    if (us.getInitialUsStatesOptOutStatus() !== doesNotApply) {
+      us.openConfirmationDialog((userDidOptOut) => {
+        if (userDidOptOut) {
+          consent.usOptOut = US_OPTED_OUT;                    // ad personalisation and analytics stay denied
+        } else {
+          try { consent.usOptOut = us.getInitialUsStatesOptOutStatus(); } catch (e) { consent.usOptOut = null; }
+          // no opt-out: bring back the signals withdrawn on click, unless the CMP has reported new ones meanwhile
+          if (consent.tc === null && !consent.cmReady) { consent.tc = before.tc; consent.cmReady = before.cmReady; }
+        }
+        applyConsent();
+      });
+      return;
+    }
+  }
+  fc.showRevocationMessage();
+}
+
 function privacyLinks() {
   document.querySelectorAll('[data-privacy-settings]').forEach((b) => b.addEventListener('click', () => {
     window.googlefc = window.googlefc || {};
     window.googlefc.callbackQueue = window.googlefc.callbackQueue || [];
     // withdrawing: deny and disable at once; the CMP then reports the new decision through the listeners above
+    const before = { tc: consent.tc, cmReady: consent.cmReady };
     consent.tc = null; consent.cmReady = false; applyConsent();
-    window.googlefc.callbackQueue.push(() => window.googlefc.showRevocationMessage());
+    window.googlefc.callbackQueue.push(() => {
+      try { openPrivacyChoice(before); } catch (e) { /* CMP not available */ }
+    });
     // pages without ads do not load the ad script up front; load it only when the visitor asks for the consent tool
     if (!document.querySelector('script[src*="adsbygoogle.js"]')) {
       const s = document.createElement('script');
