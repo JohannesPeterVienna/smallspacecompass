@@ -30,12 +30,24 @@ function adopt(candidate) {
   plan = r.plan; results = r.results; good = JSON.stringify(plan); notice = ''; repaired = false; save();
   return r;
 }
+// true when a saved plan can be loaded as it is or after the opening repair (checked without saving anything)
+function savedUsable(raw) {
+  let saved = null;
+  try { saved = JSON.parse(raw); } catch (e) { return false; }
+  if (saved !== null && preparePlan(saved, states()).ok) return true;
+  const fixed = typeof VAL.repairPlan === 'function' ? VAL.repairPlan(saved) : null;
+  return !!(fixed && preparePlan(fixed, states()).ok);
+}
 function load() {
-  const q = new URLSearchParams(location.search).get('layout');
-  if (q && layoutBySlug[q] && adopt(clone(layoutBySlug[q])).ok) return;
   let raw = null;
   try { raw = localStorage.getItem(STORE); } catch (e) { /* storage blocked */ }
-  if (raw) {
+  const q = new URLSearchParams(location.search).get('layout');
+  if (q && layoutBySlug[q]) {
+    // a layout link never silently replaces an old save that could not be loaded: keep it until discarded
+    if (raw && !savedUsable(raw)) stale = raw;
+    if (adopt(clone(layoutBySlug[q])).ok) return;
+  }
+  if (raw && stale === null) {
     let saved = null;
     try { saved = JSON.parse(raw); } catch (e) { /* not JSON */ }
     if (saved !== null && adopt(saved).ok) return;
