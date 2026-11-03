@@ -53,7 +53,7 @@ export const TOOLS = [
     path: '/tools/clearance-planner/', short: 'Clearance Planner', script: 'planner.js',
     title: 'Clearance Planner – check walkways, door swings and chair space in your room',
     description: 'Free room planner that measures the narrowest walkway from your door to the bed, desk and window, draws door swings and chair, drawer and wardrobe zones, and flags every conflict.',
-    h1: 'Clearance Planner', lede: 'Draw the room, drop in measured furniture and see whether you can still walk through it. The planner finds the widest route from the entry to every bed, desk and window, marks its narrowest point and compares it with 36 in (915 mm).',
+    h1: 'Clearance Planner', lede: 'Draw the room, drop in measured furniture and see whether you can still walk through it. The planner finds the widest route from the entry to every bed, desk and window, marks its narrowest point and compares it with 36 in (915 mm) – the ADA 2010 §403.5.1 clear width for walking surfaces on accessible routes, used here as a width reference, not as a full accessibility assessment.',
     app: plannerApp('plan'),
     body: `<h2 id="how">How the planner measures a walkway</h2>
 <p>Most free room planners answer one question: does the furniture fit on the floor? That is the easy part. The hard part is the space you need to use the furniture and to get past it – the arc of the door as it swings open, the 30-odd inches a desk chair rolls back, the strip beside a bed you need for making it, the drawer that has to come out of a dresser. The Clearance Planner draws all of those as zones, then measures the space that is left.</p>
@@ -61,7 +61,7 @@ export const TOOLS = [
 <p>Next it searches for a route from the entry door to each target – every piece you marked “measure the walkway to this piece”, plus every window. It does not take the shortest route but the <em>widest</em> one: the route whose narrowest point is as wide as possible (a so-called bottleneck path). Among all routes of that width it then takes the shortest, using an A* search, and draws it in yellow. The point where the route is tightest gets a marker, and the planner measures the gap there once more, exactly, between the two surfaces that cause it. That figure is what you see in the result box.</p>
 <p>The target itself and its own use zone are not treated as obstacles on the way to it – you are walking <em>to</em> the desk chair space, not around it. Use zones marked as walk-through, like the strip beside a bed or the work aisle in front of a counter, never block a route: you can stand in them, you just should not put furniture there.</p>
 <h2 id="threshold">Why 36 inches is the reference line</h2>
-<p>The planner compares every walkway with the 36 in (915 mm) minimum clear width for walking surfaces in section 403.5.1 of the <a href="${ADA}#ada-403_5_1">2010 ADA Standards for Accessible Design</a>. Private homes are generally not required to meet those standards, and the planner does not claim they are. The number is used because it is a published, measured width that lets one adult walk past furniture without turning sideways, and the same 36 in figure appears as the recommended walkway width in the <a href="https://kb.nkba.org/uploads/2022/05/Kitchen-Planning-Guidelines.pdf">NKBA Kitchen Planning Guidelines</a> (guideline 7). The standards also allow short pinch points: 32 in for no more than 24 in of length. If your narrowest point is a short squeeze past a nightstand, the planner will still show it below 36 in – you decide whether that is acceptable for you.</p>
+<p>The planner compares every walkway with the 36 in (915 mm) minimum clear width for walking surfaces in section 403.5.1 of the <a href="https://www.access-board.gov/ada/chapter/ch04/">2010 ADA Standards for Accessible Design</a>. That section sets the clear width of walking surfaces that are part of an accessible route (chapter 4, accessible routes). Private homes are generally not required to meet those standards, and the planner does not claim they are: it checks one width against this reference and is not a full accessibility assessment. The number is used because it is a published, measured width that lets one adult walk past furniture without turning sideways, and the same 36 in figure appears as the recommended walkway width in the <a href="https://kb.nkba.org/uploads/2022/05/Kitchen-Planning-Guidelines.pdf">NKBA Kitchen Planning Guidelines</a> (guideline 7). The standards also allow short pinch points: 32 in for no more than 24 in of length. If your narrowest point is a short squeeze past a nightstand, the planner will still show it below 36 in – you decide whether that is acceptable for you.</p>
 <h2 id="zones">Default use zones</h2>
 <p>Every preset comes with a zone that you can change once the piece is selected. They are working assumptions for planning, not code requirements:</p>
 <div class="table-scroll"><table class="data"><thead><tr><th>Piece</th><th>Zone</th><th>Default depth</th><th>Why</th></tr></thead><tbody>
@@ -85,7 +85,7 @@ export const TOOLS = [
       ['Can I use centimeters?', 'Yes. Use the in/cm switch. All inputs and results change unit; the stored plan keeps full precision.'],
       ['Does a result of 36 in mean my home is accessible?', 'No. 36 in is a reference taken from ADA 2010 §403.5.1. Accessibility also depends on turning space, door hardware, thresholds and much more that the planner does not model.']
     ],
-    sources: [['2010 ADA Standards for Accessible Design, §403.5.1, §404.2.3 (U.S. Access Board)', ADA + '#ada-403_5_1'], ['NKBA Kitchen Planning Guidelines with Access Standards (PDF)', 'https://kb.nkba.org/uploads/2022/05/Kitchen-Planning-Guidelines.pdf', 'guidelines 6, 7 and 8']]
+    sources: [['2010 ADA Standards for Accessible Design, §403.5.1, §404.2.3 (U.S. Access Board)', 'https://www.access-board.gov/ada/chapter/ch04/'], ['NKBA Kitchen Planning Guidelines with Access Standards (PDF)', 'https://kb.nkba.org/uploads/2022/05/Kitchen-Planning-Guidelines.pdf', 'guidelines 6, 7 and 8']]
   },
   {
     path: '/tools/will-it-fit/', short: 'Will It Fit?', script: 'delivery.js',
@@ -145,7 +145,7 @@ export const TOOLS = [
       ['Can I use it for a normal room without fold-away furniture?', 'Yes, but the Clearance Planner is simpler for that because it shows a single plan.'],
       ['Is the plan shared with the Clearance Planner?', 'No. Each tool keeps its own plan in your browser so that you can work on both. Use JSON export and import to move a plan between them.']
     ],
-    sources: [['Casper mattress size comparison (U.S. mattress sizes)', 'https://casper.com/mattress-size-comparison/'], ['2010 ADA Standards, §403.5.1 Clear Width', ADA + '#ada-403_5_1']]
+    sources: [['Casper mattress size comparison (U.S. mattress sizes)', 'https://casper.com/mattress-size-comparison/'], ['2010 ADA Standards, §403.5.1 Clear Width', 'https://www.access-board.gov/ada/chapter/ch04/']]
   },
   {
     path: '/tools/storage-wall/', short: 'Storage Wall Audit', script: 'storage.js',

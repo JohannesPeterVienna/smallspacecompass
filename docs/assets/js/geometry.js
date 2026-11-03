@@ -424,9 +424,15 @@ export function cornerMaxLength(a, b, w, steps = 1800) {
   return { L: best, theta: th };
 }
 // Tilting the long axis up shortens the plan length: Lp = L cosφ + t sinφ, needs L sinφ + t cosφ ≤ H.
-export function cornerPass(L, w, t, a, b, H, steps = 900) {
+// noTilt: the item must stay upright, so the long axis may not be tilted up (φ = 0 only).
+export function cornerPass(L, w, t, a, b, H, steps = 900, noTilt = false) {
   const lim = cornerMaxLength(a, b, w);
   if (lim.L === 0) return { pass: false, reason: 'width', need: w, lim };
+  if (noTilt) {
+    if (t > H + EPS) return { pass: false, reason: 'height', margin: H - t, phi: 0, lim };
+    const m = lim.L - L;
+    return { pass: m >= -EPS, margin: m, phi: 0, lim };
+  }
   let bestMargin = -Infinity, bestPhi = 0;
   for (let i = 0; i <= steps; i++) {
     const phi = (i / steps) * Math.PI / 2;
@@ -447,15 +453,22 @@ export function deliveryCheck(item, checkpoints) {
   const results = checkpoints.map(cp => {
     const opts = [];
     for (const [li, wi, ti] of ORIENT) {
-      if (item.upright && ti !== 2 && li !== 2) continue; // height must stay vertical (thickness) or be the tilted long axis
+      // upright: the original height axis must stay vertical – only rotations about the vertical axis
+      // (no tipping, no tilting in the door plane, no tilting the long axis up in a corner)
+      if (item.upright && ti !== 2) continue;
       const L = dims[li], w = dims[wi], t = dims[ti];
       const label = `${names[li]} leading, ${names[ti]} vertical`;
       if (cp.kind === 'door') {
-        const ok = rectFitsRect(w, t, cp.width, cp.height);
-        opts.push({ ok, L, w, t, label, margin: Math.min(cp.width - Math.min(w, t), cp.height - Math.max(w, t)) });
+        if (item.upright) {
+          const ok = w <= cp.width + EPS && t <= cp.height + EPS;
+          opts.push({ ok, L, w, t, label, upright: true, margin: Math.min(cp.width - w, cp.height - t) });
+        } else {
+          const ok = rectFitsRect(w, t, cp.width, cp.height);
+          opts.push({ ok, L, w, t, label, margin: Math.min(cp.width - Math.min(w, t), cp.height - Math.max(w, t)) });
+        }
       } else {
         const a = cp.kind === 'landing' ? cp.width : cp.a, b = cp.kind === 'landing' ? cp.width : cp.b;
-        const r = cornerPass(L, w, t, a, b, cp.height);
+        const r = cornerPass(L, w, t, a, b, cp.height, 900, !!item.upright);
         opts.push({ ok: r.pass, L, w, t, label, margin: r.margin, phi: r.phi, theta: r.lim.theta, limit: r.lim.L });
       }
     }

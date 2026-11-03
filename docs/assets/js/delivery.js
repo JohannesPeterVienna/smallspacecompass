@@ -1,6 +1,7 @@
 /* Will It Fit? Delivery Check */
-import { deliveryCheck, fmtLen, CM } from './geometry.js';
+import { deliveryCheck, fmtLen } from './geometry.js';
 import { esc, dimLine } from './render.js';
+import { DELIVERY_STORE, DELIVERY_STORE_V1, DELIVERY_LENGTHS, DELIVERY_CHECKS, encodeDelivery, decodeDelivery, toDisplay, fromDisplay } from './validate.js';
 
 const app = document.querySelector('[data-delivery]');
 const $ = (s) => app.querySelector(s);
@@ -12,20 +13,29 @@ const PRESET = {
   wardrobe: { W: 40, D: 24, H: 78, upright: true, label: 'Wardrobe (kept upright)' },
   fridge: { W: 30, D: 31, H: 68, upright: true, label: 'Fridge (kept upright)' }
 };
-const STORE = 'ssc-delivery-v1';
+// Lengths are kept canonically in inches at full precision; inputs only show them rounded in the chosen unit.
 let units = 'in';
-const toU = (v) => units === 'cm' ? +(v * CM).toFixed(1) : v;
-const fromU = (v) => units === 'cm' ? v / CM : v;
+const LEN = {};
+const LABEL = { W: 'Length / width', D: 'Depth', H: 'Height', diag: 'Diagonal depth', doorW: 'Entry door clear width', doorH: 'Entry door clear height', hallA: 'Hall width before', hallB: 'Hall width after', hallH: 'Ceiling height', stairW: 'Stair / landing width', stairH: 'Headroom at turn', door2W: 'Room door clear width', door2H: 'Room door clear height' };
+const input = (k) => $(`[name="${k}"]`);
+function showLengths() { for (const k of DELIVERY_LENGTHS) { const i = input(k); if (i) i.value = toDisplay(LEN[k], units); } }
+function readLength(k) { const i = input(k); if (i) LEN[k] = fromDisplay(i.value, units); }
+function persist() {
+  const checks = Object.fromEntries(DELIVERY_CHECKS.map(k => [k, !!input(k)?.checked]));
+  try { localStorage.setItem(DELIVERY_STORE, encodeDelivery({ unit: units, lengths: LEN, checks })); } catch (e) { /* ignore */ }
+}
 
 function readState() {
-  const g = (k) => fromU(parseFloat($(`[name=${k}]`).value));
+  const g = (k) => LEN[k];
   const item = { W: g('W'), D: g('D'), H: g('H'), diag: g('diag') || 0, upright: $('[name=upright]').checked };
-  const cps = [];
-  if ($('[name=useDoor]').checked) cps.push({ kind: 'door', name: 'Entry door', width: g('doorW'), height: g('doorH') });
-  if ($('[name=useCorner]').checked) cps.push({ kind: 'corner', name: 'Hallway corner (90°)', a: g('hallA'), b: g('hallB'), height: g('hallH') });
-  if ($('[name=useLanding]').checked) cps.push({ kind: 'landing', name: 'Stair landing turn', width: g('stairW'), height: g('stairH') });
-  if ($('[name=useDoor2]').checked) cps.push({ kind: 'door', name: 'Room door', width: g('door2W'), height: g('door2H') });
-  return { item, cps };
+  const cps = [], used = ['W', 'D', 'H', 'diag'];
+  if ($('[name=useDoor]').checked) { cps.push({ kind: 'door', name: 'Entry door', width: g('doorW'), height: g('doorH') }); used.push('doorW', 'doorH'); }
+  if ($('[name=useCorner]').checked) { cps.push({ kind: 'corner', name: 'Hallway corner (90°)', a: g('hallA'), b: g('hallB'), height: g('hallH') }); used.push('hallA', 'hallB', 'hallH'); }
+  if ($('[name=useLanding]').checked) { cps.push({ kind: 'landing', name: 'Stair landing turn', width: g('stairW'), height: g('stairH') }); used.push('stairW', 'stairH'); }
+  if ($('[name=useDoor2]').checked) { cps.push({ kind: 'door', name: 'Room door', width: g('door2W'), height: g('door2H') }); used.push('door2W', 'door2H'); }
+  // every physical length must be a number above 0 (the diagonal depth is optional: empty or 0 = none)
+  const bad = used.filter(k => k === 'diag' ? !(LEN[k] === null || (Number.isFinite(LEN[k]) && LEN[k] >= 0)) : !(Number.isFinite(LEN[k]) && LEN[k] > 0));
+  return { item, cps, bad };
 }
 function sketch(r, item) {
   const { cp, best } = r;
@@ -39,8 +49,9 @@ function sketch(r, item) {
       shape = `<rect x="${(W - pw) / 2}" y="${H - ph}" width="${pw}" height="${ph}" class="xs"/><text x="${W / 2}" y="${H - ph / 2}" text-anchor="middle" style="font-size:5px">diagonal ${fmtLen(item.diag, units)}</text>`;
     } else {
       const w = best.w, t = best.t;
-      const fitsStraight = Math.min(w, t) <= W && Math.max(w, t) <= H;
-      const bw = Math.min(w, t), bh = Math.max(w, t);
+      // an upright item keeps its height vertical: width across, height up – no turning in the door plane
+      const bw = best.upright ? w : Math.min(w, t), bh = best.upright ? t : Math.max(w, t);
+      const fitsStraight = best.upright || (bw <= W && bh <= H);
       shape = fitsStraight ? `<rect x="${(W - bw) / 2}" y="${H - bh}" width="${bw}" height="${bh}" class="xs"/>`
         : `<rect x="${(W - bw) / 2}" y="${H - bh}" width="${bw}" height="${bh}" class="xs" transform="rotate(${Math.min(40, Math.atan2(bw - W, bh) * 57)} ${W / 2} ${H / 2})"/>`;
     }
@@ -67,10 +78,11 @@ ${dimLine(0, H, W, H, fmtLen(W, units), 10)}${dimLine(W, H, W, 0, fmtLen(H, unit
 ${dimLine(0, a, 0, 0, fmtLen(a, units), -8)}${dimLine(ix, -ext + a + 10, ext, -ext + a + 10, fmtLen(b, units), 8)}</svg>`;
 }
 function run() {
-  const { item, cps } = readState();
-  try { localStorage.setItem(STORE, JSON.stringify([...app.querySelectorAll('input')].map(i => [i.name, i.type === 'checkbox' ? i.checked : i.value]))); } catch (e) { /* ignore */ }
+  const { item, cps, bad } = readState();
+  persist();
   const out = $('[data-result]');
-  if (![item.W, item.D, item.H].every(v => v > 0) || !cps.length) { out.innerHTML = '<p class="status">Enter the three outside dimensions of the item and at least one checkpoint.</p>'; return; }
+  if (bad.length) { out.innerHTML = `<p class="status bad" role="alert">Enter a number above 0 for: ${bad.map(k => esc(LABEL[k])).join(', ')}.</p>`; return; }
+  if (!cps.length) { out.innerHTML = '<p class="status">Enter the three outside dimensions of the item and at least one checkpoint.</p>'; return; }
   const res = deliveryCheck(item, cps);
   const deg = (r) => Math.round(r * 180 / Math.PI);
   out.innerHTML = `<div class="status ${res.ok ? 'good' : 'bad'}" role="status"><span class="big">${res.ok ? 'Fits along the whole route' : 'Does not fit at ' + res.results.filter(r => !r.ok).map(r => esc(r.cp.name)).join(', ')}</span>
@@ -78,28 +90,39 @@ function run() {
 ${res.results.map(r => {
     const b = r.best;
     let how = '';
-    if (r.cp.kind === 'door') how = b.profile ? `Tip it onto its back or end and roll it through using the diagonal depth (${fmtLen(item.diag, units)}).` : `Carry it ${esc(b.label)}. Cross-section ${fmtLen(Math.min(b.w, b.t), units)} × ${fmtLen(Math.max(b.w, b.t), units)}${b.ok ? ` – ${fmtLen(Math.max(0, r.cp.width - Math.min(b.w, b.t)), units)} spare in width.` : '.'}`;
-    else how = b.ok ? `Carry it ${esc(b.label)}${b.phi > 0.02 ? `, tilted up about ${deg(b.phi)}°` : ' flat'}; the tightest angle in the turn is about ${deg(b.theta)}°. Longest length that passes at this width: ${fmtLen(b.limit, units)}.` : `Longest length that can turn here with ${fmtLen(b.w, units)} width: ${fmtLen(Math.max(0, b.limit || 0), units)} flat; even tilted within the ${fmtLen(r.cp.height, units)} ceiling it is ${fmtLen(-b.margin, units)} too long.`;
+    if (r.cp.kind === 'door') how = b.profile ? `Tip it onto its back or end and roll it through using the diagonal depth (${fmtLen(item.diag, units)}).` : (b.upright ? `Carry it upright, ${esc(b.label)}. Cross-section ${fmtLen(b.w, units)} wide × ${fmtLen(b.t, units)} high${b.ok ? ` – ${fmtLen(Math.max(0, r.cp.width - b.w), units)} spare in width.` : (b.t > r.cp.height ? ` – ${fmtLen(b.t - r.cp.height, units)} taller than the opening, and it may not be tipped.` : ` – ${fmtLen(b.w - r.cp.width, units)} wider than the opening.`)}` : `Carry it ${esc(b.label)}. Cross-section ${fmtLen(Math.min(b.w, b.t), units)} × ${fmtLen(Math.max(b.w, b.t), units)}${b.ok ? ` – ${fmtLen(Math.max(0, r.cp.width - Math.min(b.w, b.t)), units)} spare in width.` : '.'}`);
+    else if (!b.ok && !b.limit) how = `${fmtLen(b.w, units)} across is wider than the narrower hall, so it cannot turn this corner in any position${item.upright ? ' that keeps it upright' : ''}.`;
+    else how = b.ok ? `Carry it ${esc(b.label)}${b.phi > 0.02 ? `, tilted up about ${deg(b.phi)}°` : ' flat'}; the tightest angle in the turn is about ${deg(b.theta)}°. Longest length that passes at this width: ${fmtLen(b.limit, units)}.` : item.upright ? (b.t > r.cp.height ? `Kept upright it is ${fmtLen(b.t - r.cp.height, units)} taller than the ${fmtLen(r.cp.height, units)} headroom.` : `Longest length that can turn here upright with ${fmtLen(b.w, units)} width: ${fmtLen(Math.max(0, b.limit || 0), units)}; it is ${fmtLen(-b.margin, units)} too long and may not be tilted.`) : `Longest length that can turn here with ${fmtLen(b.w, units)} width: ${fmtLen(Math.max(0, b.limit || 0), units)} flat; even tilted within the ${fmtLen(r.cp.height, units)} ceiling it is ${fmtLen(-b.margin, units)} too long.`;
     return `<section class="panel" style="margin-top:1rem"><h3><span class="dot ${r.ok ? 'ok' : 'bad'}"></span> ${esc(r.cp.name)}: ${r.ok ? 'passes' : 'blocked'}</h3><p style="margin:0">${how}</p>${sketch(r, item)}</section>`;
   }).join('')}`;
 }
 function restore() {
-  try { const s = JSON.parse(localStorage.getItem(STORE) || 'null'); if (Array.isArray(s)) for (const [n, v] of s) { const i = $(`[name="${n}"]`); if (i) { if (i.type === 'checkbox') i.checked = v; else i.value = v; } } } catch (e) { /* ignore */ }
+  for (const k of DELIVERY_LENGTHS) LEN[k] = fromDisplay(input(k)?.value, 'in');
+  let s = null;
+  try { s = decodeDelivery(localStorage.getItem(DELIVERY_STORE), localStorage.getItem(DELIVERY_STORE_V1)); } catch (e) { /* storage blocked */ }
+  if (s) {
+    Object.assign(LEN, s.lengths);
+    for (const [k, v] of Object.entries(s.checks)) { const i = input(k); if (i) i.checked = v; }
+    setUnits(s.unit);
+    try { localStorage.setItem(DELIVERY_STORE, encodeDelivery({ unit: units, lengths: LEN, checks: s.checks })); localStorage.removeItem(DELIVERY_STORE_V1); } catch (e) { /* ignore */ }
+  }
+  showLengths();
 }
-app.addEventListener('input', run);
+function setUnits(u) {
+  units = u === 'cm' ? 'cm' : 'in';
+  app.querySelectorAll('[data-units]').forEach(x => x.setAttribute('aria-pressed', x.dataset.units === units));
+  app.querySelectorAll('[data-unit-label]').forEach(e => e.textContent = units);
+}
+app.addEventListener('input', (e) => { if (e.target.name && DELIVERY_LENGTHS.includes(e.target.name)) readLength(e.target.name); run(); });
 app.addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.preset) {
     const p = PRESET[b.dataset.preset];
-    for (const k of ['W', 'D', 'H']) $(`[name=${k}]`).value = toU(p[k]);
-    $('[name=diag]').value = p.diag ? toU(p.diag) : ''; $('[name=upright]').checked = !!p.upright; run();
+    for (const k of ['W', 'D', 'H']) LEN[k] = p[k];
+    LEN.diag = p.diag ?? null; $('[name=upright]').checked = !!p.upright; showLengths(); run();
   }
   if (b.dataset.units && b.dataset.units !== units) {
-    const old = units; units = b.dataset.units;
-    app.querySelectorAll('[data-units]').forEach(x => x.setAttribute('aria-pressed', x === b));
-    app.querySelectorAll('input[type=number]').forEach(i => { if (i.value !== '') { const v = parseFloat(i.value); i.value = old === 'in' ? +(v * CM).toFixed(1) : +(v / CM).toFixed(1); } });
-    app.querySelectorAll('[data-unit-label]').forEach(e => e.textContent = units);
-    run();
+    setUnits(b.dataset.units); showLengths(); run();
   }
 });
 restore(); run();

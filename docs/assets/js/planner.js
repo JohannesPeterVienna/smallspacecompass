@@ -3,6 +3,7 @@ import { analyzePlan, findConflicts, fmtLen, CM, ADA_ROUTE } from './geometry.js
 import { planSVG, esc } from './render.js';
 import { PRESETS, presetByKey } from './catalog.js';
 import { layoutBySlug, LAYOUTS } from './layouts.js';
+import { preparePlan } from './validate.js';
 
 const app = document.querySelector('[data-planner]');
 const MODE = app.dataset.mode === 'swap' ? 'swap' : 'plan';
@@ -11,27 +12,32 @@ const $ = (s, r = app) => r.querySelector(s);
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const ROT = { N: 'E', E: 'S', S: 'W', W: 'N' };
 
+const states = () => MODE === 'swap' ? ['day', 'night'] : [undefined];
 const DEFAULT = MODE === 'swap' ? layoutBySlug['studio-15x15-wall-bed'] : layoutBySlug['studio-20x15-queen-corner'];
-let plan, units = 'in', sel = null, snaps = { A: null, B: null }, results = {};
+let plan, units = 'in', sel = null, snaps = { A: null, B: null }, results = {}, good = null, notice = '';
 
+// A candidate plan is validated in isolation and fully analysed before it replaces the current plan.
+// Only then is it adopted and saved, so a broken import or edit can never overwrite the last good plan.
+function adopt(candidate) {
+  const r = preparePlan(candidate, states());
+  if (!r.ok) return r;
+  plan = r.plan; results = r.results; good = JSON.stringify(plan); notice = ''; save();
+  return r;
+}
 function load() {
   const q = new URLSearchParams(location.search).get('layout');
-  if (q && layoutBySlug[q]) return clone(layoutBySlug[q]);
-  try { const s = localStorage.getItem(STORE); if (s) { const p = JSON.parse(s); if (valid(p)) return p; } } catch (e) { /* storage blocked */ }
-  return clone(DEFAULT);
+  if (q && layoutBySlug[q] && adopt(clone(layoutBySlug[q])).ok) return;
+  try { const s = localStorage.getItem(STORE); if (s && adopt(JSON.parse(s)).ok) return; } catch (e) { /* storage blocked or not JSON */ }
+  adopt(clone(DEFAULT));
 }
-function save() { try { localStorage.setItem(STORE, JSON.stringify(plan)); } catch (e) { /* ignore */ } }
-function valid(p) {
-  return p && p.room && p.room.W > 0 && p.room.D > 0 && Array.isArray(p.items) && p.items.every(i => i && typeof i.w === 'number' && typeof i.d === 'number' && typeof i.x === 'number' && typeof i.y === 'number');
-}
-const states = () => MODE === 'swap' ? ['day', 'night'] : [undefined];
+function save() { try { localStorage.setItem(STORE, good); } catch (e) { /* ignore */ } }
 const toU = (inch) => units === 'cm' ? +(inch * CM).toFixed(1) : +inch.toFixed(1);
 const fromU = (v) => units === 'cm' ? v / CM : v;
 
 /* ---------- rendering ---------- */
-function render(full = true) {
+function render(full = true, fresh = false) {
   for (const st of states()) {
-    const a = full ? analyzePlan(plan, { state: st, cell: 1 }) : { conflicts: findConflicts(plan, st), routes: results[st]?.routes || [] };
+    const a = full ? (fresh && results[st] ? results[st] : analyzePlan(plan, { state: st, cell: 1 })) : { conflicts: findConflicts(plan, st), routes: results[st]?.routes || [] };
     if (!full && results[st]) a.routes = results[st].routes;
     if (full) results[st] = a;
     const stage = $(`[data-stage="${st || 'plan'}"]`);
@@ -53,12 +59,12 @@ function report() {
     const ft = (v) => units === 'cm' ? (v * CM * CM / 10000).toFixed(1) + ' m²' : (v / 144).toFixed(1) + ' sq ft';
     parts.push(`<div class="status ${bad ? 'bad' : 'good'}" role="status">${st ? `<b>${st === 'day' ? 'Day' : 'Night'} state</b><br>` : ''}
 <span class="big">${Number.isFinite(narrow) ? fmtLen(narrow, units) : '—'}</span> narrowest walkway from the entry<br>
-<span class="note-small">${Number.isFinite(narrow) ? (narrow >= ADA_ROUTE - 0.05 ? 'At least 36 in (915 mm), the ADA §403.5.1 walking-surface width.' : 'Below 36 in (915 mm), the ADA §403.5.1 walking-surface width.') : 'No measured route yet – add a door and a target (bed, desk) or a window.'}</span>
+<span class="note-small">${Number.isFinite(narrow) ? (narrow >= ADA_ROUTE - 0.05 ? 'At least 36 in (915 mm), the ADA 2010 §403.5.1 clear width for walking surfaces on accessible routes – a width reference, not an accessibility assessment.' : 'Below 36 in (915 mm), the ADA 2010 §403.5.1 clear width for walking surfaces on accessible routes – a width reference, not an accessibility assessment.') : 'No measured route yet – add a door and a target (bed, desk) or a window.'}</span>
 <ul class="list-plain" style="margin-top:.6rem">${a.routes.map(r => `<li><span class="dot ${r.found ? (r.ok ? 'ok' : 'bad') : 'bad'}"></span>Entry → ${esc(r.label)}: ${r.found ? (r.width == null ? 'open floor' : fmtLen(r.width, units)) : 'no way through'}</li>`).join('')}
 ${hard.map(c => `<li><span class="dot bad"></span>${esc(c.msg)}</li>`).join('')}${warn.map(c => `<li><span class="dot warn"></span>${esc(c.msg)}</li>`).join('')}</ul>
 <p class="note-small" style="margin:.6rem 0 0">Floor ${ft(a.area)} · furniture ${ft(a.footprint)} · use zones ${ft(a.zones)} · free ${ft(a.free)} (${Math.round(a.freePct * 100)}%)</p></div>`);
   }
-  box.innerHTML = parts.join('');
+  box.innerHTML = (notice ? `<p class="status bad" role="alert">Change not applied: ${esc(notice)}. The last valid plan is kept.</p>` : '') + parts.join('');
 }
 function editor() {
   const ed = $('[data-editor]'), it = plan.items.find(i => i.id === sel);
@@ -95,7 +101,11 @@ ${kind === 'door' ? `<label class="f">Swing<select data-f="swing"><option value=
 
 /* ---------- editing ---------- */
 const uid = () => 'i' + Math.random().toString(36).slice(2, 8);
-function change(full = true) { save(); render(full); }
+function change() {
+  const r = adopt(plan);
+  if (!r.ok) { plan = JSON.parse(good); notice = r.error; render(true); roomFields(); return false; }
+  render(true, true); return true;
+}
 function rotate(it) {
   const cx = it.x + it.w / 2, cy = it.y + it.d / 2;
   [it.w, it.d] = [it.d, it.w]; it.x = Math.round(cx - it.w / 2); it.y = Math.round(cy - it.d / 2);
@@ -150,7 +160,7 @@ app.addEventListener('click', (e) => {
     change(); roomFields();
   }
   else if (b.dataset.units) { units = b.dataset.units; app.querySelectorAll('[data-units]').forEach(x => x.setAttribute('aria-pressed', x === b)); roomFields(); render(true); }
-  else if (act === 'reset') { plan = clone(DEFAULT); sel = null; change(); roomFields(); }
+  else if (act === 'reset') { if (adopt(clone(DEFAULT)).ok) { sel = null; render(true, true); roomFields(); } }
   else if (act === 'export-json') download(JSON.stringify({ format: 'smallspacecompass-plan', version: 1, ...plan }, null, 2), 'plan.json', 'application/json');
   else if (act === 'export-svg') {
     const svgs = [...app.querySelectorAll('[data-stage] svg')].map(s => s.outerHTML.replace('<svg ', `<svg xmlns="http://www.w3.org/2000/svg" `));
@@ -159,16 +169,16 @@ app.addEventListener('click', (e) => {
   }
   else if (act === 'import') $('[data-file]').click();
   else if (act === 'snap-a' || act === 'snap-b') { const k = act === 'snap-a' ? 'A' : 'B'; snaps[k] = { plan: clone(plan), r: summary() }; compare(); }
-  else if (act === 'load-a' && snaps.A) { plan = clone(snaps.A.plan); change(); roomFields(); }
-  else if (act === 'load-b' && snaps.B) { plan = clone(snaps.B.plan); change(); roomFields(); }
+  else if (act === 'load-a' && snaps.A) { if (adopt(clone(snaps.A.plan)).ok) { render(true, true); roomFields(); } }
+  else if (act === 'load-b' && snaps.B) { if (adopt(clone(snaps.B.plan)).ok) { render(true, true); roomFields(); } }
 });
 $('[data-file]').addEventListener('change', async (e) => {
   const f = e.target.files[0]; if (!f) return;
-  try { const p = JSON.parse(await f.text()); if (!valid(p)) throw new Error('not a plan'); plan = { room: p.room, doors: p.doors || [], windows: p.windows || [], items: p.items }; sel = null; change(); roomFields(); }
-  catch (err) { alert('This file is not a Small Space Compass plan (JSON).'); }
+  try { const p = JSON.parse(await f.text()); if (!valid(p)) throw new Error('not a plan'); const r = adopt({ room: p.room, doors: p.doors, windows: p.windows, items: p.items }); if (!r.ok) throw new Error(r.error); sel = null; render(true, true); roomFields(); }
+  catch (err) { alert(`This file is not a valid Small Space Compass plan (JSON)${err && err.message ? ': ' + err.message : ''}. Your current plan is unchanged.`); }
   e.target.value = '';
 });
-$('[data-load]')?.addEventListener('change', (e) => { const L = layoutBySlug[e.target.value]; if (L) { plan = clone(L); sel = null; change(); roomFields(); } });
+$('[data-load]')?.addEventListener('change', (e) => { const L = layoutBySlug[e.target.value]; if (L && adopt(clone(L)).ok) { sel = null; render(true, true); roomFields(); } });
 function download(text, name, type) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name;
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
@@ -200,7 +210,7 @@ window.addEventListener('pointermove', (e) => {
   if (nx === drag.it.x && ny === drag.it.y) return;
   drag.it.x = nx; drag.it.y = ny; clampItem(drag.it); drag.moved = true; render(false);
 });
-const endDrag = () => { if (!drag) return; drag = null; save(); render(true); focusSel(); };
+const endDrag = () => { if (!drag) return; drag = null; change(); focusSel(); };
 window.addEventListener('pointerup', endDrag); window.addEventListener('pointercancel', endDrag);
 function toSvg(svg, e) { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
 function focusSel() { app.querySelector(`[data-stage] .item[data-id="${CSS.escape(sel)}"]`)?.focus({ preventScroll: true }); }
@@ -222,6 +232,6 @@ sel0.innerHTML = Object.entries(PRESETS.reduce((g, p) => ((g[p.group] ||= []).pu
   .map(([g, ps]) => `<optgroup label="${g}">${ps.map(p => `<option value="${p.key}">${esc(p.label)} – ${p.w}×${p.d} in</option>`).join('')}</optgroup>`).join('');
 const ld = $('[data-load]');
 if (ld) ld.innerHTML = '<option value="">Load a measured layout…</option>' + LAYOUTS.filter(L => MODE === 'swap' ? L.states : true).map(L => `<option value="${L.slug}">${esc(L.title)}</option>`).join('');
-plan = load(); plan.doors ||= []; plan.windows ||= [];
-roomFields(); render(true); compare();
+load();
+roomFields(); render(true, true); compare();
 app.classList.add('ready');

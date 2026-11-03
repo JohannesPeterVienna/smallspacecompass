@@ -8,7 +8,7 @@ export const NKBA_B = 'https://kb.nkba.org/uploads/2022/05/Bath-Planning-Guideli
 export const CASPER = 'https://casper.com/mattress-size-comparison/';
 export const SILENT = 'https://www.silentnight.co.uk/guides/bed-mattress-size-guide';
 export const S = {
-  ada4035: ['2010 ADA Standards for Accessible Design, §403.5.1 Clear Width (U.S. Access Board)', ADA + '#ada-403_5_1'],
+  ada4035: ['2010 ADA Standards for Accessible Design, §403.5.1 Clear Width (U.S. Access Board)', 'https://www.access-board.gov/ada/chapter/ch04/'],
   ada4035b: ['2010 ADA Standards, §403.5.2 Clear Width at Turn', ADA + '#ada-403_5_2'],
   ada4042: ['2010 ADA Standards, §404.2.3 Clear Width of doors', ADA + '#ada-404_2_3'],
   ada40424: ['2010 ADA Standards, Table 404.2.4.1 Maneuvering clearances at doors', ADA + '#ada-404_2_4_1'],

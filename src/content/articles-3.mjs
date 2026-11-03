@@ -110,7 +110,7 @@ ${figPlan(room(120, 96, [it('t', 'Table for 2', 0, 30, 30, 30, { zones: [{ side:
 <p>The entry door decides where storage can go. A 32 in door swinging into the room claims a quarter circle with a 32 in radius on the hinge side – nothing deeper than the door's own clearance can stand there. On the latch side, the space beside the door frame is where you naturally stand when you come in; that is the best place for hooks and a shoe bench. Measure:</p>
 <ul><li>the wall length on the latch side, from the door frame to the next corner or obstacle;</li>
 <li>the wall length on the hinge side behind the open door;</li>
-<li>the walkway from the door into the room – it should stay at least 36 in wide, the clear width in ${a(ADA + '#ada-403_5_1', 'ADA 2010 §403.5.1')}.</li></ul>
+<li>the walkway from the door into the room – it should stay at least 36 in wide, the clear width in ${a('https://www.access-board.gov/ada/chapter/ch04/', 'ADA 2010 §403.5.1')}.</li></ul>
 ${figPlan(room(120, 96, [it('bench', 'Shoe bench', 0, 82, 36, 14, { zones: [{ side: 'N', depth: 24, kind: 'sitting', walk: true }] }), it('cab', 'Shoe cabinet', 84, 84, 36, 12), it('sofa', 'Sofa', 0, 0, 78, 36, { target: true })], [door('S', 44, 32, 'end')]), 'Entry wall: shoe bench on the latch side, shallow cabinet behind the door swing; the route into the room stays clear.')}
 <h2 id="heights">Heights that work</h2>
 ${table(['Element', 'Height above floor', 'Why'], [
@@ -270,7 +270,7 @@ ${figPlan(BATH55, `5 × 5 ft bathroom at code minimums: 30 × 30 in shower, toil
     tool: `draw the studio in the ${a('/tools/clearance-planner/', 'Clearance Planner')} and check each large piece with ${a('/tools/will-it-fit/', 'Will It Fit?')}.`,
     howto: { name: 'Decide which furniture to move into a studio', tools: ['Tape measure', 'Floor plan of the studio'], steps: [['Get the floor plan', 'Measure the studio or ask for a plan with door positions and swings.'], ['Measure every piece', 'Outside dimensions of each piece you might keep, including legs and handles.'], ['Add use zones', 'Add chair, drawer, bedside and door zones to each piece.'], ['Place the essentials first', 'Bed, then sofa or seating, then table or desk.'], ['Check walkways', 'Keep the route from the door to the bed and bathroom at least 36 in wide.'], ['Check the delivery route', 'Test each large piece against the doors, corners and stairs.']] },
     body: `<h2 id="method">The method</h2>
-<p>The question is not “will it fit?” but “will it fit with everything else, and can I still move around?”. Work through the pieces in order of necessity and stop adding when the walkway drops below 36 in – the clear width in ${a(ADA + '#ada-403_5_1', 'ADA 2010 §403.5.1')} that this site uses as its reference.</p>
+<p>The question is not “will it fit?” but “will it fit with everything else, and can I still move around?”. Work through the pieces in order of necessity and stop adding when the walkway drops below 36 in – the clear width in ${a('https://www.access-board.gov/ada/chapter/ch04/', 'ADA 2010 §403.5.1')} that this site uses as its reference.</p>
 <ol><li><b>Get the studio's plan</b> with door positions and swings. Measure it yourself if possible – see ${a('/guides/how-to-measure-a-room-for-furniture/', 'how to measure a room')}.</li>
 <li><b>Measure every piece</b> you are considering: outside dimensions with legs, handles and cushions.</li>
 <li><b>Place the bed first,</b> with a 24 in strip on every side you use. It is the largest piece and has the fewest possible positions.</li>
@@ -338,7 +338,7 @@ ${rule('≈ 86 in', 'Floor depth from the wall for a queen vertical wall bed whe
 <h2 id="front">What has to stay free in front</h2>
 <p>When the bed is down, the floor it covers must be empty – no coffee table, no rug with furniture on it, no plant on the floor. On top of that, plan:</p>
 <ul><li><b>A 24 in strip at the foot</b> (this site's bedside assumption) to walk past and make the bed.</li>
-<li><b>A route from the entry door to the bed</b> at least 36 in wide – the clear width in ${a(ADA + '#ada-403_5_1', 'ADA 2010 §403.5.1')} – which may use the strip at the foot.</li>
+<li><b>A route from the entry door to the bed</b> at least 36 in wide – the clear width in ${a('https://www.access-board.gov/ada/chapter/ch04/', 'ADA 2010 §403.5.1')} – which may use the strip at the foot.</li>
 <li><b>The entry door must open fully</b> with the bed down. A bed inside the door swing is a safety problem.</li></ul>
 <p>For a queen vertical wall bed, that means about 86 + 24 = 110 in (just over 9 ft) of room depth in front of the bed wall, plus whatever the walkway needs if it does not use the foot strip.</p>
 ${figLayout('studio-15x15-wall-bed', 'Queen wall bed in a 15 × 15 ft studio at night: 94 in remain between the foot of the open bed and the opposite wall.', { state: 'night' })}

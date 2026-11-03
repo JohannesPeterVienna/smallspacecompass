@@ -56,6 +56,55 @@ for (const width of [390, 1366]) {
   if (!/cu ft/.test(await p.textContent('[data-bands]'))) { fail++; console.log('✗ storage bands missing'); }
   await ctx.close();
 }
+// Codex counterexamples (Nov 2026), end to end in the real pages
+{
+  const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } });
+  await ctx.route(/^https?:\/\/(?!127\.0\.0\.1)/, r => r.abort());
+  const p = await ctx.newPage(); const errs = [];
+  p.on('pageerror', e => errs.push(e.message));
+  p.on('dialog', d => d.accept());
+  // SSC02: a broken import must not replace or overwrite the saved plan
+  await p.goto(base + '/tools/clearance-planner/', { waitUntil: 'networkidle' });
+  const saved0 = await p.evaluate(() => localStorage.getItem('ssc-planner-v1'));
+  await p.setInputFiles('[data-file]', { name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ room: { W: 120, D: 120 }, items: [], doors: 'not-an-array', windows: [] })) });
+  await p.waitForTimeout(300);
+  const saved1 = await p.evaluate(() => localStorage.getItem('ssc-planner-v1'));
+  if (saved1 !== saved0) { fail++; console.log('✗ SSC02 broken import replaced the saved plan'); }
+  if (!(await p.$('[data-stage] .item[data-id="desk"]'))) { fail++; console.log('✗ SSC02 old plan no longer shown after broken import'); }
+  // SSC02: a corrupt saved plan falls back to a good plan instead of breaking the page
+  await p.evaluate(() => localStorage.setItem('ssc-planner-v1', JSON.stringify({ room: { W: 120, D: 120 }, items: [], doors: 'not-an-array', windows: [] })));
+  await p.reload({ waitUntil: 'networkidle' });
+  if (!/narrowest walkway/.test(await p.textContent('[data-report]'))) { fail++; console.log('✗ SSC02 corrupt saved plan broke the planner'); }
+  // SSC03: 84 in → cm → reload must still be 84 in (shown as 213.4 cm)
+  await p.goto(base + '/tools/will-it-fit/', { waitUntil: 'networkidle' });
+  await p.evaluate(() => localStorage.removeItem('ssc-delivery-v2'));
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.fill('[name=W]', '84'); await p.click('[data-units="cm"]');
+  const shown = await p.inputValue('[name=W]');
+  await p.reload({ waitUntil: 'networkidle' });
+  const st = JSON.parse(await p.evaluate(() => localStorage.getItem('ssc-delivery-v2')));
+  const afterCm = await p.inputValue('[name=W]');
+  await p.click('[data-units="in"]');
+  const afterIn = await p.inputValue('[name=W]');
+  if (shown !== '213.4' || st?.lengths?.W !== 84 || st?.unit !== 'cm' || afterCm !== '213.4' || afterIn !== '84') { fail++; console.log(`✗ SSC03 unit round trip: shown ${shown}, stored ${st?.lengths?.W} ${st?.unit}, after reload ${afterCm} cm / ${afterIn} in`); }
+  // SSC01 in the page: fridge-like 30×31×68 kept upright, door 36×60
+  await p.fill('[name=W]', '30'); await p.fill('[name=D]', '31'); await p.fill('[name=H]', '68'); await p.fill('[name=diag]', '');
+  await p.check('[name=upright]'); await p.uncheck('[name=useCorner]'); await p.fill('[name=doorW]', '36'); await p.fill('[name=doorH]', '60');
+  if (!/Does not fit at Entry door/.test(await p.textContent('[data-result]'))) { fail++; console.log('✗ SSC01 upright item reported as fitting a 60 in high door'); }
+  await p.fill('[name=doorW]', '-5');
+  if (!/above 0/.test(await p.textContent('[data-result]'))) { fail++; console.log('✗ delivery accepted a negative door width'); }
+  await p.evaluate(() => localStorage.removeItem('ssc-delivery-v2'));
+  // Storage: a typed negative width is rejected (HTML min does not stop it)
+  await p.goto(base + '/tools/storage-wall/', { waitUntil: 'networkidle' });
+  await p.evaluate(() => localStorage.removeItem('ssc-storage-v1'));
+  await p.reload({ waitUntil: 'networkidle' });
+  const tot0 = await p.textContent('[data-bands] tbody tr:last-child');
+  await p.fill('[data-unit] [data-k="w"]', '-24'); await p.dispatchEvent('[data-unit] [data-k="w"]', 'change');
+  const tot1 = await p.textContent('[data-bands] tbody tr:last-child');
+  if (tot1 !== tot0 || /-/.test(tot1) || !/Width: Must be more than 0/.test(await p.textContent('[data-unit]'))) { fail++; console.log(`✗ storage accepted a negative width (${tot0} → ${tot1})`); }
+  if (errs.length) { fail++; console.log('✗ counterexample pages: ' + errs.join(' / ')); }
+  await ctx.close();
+}
 await browser.close(); srv.close();
 console.log(fail ? `${fail} browser problem(s)` : 'browser checks passed');
 process.exit(fail ? 1 : 0);
