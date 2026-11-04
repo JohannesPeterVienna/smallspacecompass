@@ -7,7 +7,7 @@ export const LEGAL = [
     crumbs: [['About', '/about/']], ads: false,
     body: sheet('About Small Space Compass', 'About &amp; method', `<p class="lede">Small Space Compass is a small-space planning site built around one idea: in a small home, the space you need to <em>use</em> furniture matters as much as the furniture itself. Every guide states the measurements it relies on, and every tool checks movement – door swings, pull-out zones, walkways – not just whether the pieces fit on the floor.</p>
 <h2 id="who">Who runs the site</h2>
-<p>The site is published by AdStern, an advertising agency based in Vienna, Austria (see the <a href="/imprint/">imprint</a>). It is financed by advertising shown on guide and tool pages; no manufacturer or retailer pays for mentions, and there are no affiliate links.</p>
+<p>The site is published by AdStern, an advertising agency based in Vienna, Austria (see the <a href="/imprint/">imprint</a>). It is financed by advertising, which can appear on guide, tool, layout and overview pages, including the home page, the indexes and this page; the imprint, privacy policy and contact page show no ads. No manufacturer or retailer pays for mentions, and there are no affiliate links.</p>
 <h2 id="method">How the measurements are chosen</h2>
 <p>Where a published guideline exists, we use it and link the primary document:</p>
 <ul><li><b>Walkways and doors:</b> the <a href="https://www.access-board.gov/ada/">2010 ADA Standards for Accessible Design</a> published by the U.S. Access Board – §403.5.1 (36 in clear width of walking surfaces), §404.2.3 (32 in door clear width and how to measure it), §304.3 (60 in turning space), §305.3 (30 × 48 in clear floor space) and §308 (15–48 in reach range).</li>
@@ -23,7 +23,7 @@ export const LEGAL = [
 <p>Plans you draw are stored only in your own browser (localStorage) and are never sent to us. You can export them as SVG or JSON. Details on advertising and analytics are in the <a href="/privacy/">privacy policy</a>.</p>
 <h2 id="history">History</h2>
 <p>The site was rebuilt in October 2026. The earlier standalone tools Room Fit, Storage Atlas and Shelf Measure are now part of the Clearance Planner and the Storage Wall Audit on this domain.</p>
-<p class="reviewed">Last reviewed: October 2026</p>`)
+<p class="reviewed">Last reviewed: November 4, 2026</p>`)
   },
   {
     path: '/imprint/', title: 'Imprint – Small Space Compass', description: 'Legal notice for smallspacecompass.com under the Austrian E-Commerce Act and Media Act.',
@@ -48,7 +48,7 @@ export const LEGAL = [
   {
     path: '/privacy/', title: 'Privacy policy – Small Space Compass', description: 'How smallspacecompass.com handles data: GitHub Pages hosting, Google AdSense advertising and consent, optional Google Analytics, plans stored only in your browser, and your rights.',
     crumbs: [['Privacy', '/privacy/']], ads: false,
-    body: sheet('Privacy policy', 'Privacy', `<p>This policy explains what data is processed when you visit smallspacecompass.com, why, and what rights you have. Last updated: November 2026.</p>
+    body: sheet('Privacy policy', 'Privacy', `<p>This policy explains what data is processed when you visit smallspacecompass.com, why, and what rights you have. Last updated: November 4, 2026.</p>
 <h2 id="controller">Controller</h2>
 <p>AdStern, Seilerstätte 8, 1010 Vienna, Austria (full details in the <a href="/imprint/">imprint</a>).</p>
 <h2 id="hosting">Hosting</h2>
@@ -56,8 +56,8 @@ export const LEGAL = [
 <h2 id="plans">Your plans and inputs</h2>
 <p>Everything you enter into the planning tools – room sizes, furniture, door positions – is processed only in your own browser. Plans are saved in your browser's local storage so they are still there on your next visit; they are not sent to us or to anyone else. You can delete them at any time with the tool's reset button or by clearing your browser's site data. Files you export or import are handled entirely on your device.</p>
 <h2 id="ads">Advertising (Google AdSense)</h2>
-<p>Guide and tool pages show advertising from Google AdSense, a service of Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ireland (for users in the EEA and UK) and Google LLC, USA (elsewhere). AdSense uses cookies and similar technologies to show ads, limit how often you see them, measure their performance and prevent fraud.</p>
-<p>The AdSense script, and with it Google's consent message, is loaded on every page of this site that search engines may index, including the home page, the indexes, the measured layouts and the legal pages. Ad spaces are only placed on guide and tool pages; on the other pages the script loads without showing ads in the page content.</p>
+<p>This site shows advertising from Google AdSense, a service of Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ireland (for users in the EEA and UK) and Google LLC, USA (elsewhere). AdSense uses cookies and similar technologies to show ads, limit how often you see them, measure their performance and prevent fraud.</p>
+<p>Guide, tool, layout and overview pages (the home page, the indexes and About) can show advertising; Google places these ads automatically, so their number and position can vary. On the imprint, this privacy policy and the contact page the AdSense script loads only for Google's consent message, and no ads are shown.</p>
 <p><b>Third-party vendors, including Google, use cookies to serve ads based on a user's prior visits to this website or other websites.</b> Google's use of advertising cookies enables it and its partners to serve ads to you based on your visits to this and/or other sites on the internet.</p>
 <p>You can opt out of personalized advertising in Google's <a href="https://adssettings.google.com" rel="noopener">Ads Settings</a>. You can also opt out of the use of cookies by third-party vendors for personalized advertising at <a href="https://www.aboutads.info/choices/" rel="noopener">www.aboutads.info</a> or, in Europe, at <a href="https://www.youronlinechoices.eu/" rel="noopener">www.youronlinechoices.eu</a>. More information on how Google uses data is available at <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">policies.google.com/technologies/partner-sites</a>.</p>
 <p><b>Consent.</b> For visitors in the European Economic Area, the United Kingdom and Switzerland, a consent message from Google's certified consent management platform (IAB Transparency &amp; Consent Framework) asks for your choices before personalized ads or cookies that require consent are used. The legal basis is your consent (Art. 6(1)(a) GDPR, § 165(3) Austrian Telecommunications Act). Personalized ads require your consent. Non-personalized ads (based on page content and approximate location) also use cookies or similar identifiers, for example for frequency capping, aggregated reporting and fraud prevention, so they too are shown only if you consent to storing and accessing information on your device. Without that consent Google can show only limited ads. Limited ads are not personalised and do not use cookies or local storage for personalised advertising; Google may still use technical data, and where permitted storage, for fraud prevention and frequency limits as described in its documentation. You can change or withdraw your consent at any time with the <button type="button" class="linklike" data-privacy-settings style="color:inherit">Privacy settings</button> link, which is also in the footer of every page.</p>

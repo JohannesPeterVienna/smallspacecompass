@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 let n = 0;
-async function loadPage(usStatus, { withEnum = true, gpp, gdprApplies = false } = {}) {
+async function loadPage(usStatus, { withEnum = true, gpp, gdprApplies = false, withDialog = true } = {}) {
   const calls = [], updates = [];
   let onClick = null, tcfListener = null;
   const us = {
@@ -12,6 +12,7 @@ async function loadPage(usStatus, { withEnum = true, gpp, gdprApplies = false } 
     openConfirmationDialog: (cb) => { calls.push('usDialog'); us.answer = cb; },
     status: usStatus
   };
+  if (!withDialog) delete us.openConfirmationDialog;
   if (withEnum) us.InitialUsStatesOptOutStatusEnum = { UNKNOWN: 0, DOES_NOT_APPLY: 1, NOT_OPTED_OUT: 2, OPTED_OUT: 3 };
   const googlefc = {
     callbackQueue: [],
@@ -182,4 +183,14 @@ test('GPP: malformed or unreadable data → denied', async () => {
   }
   const p = await loadPage(0, { gpp: () => { throw new Error('boom'); } });   // throwing API: page keeps working
   assert.equal(p.last().analytics_storage, 'denied');
+});
+
+test('U.S. status known but the CMP offers no openConfirmationDialog → consent (revocation) message, no error', async () => {
+  for (const status of [2, 3]) {
+    const p = await loadPage(status, { withDialog: false });
+    assert.equal(typeof p.us.openConfirmationDialog, 'undefined');
+    p.click();
+    assert.doesNotThrow(() => p.runQueue());
+    assert.deepEqual(p.calls, ['revocation']);
+  }
 });

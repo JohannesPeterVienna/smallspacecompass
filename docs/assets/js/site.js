@@ -194,7 +194,7 @@ function watchConsent() {
    opt-out dialog ("Do Not Sell or Share"); everywhere else it reopens the consent message.
    The U.S. dialog opens only for a known U.S. status (NOT_OPTED_OUT or OPTED_OUT) and only when the latest
    TCF data does not say the GDPR applies; UNKNOWN (0) or an EU visitor gets the consent message, so consent
-   can always be withdrawn. */
+   can always be withdrawn. If the CMP offers no openConfirmationDialog, the consent message opens instead. */
 const US_OPTED_OUT = 3;
 function openPrivacyChoice(before) {
   const fc = window.googlefc;
@@ -206,7 +206,7 @@ function openPrivacyChoice(before) {
     const tc = lastTc || (before && before.tc);
     const gdpr = !!(tc && tc.gdprApplies === true);
     const status = us.getInitialUsStatesOptOutStatus();
-    if ((status === notOptedOut || status === optedOut) && !gdpr) {
+    if ((status === notOptedOut || status === optedOut) && !gdpr && typeof us.openConfirmationDialog === 'function') {
       us.openConfirmationDialog((userDidOptOut) => {
         if (userDidOptOut) {
           consent.usOptOut = US_OPTED_OUT;                    // ad personalisation and analytics stay denied
