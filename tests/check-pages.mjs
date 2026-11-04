@@ -38,14 +38,14 @@ for (const p of all) {
   const hasAdScript = h.includes('adsbygoogle.js');
   const slots = (h.match(/class="ad ad-/g) || []).length;
   if (NO_AD.includes(p.path) && slots) err(p.path, 'ad slot on a page that must have none');
-  if (NO_AD.includes(p.path) && p.path !== '/' && hasAdScript) err(p.path, 'ad script on a page that must have none');
-  if (p.path === '/') {
-    if (!hasAdScript) err(p.path, 'home page needs the AdSense loader (CMP)');
-    else if (h.indexOf('adsbygoogle.js') < h.indexOf("gtag('consent','default'")) err(p.path, 'AdSense loader before consent defaults');
-  }
+  // AdSense loader: statically in the head of every indexable page, exactly once, after the consent defaults
+  const loaders = (h.match(/<script async src="https:\/\/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js\?client=ca-pub-7811071715414905" crossorigin="anonymous"><\/script>/g) || []).length;
+  if (p.noindex && hasAdScript) err(p.path, 'AdSense loader on a noindex page');
+  if (!p.noindex && loaders !== 1) err(p.path, `AdSense loader ${loaders}× instead of once`);
+  if (loaders && (h.indexOf('adsbygoogle.js') < h.indexOf("gtag('consent','default'") || h.indexOf('adsbygoogle.js') > h.indexOf('</head>'))) err(p.path, 'AdSense loader not in the head after the consent defaults');
   // guides: the leaderboard comes after the H1 and the lede, never between menu and heading
   if (/class="ad ad-leader"/.test(h) && h.indexOf('class="ad ad-leader"') < h.indexOf('class="lede"')) err(p.path, 'leaderboard above H1/lede');
-  if (p.kind === 'layout' && (hasAdScript || slots)) err(p.path, 'ads on layout page');
+  if (p.kind === 'layout' && slots) err(p.path, 'ad slot on layout page');
   // tool pages: no ad inside the tool section
   const tool = h.match(/<section class="tool"[\s\S]*?<\/section>/)?.[0] || '';
   if (/class="ad /.test(tool)) err(p.path, 'ad slot inside tool UI');
@@ -62,6 +62,11 @@ for (const p of all) {
   }
   const w = words(h);
   if (p.kind === 'article' && w < 900) err(p.path, `only ${w} words`);
+  if (p.kind === 'layout' && w < 800) err(p.path, `layout page only ${w} words`);
+  if (['/tools/', '/layouts/'].includes(p.path)) {
+    const mw = h.slice(h.indexOf('<main'), h.indexOf('</main>')).replace(/<svg[\s\S]*?<\/svg>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/g, ' ').split(/\s+/).filter(x => /[A-Za-z]/.test(x)).length;
+    if (mw < 700) err(p.path, `index page only ${mw} words`);
+  }
   if (p.kind === 'article' && !h.includes('Last reviewed: October 2026')) err(p.path, 'no review date');
   if (p.kind === 'article' && !/<svg class="(plan|elev)/.test(h)) err(p.path, 'no own plan figure');
   if ((p.kind === 'article' || p.kind === 'tool') && !(hasAdScript && slots)) err(p.path, 'expected ad setup');
@@ -73,6 +78,8 @@ for (const [from, to] of redirects) {
   if (!existsSync(fileOf(to))) err(from, 'redirect target missing');
 }
 for (const f of ['ads.txt', 'robots.txt', 'sitemap.xml', 'CNAME', '.nojekyll', '404.html']) if (!existsSync(join(DOCS, f))) err(f, 'missing');
+if (readFileSync(join(DOCS, 'CNAME'), 'utf8') !== 'smallspacecompass.com') err('CNAME', 'must be exactly smallspacecompass.com without newline');
+for (const m of readFileSync(join(DOCS, 'sitemap.xml'), 'utf8').matchAll(/<lastmod>([^<]*)<\/lastmod>/g)) if (m[1] !== '2026-11-04') { err('sitemap', 'lastmod ' + m[1]); break; }
 if (readFileSync(join(DOCS, 'ads.txt'), 'utf8').trim() !== 'google.com, pub-7811071715414905, DIRECT, f08c47fec0942fa0') err('ads.txt', 'content');
 const sm = readFileSync(join(DOCS, 'sitemap.xml'), 'utf8');
 for (const [from] of redirects) if (sm.includes(from)) err('sitemap', `contains redirect ${from}`);

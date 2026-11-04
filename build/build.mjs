@@ -15,7 +15,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'docs');
 const ORIGIN = 'https://smallspacecompass.com';
 const REVIEWED = 'October 2026';
-const VERSION = '20261103e';
+const VERSION = '20261104a';
+const MODIFIED = '2026-11-04';
 const pages = [];
 
 const NAV = [['/tools/clearance-planner/', 'Planner'], ['/tools/will-it-fit/', 'Will it fit?'], ['/layouts/', 'Layouts'], ['/guides/', 'Guides'], ['/about/', 'About']];
@@ -36,8 +37,9 @@ function layout(p) {
   if (crumbs.length) ld.push({ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [['Home', '/'], ...crumbs].map(([n, u], i) => ({ '@type': 'ListItem', position: i + 1, name: n, item: ORIGIN + u })) });
   if (p.ld) ld.push(...p.ld);
   const ads = p.ads === true;
-  // AdSense loader (and with it the Google CMP) also on pages without ad slots, e.g. the home page
-  const loader = ads || p.loader === true;
+  // AdSense loader (and with it the Google CMP) statically in the head of every indexable page,
+  // also where there are no ad slots (home, indexes, layouts, legal pages); never on noindex pages such as the 404.
+  const loader = !p.noindex;
   const nav = NAV.map(([u, t]) => `<a href="${u}"${p.path.startsWith(u) ? ' aria-current="page"' : ''}>${t}</a>`).join('');
   return `<!doctype html>
 <html lang="en" data-ads="${ads ? 'yes' : 'no'}">
@@ -90,7 +92,7 @@ function articlePage(a) {
   body = body.replace(/<h2 id=/g, (m) => (++n === 3 ? `${ad('inline')}\n` + m : m));
   const faq = a.faq?.length ? `<h2 id="faq">Frequently asked questions</h2><div class="faq">${a.faq.map(([q, ans]) => `<details><summary>${esc(q)}</summary><div><p>${ans}</p></div></details>`).join('')}</div>` : '';
   const src = a.sources?.length ? `<h2 id="sources">Sources</h2><ol class="sources">${a.sources.map(([t, u, note]) => `<li><a href="${u}" rel="noopener">${esc(t)}</a>${note ? ` – ${note}` : ''}</li>`).join('')}</ol>` : '';
-  const ld = [{ '@context': 'https://schema.org', '@type': 'Article', headline: a.h1, description: a.description, inLanguage: 'en', mainEntityOfPage: ORIGIN + path, dateModified: '2026-10-31', author: { '@type': 'Organization', name: 'Small Space Compass' }, publisher: { '@type': 'Organization', name: 'AdStern' } }];
+  const ld = [{ '@context': 'https://schema.org', '@type': 'Article', headline: a.h1, description: a.description, inLanguage: 'en', mainEntityOfPage: ORIGIN + path, dateModified: MODIFIED, author: { '@type': 'Organization', name: 'Small Space Compass' }, publisher: { '@type': 'Organization', name: 'AdStern' } }];
   if (a.faq?.length) ld.push({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: a.faq.map(([q, ans]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: ans.replace(/<[^>]+>/g, '') } })) });
   if (a.howto) ld.push({ '@context': 'https://schema.org', '@type': 'HowTo', name: a.howto.name, tool: (a.howto.tools || []).map(t => ({ '@type': 'HowToTool', name: t })), step: a.howto.steps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s[0], text: s[1] })) });
   const related = (a.related || []).map(s => ARTICLES.find(x => x.slug === s)).filter(Boolean);
@@ -137,9 +139,10 @@ function layoutPages() {
 <p class="row no-print"><a class="btn" href="/tools/${L.states ? 'day-night-swap' : 'clearance-planner'}/?layout=${L.slug}">Open in the ${L.states ? 'Day/Night Floor Swap' : 'Clearance Planner'}</a></p></header>
 <div style="max-width:74ch">${blocks}
 <h2 id="why">Why it is laid out this way</h2>${note.body}
+${note.more || ''}
 <h2 id="pieces">Pieces and their use zones</h2><div class="table-scroll"><table class="data"><thead><tr><th>Piece</th><th>Size (in)</th><th>Size (cm)</th><th>Use zone in front</th></tr></thead><tbody>${items}</tbody></table></div>
 <p class="note-small">Room inside wall faces: ${fmtLen(L.room.W)} × ${fmtLen(L.room.D)} (${fmtLen(L.room.W, 'cm')} × ${fmtLen(L.room.D, 'cm')}). Results are computed by the same code as the planner and compared with the 36 in clear width of ADA 2010 §403.5.1 as a reference, not as a compliance statement.</p>
-<p class="reviewed">Last reviewed: ${REVIEWED}</p></div></article>`
+<p class="reviewed">Last reviewed: November 2026</p></div></article>`
     });
   }
   const cards = LAYOUTS.map(L => `<a class="card" href="/layouts/${L.slug}/"><span class="k">${L.kind}${L.states ? ' · day/night' : ''}</span>${planSVG(L, analyzePlan(L, { state: L.states?.[0] }), { dims: false, noPinch: true, pad: 8, title: L.title })}<h3>${esc(L.title)}</h3></a>`).join('');
@@ -150,7 +153,23 @@ function layoutPages() {
 <div class="intro" style="max-width:74ch"><h2 id="read">How to read the plans</h2>
 <p>Every plan is measured on the inside faces of the walls and drawn at the same scale on its own page. Furniture appears as its real footprint; the lighter areas in front of it are use zones – the 32 in a desk chair rolls back, the 24 in strip beside a bed, the 18 in a dresser drawer needs, the arc of each door. The yellow line is the widest route from the entry to the bed, the desk and the window, and the marker sits where that route is narrowest. Each page lists that narrowest width in inches and centimeters and compares it with the 36 in clear width from §403.5.1 of the 2010 ADA Standards, used here as a reference line, not as a compliance test.</p>
 <p>Below the drawing you also find the floor area, the furniture footprint, the area taken by use zones and the free floor that is left, plus a short note on why the pieces sit where they do. The library covers six studios between 15 × 15 ft and 24 × 14 ft, two 12 × 10 ft bedrooms and a galley kitchen; the wall-bed and sofa-bed studios are checked twice, in their day and their night position.</p>
-<p>To adapt a plan, open it in the <a href="/tools/clearance-planner/">Clearance Planner</a> (or the <a href="/tools/day-night-swap/">Day/Night Floor Swap</a> for fold-away furniture), change the room size and the pieces to your own measurements and watch the route widths update. For the reasoning behind the numbers, start with the guide to <a href="/guides/studio-apartment-layouts/">studio apartment layouts</a>.</p></div>
+<p>To adapt a plan, open it in the <a href="/tools/clearance-planner/">Clearance Planner</a> (or the <a href="/tools/day-night-swap/">Day/Night Floor Swap</a> for fold-away furniture), change the room size and the pieces to your own measurements and watch the route widths update. For the reasoning behind the numbers, start with the guide to <a href="/guides/studio-apartment-layouts/">studio apartment layouts</a>.</p>
+<h2 id="which">Which plan for which room</h2>
+<div class="table-scroll"><table class="data"><caption class="sr">Layouts by room type</caption><thead><tr><th>Your room</th><th>Start with</th><th>Why</th></tr></thead><tbody>
+<tr><td>Studio, roughly square, queen bed</td><td><a href="/layouts/studio-20x15-queen-corner/">20 × 15 ft, bed in the corner</a></td><td>Bed away from the door, living area by the window</td></tr>
+<tr><td>Studio where the bed should be screened</td><td><a href="/layouts/studio-18x14-full-alcove/">18 × 14 ft alcove</a></td><td>Bookshelf divider, full bed</td></tr>
+<tr><td>Long, narrow studio</td><td><a href="/layouts/studio-22x12-long-narrow/">22 × 12 ft in three zones</a></td><td>Furniture on one long wall, route on the other</td></tr>
+<tr><td>Small studio, wall bed</td><td><a href="/layouts/studio-15x15-wall-bed/">15 × 15 ft wall bed</a></td><td>Day and night states checked</td></tr>
+<tr><td>Studio with a kitchen wall</td><td><a href="/layouts/studio-16x20-kitchen-wall/">16 × 20 ft</a></td><td>42 in work aisle kept free</td></tr>
+<tr><td>Studio without a separate bed</td><td><a href="/layouts/studio-24x14-sofa-bed/">24 × 14 ft sofa bed</a></td><td>Only the coffee table moves</td></tr>
+<tr><td>Small bedroom, queen bed</td><td><a href="/layouts/bedroom-12x10-queen/">12 × 10 ft queen</a></td><td>Both bed sides usable, room for a dresser</td></tr>
+<tr><td>Small bedroom with a desk</td><td><a href="/layouts/bedroom-12x10-full-desk/">12 × 10 ft full bed and desk</a></td><td>Bed in the corner frees a work wall</td></tr>
+<tr><td>Galley kitchen</td><td><a href="/layouts/galley-kitchen-8x12/">8 × 12 ft galley</a></td><td>NKBA aisle, dishwasher and fridge doors</td></tr>
+</tbody></table></div>
+<h2 id="smaller">What if your room is 12 in smaller?</h2>
+<p>Each layout page also reports what happens when the room loses 12 in (30 cm) in either direction. We recompute the plan with the same code as the planner, take the 12 in out of the middle of the room and move the furniture on the far side with the wall. Some plans barely notice – the 24 × 14 ft sofa-bed studio keeps every route above 49 in – while others lose a piece: in a 12 × 9 ft bedroom a queen bed and two 24 in strips use the whole width, so the nightstands no longer fit. If your room is a little smaller than a plan, read that section first; it tells you which piece to change.</p>
+<h2 id="pinch">Reading the pinch points</h2>
+<p>A route is only as wide as its narrowest point. The marker on each plan shows where that is, and the two pieces on either side of it are the ones to change first. A short squeeze past the corner of a table is easier to live with than a long, narrow corridor along a sofa, which is why the 2010 ADA Standards allow a 32 in pinch only over a short length; the layout pages say when a plan relies on such a pinch.</p></div>
 <div class="cards">${cards}</div>`
   });
 }
@@ -176,7 +195,17 @@ ${ad('inline')}</div>`,
     body: `<header class="titleblock"><span class="kicker">Tools</span><h1>Planning tools that check movement, not just footprints</h1><p class="lede">All four tools run entirely in your browser. Plans are kept on your device only and can be exported as SVG or JSON.</p></header>
 <div class="intro" style="max-width:74ch"><h2 id="which">Which tool answers which question</h2>
 <p>Use the <a href="/tools/clearance-planner/">Clearance Planner</a> when you are arranging a room: it draws furniture as measured rectangles, adds door swings and the space a chair, drawer or wardrobe door needs, then finds the widest route from the entry to the bed, desk and window and measures its narrowest point. Use <a href="/tools/will-it-fit/">Will It Fit?</a> before you order a sofa, mattress or wardrobe: it tests the item straight, on its side, on end and tilted through your door, around a 90° hallway corner and over a stair landing. The <a href="/tools/day-night-swap/">Day/Night Floor Swap</a> runs the planner's checks twice for wall beds, sofa beds and drop-leaf tables, once folded and once open. The <a href="/tools/storage-wall/">Storage Wall Audit</a> splits the volume of shelves and cabinets into what sits below 15 in, within the 15–48 in reach range and above it.</p>
-<p>All tools work in inches or centimeters and convert exactly. Measure the inside faces of walls and the clear width of doors with the door open 90°; the <a href="/guides/how-to-measure-a-room-for-furniture/">room measuring guide</a> shows where. The tools are geometric aids: they check rectangles, arcs and heights, not building codes, structural loads or how a piece is carried. Each tool page explains its method, its sources and its limits below the tool.</p></div>
+<p>All tools work in inches or centimeters and convert exactly. Measure the inside faces of walls and the clear width of doors with the door open 90°; the <a href="/guides/how-to-measure-a-room-for-furniture/">room measuring guide</a> shows where. The tools are geometric aids: they check rectangles, arcs and heights, not building codes, structural loads or how a piece is carried. Each tool page explains its method, its sources and its limits below the tool.</p>
+<h2 id="order">A sensible order</h2>
+<p>Before a move or a furniture purchase, the tools work best in this order. First measure the room and the doors, using the <a href="/guides/how-to-measure-a-room-for-furniture/">measuring guide</a>. Then check every large piece with Will It Fit? – a sofa that cannot get through the hallway corner does not need a place in the plan. Next, arrange the pieces that passed in the Clearance Planner, or in the Day/Night Floor Swap if something folds. Finally, use the Storage Wall Audit to see whether the storage you planned is within easy reach or mostly above your head.</p>
+<h2 id="example">A worked example</h2>
+<p>Say you are moving into a 20 × 15 ft studio with a 32 in entry door and want to bring a 84 in sofa, a queen bed and a desk. In Will It Fit? you enter the sofa's width, depth and height and the door and hallway measurements; the result says whether it passes straight, on its side or only tilted, and where it gets stuck if it does not. In the Clearance Planner you then open the measured <a href="/layouts/studio-20x15-queen-corner/">20 × 15 ft studio layout</a>, change the sofa to 84 in and see the route widths update: if a route drops below the 36 in reference, the marker shows which two pieces cause it. Exporting the plan as SVG gives you a drawing to take to the shop.</p>
+<h2 id="limits">What the tools do not check</h2>
+<ul><li><b>Building rules.</b> Egress, fire and accessibility codes for your building are not part of the checks; the 36 in ADA figure is used as a reference line only.</li>
+<li><b>Loads and fixings.</b> Whether a wall can carry a shelf or a wall bed, or a floor a piano, is a question for the building owner or a structural engineer.</li>
+<li><b>Carrying.</b> The delivery check tests geometry. It does not know how heavy a piece is, whether the movers can tilt it or whether its legs come off.</li>
+<li><b>Odd shapes.</b> Furniture is drawn as rectangles and rooms as rectangles with doors and windows. L-shaped rooms and curved pieces need to be approximated.</li></ul>
+<p>Everything you enter stays in your browser. Each tool keeps its own plan in local storage, and you can move a plan between the planner and the swap tool with JSON export and import.</p></div>
 <div class="cards">${TOOLS.map(t => `<a class="card" href="${t.path}"><span class="k">Tool</span><h3>${esc(t.h1)}</h3><p>${esc(t.description)}</p></a>`).join('')}<a class="card" href="/layouts/"><span class="k">Library</span><h3>Measured Layout Library</h3><p>Nine measured plans that open straight in the planner.</p></a></div>`
   });
 }
@@ -194,7 +223,7 @@ ${Object.entries(groups).map(([g, list]) => `<h2>${esc(g)}</h2><div class="cards
   const hero = layoutBySlug['studio-20x15-queen-corner'];
   page({
     path: '/', title: 'Small Space Compass – small-space planning from the tape measure up', description: 'Free clearance planner, delivery check and measured guides for studios and small rooms. See door swings, chair pull-out zones and the narrowest point of every walkway.',
-    ads: false, loader: true,
+    ads: false,
     ld: [{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'Small Space Compass', url: ORIGIN + '/', inLanguage: 'en' }],
     body: `<section class="hero"><div><p class="titleblock"><span class="kicker">Small living, measured</span></p><h1>Will you still be able to walk through it?</h1>
 <p class="lede">Most room planners stop at “the bed fits on the floor”. Small Space Compass draws door swings, chair and drawer zones and the route from your door to the bed, desk and window – then measures its narrowest point and compares it with the 36 in clear width from the 2010 ADA Standards.</p>
@@ -238,7 +267,7 @@ for (const l of LEGAL) page(l);
 redirects();
 write('/404.html', layout({ path: '/404.html', title: 'Page not found – Small Space Compass', description: 'The page you were looking for does not exist on smallspacecompass.com. It may have moved when the site was rebuilt.', noindex: true, ads: false, canonical: false,
   body: `<div class="sheet" style="max-width:60ch"><h1>Nothing measured here.</h1><p>This address does not lead to a page. It may have moved when the site was rebuilt in October 2026.</p><p class="row"><a class="btn" href="/">Home</a><a class="btn ghost" href="/guides/">All guides</a><a class="btn ghost" href="/tools/clearance-planner/">Clearance Planner</a></p></div>` }));
-const sm = pages.filter(p => !p.noindex).map(p => `<url><loc>${ORIGIN}${p.path}</loc><lastmod>2026-10-31</lastmod></url>`).join('\n');
+const sm = pages.filter(p => !p.noindex).map(p => `<url><loc>${ORIGIN}${p.path}</loc><lastmod>${MODIFIED}</lastmod></url>`).join('\n');
 writeFileSync(join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sm}\n</urlset>\n`);
 writeFileSync(join(OUT, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${ORIGIN}/sitemap.xml\n`);
 writeFileSync(join(OUT, 'ads.txt'), 'google.com, pub-7811071715414905, DIRECT, f08c47fec0942fa0\n');

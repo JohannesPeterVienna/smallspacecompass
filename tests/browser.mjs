@@ -27,8 +27,27 @@ for (const width of [390, 1366]) {
   for (const path of [...pages, '/404.html']) {
     const page = await ctx.newPage(); const errs = [];
     page.on('pageerror', e => errs.push(e.message));
-    page.on('console', m => { if (m.type() === 'error' && !/ERR_FAILED|net::/.test(m.text())) errs.push(m.text()); });
+    page.on('console', m => { if (m.type() === 'error' && !/ERR_FAILED|net::|Failed to load resource/.test(m.text())) errs.push(m.text()); });
+    page.on('response', res => { if (res.status() === 404 && res.url().startsWith(base) && path !== '/404.html') errs.push('local 404: ' + res.url().slice(base.length)); });
     await page.goto(base + path, { waitUntil: 'networkidle' });
+    // every ad box forced visible (as if all slot IDs were filled): at least 150 px to any button, input, select, textarea or summary
+    const near = await page.evaluate(() => {
+      const ads = [...document.querySelectorAll('.ad')];
+      for (const a of ads) { a.classList.add('on'); a.style.minHeight = '250px'; }
+      const ctl = [...document.querySelectorAll('button, input, select, textarea, summary')].filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden'; });
+      const out = [];
+      for (const a of ads) {
+        const r = a.getBoundingClientRect(); if (!r.width || !r.height) continue;
+        for (const c of ctl) {
+          const q = c.getBoundingClientRect();
+          const d = Math.hypot(Math.max(0, q.left - r.right, r.left - q.right), Math.max(0, q.top - r.bottom, r.top - q.bottom));
+          if (d < 150) out.push(`${a.dataset.slot} ad ${Math.round(d)} px from ${c.tagName.toLowerCase()} "${(c.textContent || c.name || '').trim().slice(0, 30)}"`);
+        }
+      }
+      for (const a of ads) { a.classList.remove('on'); a.style.minHeight = ''; }
+      return out;
+    });
+    if (near.length) { fail++; console.log(`✗ ${width}px ${path}: ${near.join(' / ')}`); }
     const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     if (over > 1) { fail++; const who = await page.evaluate(() => [...document.querySelectorAll('body *')].filter(e => e.getBoundingClientRect().right > window.innerWidth + 1).slice(0, 3).map(e => e.tagName + '.' + e.className).join(' | ')); console.log(`✗ ${width}px ${path}: horizontal overflow ${over}px – ${who}`); }
     if (errs.length) { fail++; console.log(`✗ ${width}px ${path}: ${errs.join(' / ')}`); }
