@@ -15,7 +15,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'docs');
 const ORIGIN = 'https://smallspacecompass.com';
 const REVIEWED = 'October 2026';
-const VERSION = '20261105a';
+const VERSION = '20261105b';
 const MODIFIED = '2026-11-04';
 const pages = [];
 

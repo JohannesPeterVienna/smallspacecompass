@@ -30,10 +30,19 @@ for (const width of [390, 1366]) {
     page.on('console', m => { if (m.type() === 'error' && !/ERR_FAILED|net::|Failed to load resource/.test(m.text())) errs.push(m.text()); });
     page.on('response', res => { if (res.status() === 404 && res.url().startsWith(base) && path !== '/404.html') errs.push('local 404: ' + res.url().slice(base.length)); });
     await page.goto(base + path, { waitUntil: 'networkidle' });
+    // no ad unit is filled here (third-party requests blocked), so no ad box may take any room
+    const empty = await page.evaluate(() => [...document.querySelectorAll('.ad')].filter(a => a.getBoundingClientRect().height > 0).map(a => a.dataset.slot));
+    if (empty.length) { fail++; console.log(`✗ ${width}px ${path}: empty ad box visible (${empty.join(', ')})`); }
     // every ad box forced visible (as if all slot IDs were filled): at least 150 px to any button, input, select, textarea or summary
     const near = await page.evaluate(() => {
       const ads = [...document.querySelectorAll('.ad')];
-      for (const a of ads) { a.classList.add('on'); a.style.minHeight = '250px'; }
+      const added = [];
+      for (const a of ads) {
+        a.classList.add('on'); a.style.minHeight = '250px';
+        let ins = a.querySelector('ins.adsbygoogle');
+        if (!ins) { ins = document.createElement('ins'); ins.className = 'adsbygoogle'; a.appendChild(ins); added.push(ins); }
+        ins.setAttribute('data-ad-status', 'filled');
+      }
       const ctl = [...document.querySelectorAll('button, input, select, textarea, summary')].filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden'; });
       const out = [];
       for (const a of ads) {
@@ -44,7 +53,8 @@ for (const width of [390, 1366]) {
           if (d < 150) out.push(`${a.dataset.slot} ad ${Math.round(d)} px from ${c.tagName.toLowerCase()} "${(c.textContent || c.name || '').trim().slice(0, 30)}"`);
         }
       }
-      for (const a of ads) { a.classList.remove('on'); a.style.minHeight = ''; }
+      for (const a of ads) { a.classList.remove('on'); a.style.minHeight = ''; a.querySelector('ins.adsbygoogle')?.removeAttribute('data-ad-status'); }
+      added.forEach(i => i.remove());
       return out;
     });
     if (near.length) { fail++; console.log(`✗ ${width}px ${path}: ${near.join(' / ')}`); }
@@ -73,6 +83,35 @@ for (const width of [390, 1366]) {
   if ((await p.$$('[data-stage] svg')).length !== 2) { fail++; console.log('✗ swap needs two plans'); }
   await p.goto(base + '/tools/storage-wall/', { waitUntil: 'networkidle' });
   if (!/cu ft/.test(await p.textContent('[data-bands]'))) { fail++; console.log('✗ storage bands missing'); }
+  await ctx.close();
+}
+// Ad slots with a stubbed adsbygoogle.js that never fills anything: nothing visible (no label, no gap);
+// data-ad-status="unfilled" stays collapsed, "filled" opens the box with its label and margin.
+for (const width of [390, 1366]) {
+  const ctx = await browser.newContext({ viewport: { width, height: 900 } });
+  await ctx.route(/^https?:\/\/(?!127\.0\.0\.1)/, r => r.fulfill({ status: 200, contentType: 'text/javascript', body: '/* stub: no ad */' }));
+  for (const path of ['/guides/studio-apartment-layouts/', '/guides/small-kitchen-clearances/', '/tools/clearance-planner/']) {
+    const p = await ctx.newPage(); const errs = [];
+    p.on('pageerror', e => errs.push(e.message));
+    await p.goto(base + path, { waitUntil: 'networkidle' });
+    const r = await p.evaluate(async () => {
+      const tick = () => new Promise(ok => setTimeout(ok, 0));   // MutationObserver reports asynchronously
+      const shown = () => [...document.querySelectorAll('.ad')].filter(a => { const cs = getComputedStyle(a); return cs.display !== 'none' && (a.getBoundingClientRect().height > 0 || parseFloat(cs.marginTop) > 0 || parseFloat(cs.marginBottom) > 0); }).length;
+      const ins = [...document.querySelectorAll('.ad.on ins.adsbygoogle')];
+      const stub = shown();
+      ins.forEach(i => i.setAttribute('data-ad-status', 'unfilled')); await tick();
+      const unfilled = shown();
+      ins.forEach(i => i.setAttribute('data-ad-status', 'filled')); await tick();
+      return { ins: ins.length, stub, unfilled, filled: shown(),
+               label: ins.every(i => getComputedStyle(i.parentElement, '::before').content.includes('Advertisement')),
+               cls: ins.every(i => i.parentElement.classList.contains('ad-filled')) };
+    });
+    if (!r.ins) { fail++; console.log(`✗ stub ${width}px ${path}: no ad slot filled in`); }
+    if (r.stub || r.unfilled) { fail++; console.log(`✗ stub ${width}px ${path}: empty ad visible (${r.stub}/${r.unfilled})`); }
+    if (r.filled !== r.ins || !r.label || !r.cls) { fail++; console.log(`✗ stub ${width}px ${path}: filled ad not shown (${r.filled}/${r.ins}, label ${r.label}, class ${r.cls})`); }
+    if (errs.length) { fail++; console.log(`✗ stub ${width}px ${path}: ${errs.join(' / ')}`); }
+    await p.close();
+  }
   await ctx.close();
 }
 // Codex counterexamples (Nov 2026), end to end in the real pages

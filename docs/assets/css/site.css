@@ -141,6 +141,13 @@ table.data td.num{font-family:var(--mono);white-space:nowrap}
 @media (min-width:1100px){.ad-side.on{display:block!important}.ad-side.on .slot{width:300px;height:600px}}
 .ad-inline.on .slot{width:300px;height:250px;max-width:100%}
 .ad.on{max-width:100%;overflow:hidden} /* 320-px phones: never wider than the column (responsive units can request full width) */
+/* A slot Google has not filled takes no space at all: zero height, no margin, no “Advertisement” label, no striped
+   placeholder. It opens only when the ins carries data-ad-status="filled"; the width stays so AdSense can measure it.
+   :has() first; without it site.js adds html.no-has-support and .ad-filled via a MutationObserver. */
+.ad.on:not(:has(ins.adsbygoogle[data-ad-status="filled"])),
+.no-has-support .ad.on:not(.ad-filled){height:0!important;min-height:0!important;margin-top:0!important;margin-bottom:0!important;padding:0!important;border:0!important;overflow:hidden!important}
+.ad.on:not(:has(ins.adsbygoogle[data-ad-status="filled"]))::before,
+.no-has-support .ad.on:not(.ad-filled)::before{content:none}
 /* tool UI */
 .tool{display:grid;gap:1rem}
 @media (min-width:1000px){.tool{grid-template-columns:minmax(0,1fr) 340px;align-items:start}}

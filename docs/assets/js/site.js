@@ -25,8 +25,18 @@ function fillSlots() {
     ins.style.display = 'block';
     box.appendChild(ins);
     box.classList.add('on');
+    watchFill(box, ins);
     try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) { box.classList.remove('on'); }
   });
+}
+
+// Fallback for browsers without :has(): the slot only opens (.ad-filled, see site.css) once Google
+// marks its ins with data-ad-status="filled"; "unfilled" or no answer keeps it collapsed.
+function watchFill(box, ins) {
+  if (!(window.CSS && CSS.supports && CSS.supports('selector(:has(a))'))) document.documentElement.classList.add('no-has-support');
+  const sync = () => box.classList.toggle('ad-filled', ins.getAttribute('data-ad-status') === 'filled');
+  sync();
+  if (typeof MutationObserver === 'function') new MutationObserver(sync).observe(ins, { attributes: true, attributeFilter: ['data-ad-status'] });
 }
 
 /* ---------- consent ----------
