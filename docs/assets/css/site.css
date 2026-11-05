@@ -139,7 +139,8 @@ table.data td.num{font-family:var(--mono);white-space:nowrap}
 @media (min-width:768px){.ad-leader.on .slot{width:728px;height:90px}}
 .ad-side{display:none!important}
 @media (min-width:1100px){.ad-side.on{display:block!important}.ad-side.on .slot{width:300px;height:600px}}
-.ad-inline.on .slot{width:300px;height:250px}
+.ad-inline.on .slot{width:300px;height:250px;max-width:100%}
+.ad.on{max-width:100%;overflow:hidden} /* 320-px phones: never wider than the column (responsive units can request full width) */
 /* tool UI */
 .tool{display:grid;gap:1rem}
 @media (min-width:1000px){.tool{grid-template-columns:minmax(0,1fr) 340px;align-items:start}}
