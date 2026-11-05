@@ -17,7 +17,7 @@ const srv = createServer((q, r) => {
 }).listen(0);
 const base = `http://127.0.0.1:${srv.address().port}`;
 const pages = JSON.parse(readFileSync(join(ROOT, '..', 'build/pages.json'), 'utf8')).map(p => p.path);
-const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+const browser = await chromium.launch({ executablePath: process.env.CHROME || '/usr/bin/google-chrome', args: ['--no-sandbox'] });
 let fail = 0;
 const shots = new Set(process.argv.slice(2));
 for (const width of [390, 1366]) {

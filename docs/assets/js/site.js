@@ -1,5 +1,5 @@
-/* Site runtime: ad slots, Consent Mode v2 + CMP-gated analytics, privacy-settings link.
-   Written for smallspacecompass.com. Slot IDs stay empty until AdSense units exist;
+/* Site runtime: ad slots, Consent Mode v2 + CMP-gated analytics, interim statistics window,
+   privacy-settings link. Written for smallspacecompass.com. Slot IDs stay empty until AdSense units exist;
    an empty ID means the slot is not rendered and no space is reserved. */
 const ADSENSE = {
   client: 'ca-pub-7811071715414905',
@@ -44,7 +44,7 @@ function fillSlots() {
    and denies everything at once (see gppUsOptOut).
    Enum values: developers.google.com/funding-choices/fc-api-docs */
 const CM = { UNKNOWN: 0, GRANTED: 1, DENIED: 2, NOT_APPLICABLE: 3, NOT_CONFIGURED: 4 };
-const US_DOES_NOT_APPLY = 1, US_NOT_OPTED_OUT = 2;
+const US_DOES_NOT_APPLY = 1, US_NOT_OPTED_OUT = 2, US_OPTED_OUT = 3;
 const gtag = window.gtag || function () { (window.dataLayer = window.dataLayer || []).push(arguments); };
 const consent = { tc: null, cmReady: false, usOptOut: null, gppOptOut: false, last: '' };
 let lastTc = null;                                         // latest TCF data the CMP reported
@@ -116,6 +116,93 @@ export function gppUsOptOut(pd) {
   return us.some((k) => gppSectionState(parsed[k]) !== 'in');
 }
 
+/* ---------- interim statistics window ("stats note", since 5 Nov 2026) ----------
+   Google's consent message is published but currently reports displayStatus "hidden", so no TCF decision
+   ever arrives and analytics never starts. Rules:
+   - The note is used only if, STATS_WAIT ms after start, Google's CMP has not "spoken" (see cmpSpoke):
+     no __tcfapi at all, or no "useractioncomplete", no "tcloaded" with a tcString, no visible message
+     ("cmpuishown" with displayStatus hidden/disabled does not count) and gdprApplies is not false.
+   - It asks about statistics only. "Allow" sends Consent Mode { analytics_storage: 'granted' } and loads
+     gtag.js once (Google signals and ad personalisation off); ad_storage, ad_user_data and
+     ad_personalization are never sent from here and stay at their "denied" default.
+     "Decline", "×", Escape or no choice: analytics stays denied. Decline/withdrawal also deletes _ga/_ga_*.
+   - Stored in localStorage "ssc-stats" as { v, choice, at }; asked again after 12 months; a time stamp in
+     the future, another version or a blocked storage count as "no choice".
+   - Google's CMP has priority: once it speaks, the note closes for good (phase "retired"); a real decision
+     or gdprApplies === false also deletes the stored note choice; a Google "no" for analytics deletes the
+     GA cookies, whether or not the note was ever used.
+   - Global Privacy Control, a U.S. opt-out (initial status or GPP) → no analytics, the note is not pushed.
+   - Pages marked data-stats="off" (imprint, privacy policy, 404) never load Google Analytics; there the
+     note only opens through "Privacy settings", so a choice made in it can be seen and withdrawn. */
+const STATS_KEY = 'ssc-stats', STATS_V = 1, STATS_WAIT = 3000, STATS_MONTHS = 12;
+const GA_OFF = 'ga-disable-' + GA_ID;
+const gpc = !!(window.navigator && window.navigator.globalPrivacyControl === true);
+const statsOff = page.stats === 'off';
+// 'waiting' (first ~3 s) | 'active' (the note decides analytics) | 'settings' (data-stats="off" page) | 'retired' (CMP decides)
+const stats = { phase: statsOff ? 'settings' : 'waiting', pick: null };
+
+export function readStats(raw, now) {
+  let rec;
+  try { rec = JSON.parse(raw); } catch (e) { return null; }
+  if (!rec || typeof rec !== 'object' || rec.v !== STATS_V) return null;
+  if (rec.choice !== 'granted' && rec.choice !== 'denied') return null;
+  if (typeof rec.at !== 'number' || !Number.isFinite(rec.at) || rec.at > now) return null;   // future time stamp: discarded
+  const renew = new Date(rec.at);
+  renew.setMonth(renew.getMonth() + STATS_MONTHS);
+  return now < renew.getTime() ? rec : null;
+}
+function storedStats() {
+  let raw = null;
+  try { raw = window.localStorage.getItem(STATS_KEY); } catch (e) { /* storage blocked */ }
+  return readStats(raw, Date.now());
+}
+function saveStats(choice) {
+  const rec = { v: STATS_V, choice, at: Date.now() };
+  try { window.localStorage.setItem(STATS_KEY, JSON.stringify(rec)); } catch (e) { /* blocked: holds for this page view */ }
+  return rec;
+}
+function dropStats() {
+  try { window.localStorage.removeItem(STATS_KEY); } catch (e) { /* storage blocked: nothing stored */ }
+}
+
+// Has Google's CMP spoken? A real decision, its own message actually on screen, or GDPR clearly not applicable.
+export function cmpDecided(tc) {
+  return !!tc && (tc.eventStatus === 'useractioncomplete' ||
+    (tc.eventStatus === 'tcloaded' && typeof tc.tcString === 'string' && tc.tcString !== ''));
+}
+export function cmpSpoke(tc) {
+  if (!tc) return false;
+  const shown = tc.displayStatus === 'visible' ||
+    (tc.eventStatus === 'cmpuishown' && tc.displayStatus !== 'hidden' && tc.displayStatus !== 'disabled');
+  return tc.gdprApplies === false || cmpDecided(tc) || shown;
+}
+// a real Google decision that leaves analytics off (TCF data first; Consent Mode only if TCF says yes)
+function googleSaysNo(tc) {
+  if (!cmpDecided(tc) || tc.gdprApplies === false) return false;
+  const p1 = !!(tc.purpose && tc.purpose.consents && tc.purpose.consents[1]);
+  const v = !!(tc.vendor && tc.vendor.consents && tc.vendor.consents[GOOGLE_VENDOR_ID]);
+  if (!p1 || !v) return true;
+  const cm = readConsentMode();
+  return !!cm && cm.analyticsStoragePurposeConsentStatus === CM.DENIED;
+}
+
+// _ga and _ga_<container> on the host itself and on every parent domain (www.example.com, example.com)
+export function eraseGaCookies() {
+  let jar = '';
+  try { jar = String(document.cookie || ''); } catch (e) { return; }
+  const host = String((window.location && window.location.hostname) || '');
+  const labels = host.split('.').filter(Boolean);
+  const scopes = [''];
+  for (let i = 0; i < labels.length - 1; i++) scopes.push('; domain=.' + labels.slice(i).join('.'));
+  for (const part of jar.split(';')) {
+    const name = part.split('=')[0].trim();
+    if (name !== '_ga' && !name.startsWith('_ga_')) continue;
+    for (const scope of scopes) {
+      try { document.cookie = `${name}=; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/${scope}`; } catch (e) { /* ignore */ }
+    }
+  }
+}
+
 let gaLoaded = false;
 function loadAnalytics() {
   if (gaLoaded) return; gaLoaded = true;
@@ -123,7 +210,22 @@ function loadAnalytics() {
   s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
   document.head.appendChild(s);
   gtag('js', new Date());
-  gtag('config', GA_ID);
+  gtag('config', GA_ID, { allow_google_signals: false, allow_ad_personalization_signals: false });
+}
+// Every GA event goes through here: nothing is sent unless analytics is switched on.
+export function track(name, params) {
+  if (window[GA_OFF] !== false) return;
+  try { gtag('event', name, params || {}); } catch (e) { /* ignore */ }
+}
+// note phase: only analytics_storage is ever updated; a U.S. opt-out, GPC or a data-stats="off" page keep it denied
+function applyStats() {
+  const allowed = !gpc && !statsOff && !consent.gppOptOut && consent.usOptOut !== US_OPTED_OUT &&
+    !!stats.pick && stats.pick.choice === 'granted';
+  window[GA_OFF] = !allowed;
+  const d = { analytics_storage: allowed ? 'granted' : 'denied' };
+  const key = 'stats:' + d.analytics_storage;
+  if (key !== consent.last) { consent.last = key; gtag('consent', 'update', d); }
+  if (allowed) loadAnalytics();
 }
 function readConsentMode() {
   try {
@@ -132,14 +234,17 @@ function readConsentMode() {
   } catch (e) { return null; }                               // CMP API failure → denied
 }
 function applyConsent() {
+  if (stats.phase === 'active') { applyStats(); return; }   // interim note decides analytics (ad_* untouched)
   // a clear TCF "no" is decided without asking any further CMP API
   const cm = consent.cmReady && tcfSignal(consent.tc) !== 'no' ? readConsentMode() : null;
   // a later U.S. opt-out through GPP keeps everything denied for the rest of the page view
   const d = consent.gppOptOut
     ? { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', analytics_storage: 'denied' }
     : decideConsent({ tc: consent.tc, cm, usOptOut: consent.usOptOut });
+  // Global Privacy Control or a page without statistics (imprint, privacy policy, 404): analytics stays off
+  if (gpc || statsOff) d.analytics_storage = 'denied';
   const allowed = d.analytics_storage === 'granted';
-  window['ga-disable-' + GA_ID] = !allowed;
+  window[GA_OFF] = !allowed;
   const key = JSON.stringify(d);
   if (key !== consent.last) { consent.last = key; gtag('consent', 'update', d); }
   if (allowed) loadAnalytics();
@@ -173,6 +278,7 @@ function watchConsent() {
       if (typeof window.__tcfapi === 'function') window.__tcfapi('addEventListener', 2, (tc, ok) => {
         consent.tc = ok ? tc : null;
         if (ok && tc) lastTc = tc;                           // kept across the click-time withdrawal
+        if (ok && tc) onCmpSignal(tc);                       // Google's CMP has priority over the interim note
         // after a new decision in the message the CMP's consent-mode values are current again
         if (ok && tc && tc.eventStatus === 'useractioncomplete' && typeof window.googlefc.getGoogleConsentModeValues === 'function') consent.cmReady = true;
         applyConsent();
@@ -196,7 +302,6 @@ function watchConsent() {
    The U.S. dialog opens only for a known U.S. status (NOT_OPTED_OUT or OPTED_OUT) and only when the latest
    TCF data does not say the GDPR applies; UNKNOWN (0) or an EU visitor gets the consent message, so consent
    can always be withdrawn. If the CMP offers no openConfirmationDialog, the consent message opens instead. */
-const US_OPTED_OUT = 3;
 function openPrivacyChoice(before) {
   const fc = window.googlefc;
   const us = fc.usstatesoptout;
@@ -226,6 +331,9 @@ function openPrivacyChoice(before) {
 
 function privacyLinks() {
   document.querySelectorAll('[data-privacy-settings]').forEach((b) => b.addEventListener('click', () => {
+    // interim mode, a page without statistics, or no CMP at all: our own note shows and changes the choice
+    if (stats.phase === 'waiting' && typeof window.__tcfapi !== 'function') activateStats();
+    if (stats.phase === 'active' || stats.phase === 'settings') { openNote(b); return; }
     window.googlefc = window.googlefc || {};
     window.googlefc.callbackQueue = window.googlefc.callbackQueue || [];
     // withdrawing: deny and disable at once; the CMP then reports the new decision through the listeners above
@@ -244,6 +352,125 @@ function privacyLinks() {
   }));
 }
 
+/* ---------- interim statistics window: phases ---------- */
+function onCmpSignal(tc) {
+  if (cmpSpoke(tc)) retireStats();
+  if (cmpDecided(tc) || tc.gdprApplies === false) dropStats();   // only Google's decision counts from now on
+  if (googleSaysNo(tc)) eraseGaCookies();                        // also if the note was never used
+}
+function retireStats() {
+  if (stats.phase === 'retired') return;
+  stats.phase = 'retired'; stats.pick = null;
+  closeNote(false);
+}
+function activateStats() {
+  if (stats.phase !== 'waiting') return;
+  stats.phase = 'active';
+  stats.pick = storedStats();
+  applyConsent();
+}
+function startStats() {
+  if (stats.phase !== 'waiting') return;
+  if (cmpSpoke(lastTc)) { retireStats(); return; }
+  activateStats();
+  const usOut = consent.gppOptOut || consent.usOptOut === US_OPTED_OUT;
+  if (!stats.pick && !gpc && !usOut) openNote(null);          // GPC / U.S. opt-out: nothing is pushed
+}
+function choose(choice) {
+  stats.pick = saveStats(choice);
+  if (choice === 'denied') {
+    window[GA_OFF] = true;
+    if (stats.phase !== 'active') gtag('consent', 'update', { analytics_storage: 'denied' });
+    eraseGaCookies();
+  }
+  if (stats.phase === 'active') applyConsent();
+  closeNote(true);
+  announce(choice === 'granted' ? 'Statistics allowed.' : 'Statistics declined. Google Analytics stays off.');
+}
+
+/* ---------- interim statistics window: the note itself (built with DOM calls, no innerHTML) ---------- */
+let note = null, noteOpener = null, live = null;
+const ui = {};
+function h(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const k of Object.keys(attrs || {})) n.setAttribute(k, attrs[k]);
+  for (const c of kids) n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+  return n;
+}
+function announce(msg) {
+  try {
+    if (!live) { live = h('p', { class: 'sr', 'aria-live': 'polite', id: 'ssc-stats-live' }); document.body.appendChild(live); }
+    live.textContent = '';
+    window.setTimeout(() => { live.textContent = msg; }, 60);
+  } catch (e) { /* no DOM */ }
+}
+function buildNote() {
+  ui.close = h('button', { type: 'button', class: 'statnote-x', 'aria-label': 'Close – statistics stay off', title: 'Close – statistics stay off' }, '×');
+  ui.title = h('h2', { id: 'ssc-stats-title', class: 'statnote-title', tabindex: '-1' }, 'Count this visit?');
+  ui.text = h('p', { id: 'ssc-stats-text', class: 'statnote-text' });
+  ui.now = h('p', { class: 'statnote-now' });
+  ui.allow = h('button', { type: 'button', class: 'statnote-pick', 'data-stats-pick': 'granted' }, 'Allow');
+  ui.decline = h('button', { type: 'button', class: 'statnote-pick', 'data-stats-pick': 'denied' }, 'Decline');
+  ui.picks = h('div', { class: 'statnote-picks' }, ui.allow, ui.decline);
+  ui.gpcClose = h('button', { type: 'button', class: 'statnote-pick' }, 'Close');
+  ui.gpc = h('div', { class: 'statnote-picks statnote-one' }, ui.gpcClose);
+  const el = h('section', { class: 'statnote', id: 'ssc-stats', role: 'dialog', 'aria-modal': 'false',
+    'aria-labelledby': 'ssc-stats-title', 'aria-describedby': 'ssc-stats-text' },
+    ui.close, h('p', { class: 'statnote-kicker' }, 'Statistics only · interim notice'), ui.title, ui.text, ui.now, ui.picks, ui.gpc);
+  el.hidden = true;
+  ui.allow.addEventListener('click', () => choose('granted'));
+  ui.decline.addEventListener('click', () => choose('denied'));
+  ui.close.addEventListener('click', () => closeNote(true));      // closes for now: nothing stored, no consent
+  ui.gpcClose.addEventListener('click', () => closeNote(true));
+  el.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); closeNote(true); } });
+  const skip = document.querySelector('.skip');                   // early in the tab order, shown fixed at the bottom
+  if (skip && skip.parentNode) skip.parentNode.insertBefore(el, skip.nextSibling); else document.body.appendChild(el);
+  return el;
+}
+const longDate = (ms) => new Date(ms).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+function fillNote() {
+  const rec = stats.phase === 'settings' ? storedStats() : stats.pick;
+  ui.text.textContent = '';
+  if (gpc) {
+    ui.text.appendChild(document.createTextNode('Your browser sends a Global Privacy Control signal, so Google Analytics stays switched off on this site and we do not ask. '));
+    ui.now.textContent = '';
+  } else {
+    ui.text.appendChild(document.createTextNode('With your permission, Google Analytics (Google Ireland Ltd.) counts which pages and tools are used, with cookies (_ga); data may be processed in the USA. ' +
+      'Statistics only – this is not consent to advertising. Kept in this browser for 12 months; change it any time under “Privacy settings”. '));
+    const parts = [];
+    if (rec) parts.push(`Your current choice: ${rec.choice === 'granted' ? 'allowed' : 'declined'} on ${longDate(rec.at)}.`);
+    else if (stats.phase === 'settings') parts.push('No choice saved in this browser yet.');
+    if (statsOff) parts.push('This page itself never loads Google Analytics.');
+    ui.now.textContent = parts.join(' ');
+  }
+  ui.text.appendChild(h('a', { href: '/privacy/#interim-statistics' }, 'Privacy policy'));
+  ui.picks.hidden = gpc;
+  ui.gpc.hidden = !gpc;
+}
+function openNote(opener) {
+  try {
+    if (!note) note = buildNote();
+    noteOpener = opener;
+    fillNote();
+    note.hidden = false;
+    document.body.classList.add('stats-open');
+    document.body.style.setProperty('--stats-room', note.offsetHeight + 'px');   // the footer stays reachable
+    announce('Statistics question shown at the bottom of the page.');
+    if (opener) ui.title.focus();                    // opened on request: focus moves in; shown by itself: focus stays
+  } catch (e) { /* no DOM: nothing to show */ }
+}
+function closeNote(returnFocus) {
+  if (!note || note.hidden) return;
+  note.hidden = true;
+  try {
+    document.body.classList.remove('stats-open');
+    if (returnFocus && noteOpener && typeof noteOpener.focus === 'function') noteOpener.focus();
+  } catch (e) { /* ignore */ }
+  noteOpener = null;
+}
+
+{ const rec = storedStats(); if (rec && rec.choice === 'denied') eraseGaCookies(); }   // declined earlier: no GA cookie may linger
 privacyLinks();
 fillSlots();
 watchConsent();
+if (!statsOff && typeof window.setTimeout === 'function') window.setTimeout(startStats, STATS_WAIT);
