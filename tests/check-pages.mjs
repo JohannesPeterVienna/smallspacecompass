@@ -40,8 +40,11 @@ for (const p of all) {
   if (NO_AD.includes(p.path) && slots) err(p.path, 'ad slot on a page that must have none');
   // AdSense loader: statically in the head of every indexable page, exactly once, after the consent defaults
   const loaders = (h.match(/<script async src="https:\/\/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js\?client=ca-pub-7811071715414905" crossorigin="anonymous"><\/script>/g) || []).length;
-  if (p.noindex && hasAdScript) err(p.path, 'AdSense loader on a noindex page');
-  if (!p.noindex && loaders !== 1) err(p.path, `AdSense loader ${loaders}× instead of once`);
+  // mandatory pages (imprint, privacy, contact) and noindex pages: no ad code at all (no Auto Ads), statistics off
+  const mandatory = ['/imprint/', '/privacy/', '/contact/'].includes(p.path);
+  if ((p.noindex || mandatory) && hasAdScript) err(p.path, 'AdSense loader on a noindex or mandatory page');
+  if (mandatory && !h.includes('data-stats="off"')) err(p.path, 'mandatory page without data-stats="off"');
+  if (!p.noindex && !mandatory && loaders !== 1) err(p.path, `AdSense loader ${loaders}× instead of once`);
   if (loaders && (h.indexOf('adsbygoogle.js') < h.indexOf("gtag('consent','default'") || h.indexOf('adsbygoogle.js') > h.indexOf('</head>'))) err(p.path, 'AdSense loader not in the head after the consent defaults');
   // guides: the leaderboard comes after the H1 and the lede, never between menu and heading
   if (/class="ad ad-leader"/.test(h) && h.indexOf('class="ad ad-leader"') < h.indexOf('class="lede"')) err(p.path, 'leaderboard above H1/lede');

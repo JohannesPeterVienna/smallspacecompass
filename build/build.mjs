@@ -15,7 +15,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'docs');
 const ORIGIN = 'https://smallspacecompass.com';
 const REVIEWED = 'October 2026';
-const VERSION = '20261104b';
+const VERSION = '20261105a';
 const MODIFIED = '2026-11-04';
 const pages = [];
 
@@ -41,11 +41,13 @@ function layout(p) {
   if (p.ld) ld.push(...p.ld);
   const ads = p.ads === true;
   // AdSense loader (and with it the Google CMP) statically in the head of every indexable page,
-  // also where there are no ad slots (home, indexes, layouts, legal pages); never on noindex pages such as the 404.
-  const loader = !p.noindex;
+  // also where there are no ad slots (home, indexes, layouts); never on noindex pages such as the 404 or on the mandatory pages.
+  // Mandatory pages (stats: false – imprint, privacy policy, contact, 404) load no ad code at all, so no Auto Ads can
+  // appear there, and data-stats="off" keeps Google Analytics off; Google's consent tool loads there only on an explicit click.
+  const loader = !p.noindex && p.stats !== false;
   const nav = NAV.map(([u, t]) => `<a href="${u}"${p.path.startsWith(u) ? ' aria-current="page"' : ''}>${t}</a>`).join('');
   return `<!doctype html>
-<html lang="en" data-ads="${ads ? 'yes' : 'no'}">
+<html lang="en" data-ads="${ads ? 'yes' : 'no'}"${p.stats === false ? ' data-stats="off"' : ''}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -272,7 +274,7 @@ toolPages();
 indexes();
 for (const l of LEGAL) page(l);
 redirects();
-write('/404.html', layout({ path: '/404.html', title: 'Page not found – Small Space Compass', description: 'The page you were looking for does not exist on smallspacecompass.com. It may have moved when the site was rebuilt.', noindex: true, ads: false, canonical: false,
+write('/404.html', layout({ path: '/404.html', title: 'Page not found – Small Space Compass', description: 'The page you were looking for does not exist on smallspacecompass.com. It may have moved when the site was rebuilt.', noindex: true, ads: false, stats: false, canonical: false,
   body: `<div class="sheet" style="max-width:60ch"><h1>Nothing measured here.</h1><p>This address does not lead to a page. It may have moved when the site was rebuilt in October 2026.</p><p class="row"><a class="btn" href="/">Home</a><a class="btn ghost" href="/guides/">All guides</a><a class="btn ghost" href="/tools/clearance-planner/">Clearance Planner</a></p></div>` }));
 const sm = pages.filter(p => !p.noindex).map(p => `<url><loc>${ORIGIN}${p.path}</loc><lastmod>${MODIFIED}</lastmod></url>`).join('\n');
 writeFileSync(join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sm}\n</urlset>\n`);
