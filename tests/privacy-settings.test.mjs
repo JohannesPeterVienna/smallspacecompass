@@ -43,7 +43,8 @@ async function loadPage(usStatus, { withEnum = true, gpp, gdprApplies = false, w
     }
   };
   runQueue();
-  tcfListener({ gdprApplies, eventStatus: 'tcloaded' }, true);   // visitor outside the GDPR
+  // stored decision (tcloaded with a tcString): Google's CMP has spoken, so "Privacy settings" routes to Google
+  tcfListener({ gdprApplies, eventStatus: 'tcloaded', tcString: 'CQstub' }, true);
   return { calls, us, scripts, window: globalThis.window, runQueue, click: () => onClick(), last: () => updates[updates.length - 1] };
 }
 

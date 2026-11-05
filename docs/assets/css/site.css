@@ -202,7 +202,7 @@ input:focus-visible,select:focus-visible{outline:3px solid var(--tape);outline-o
 .statnote-x:hover{color:var(--tape)}
 body.stats-open{padding-bottom:calc(var(--stats-room,0px) + 24px)}
 @media (max-width:599px){.statnote{left:0;right:0;bottom:0;width:auto;border-left:0;border-right:0;border-bottom:0;box-shadow:none}body.stats-open{padding-bottom:var(--stats-room,0px)}}
-@media print{.statnote{display:none!important}body.stats-open{padding-bottom:0}}
+@media print{.statnote{display:none!important}body.stats-open{padding-bottom:0!important}}
 /* home */
 .hero{display:grid;gap:1.5rem;align-items:center;margin-bottom:2rem}
 @media (min-width:900px){.hero{grid-template-columns:1.05fr 1fr}}

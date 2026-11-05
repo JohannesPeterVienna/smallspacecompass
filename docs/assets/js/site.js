@@ -254,7 +254,7 @@ let gppWatching = false;
 function onGppData(pd) {
   let out;
   try { out = gppUsOptOut(pd); } catch (e) { out = true; }
-  if (out === true && !consent.gppOptOut) { consent.gppOptOut = true; applyConsent(); }
+  if (out === true && !consent.gppOptOut) { consent.gppOptOut = true; applyConsent(); eraseGaCookies(); }   // U.S. opt-out: no GA cookie may linger
 }
 function watchGpp() {
   if (gppWatching || typeof window.__gpp !== 'function') return;
@@ -332,7 +332,9 @@ function openPrivacyChoice(before) {
 function privacyLinks() {
   document.querySelectorAll('[data-privacy-settings]').forEach((b) => b.addEventListener('click', () => {
     // interim mode, a page without statistics, or no CMP at all: our own note shows and changes the choice
-    if (stats.phase === 'waiting' && typeof window.__tcfapi !== 'function') activateStats();
+    // first ~3 s: if Google has already spoken it decides, otherwise the window takes over at once (no second
+    // window from the timer, because startStats only acts in the "waiting" phase)
+    if (stats.phase === 'waiting') { if (cmpSpoke(lastTc)) retireStats(); else activateStats(); }
     if (stats.phase === 'active' || stats.phase === 'settings') { openNote(b); return; }
     openGoogleChoices();
   }));
@@ -486,7 +488,7 @@ function closeNote(returnFocus) {
   noteOpener = null;
 }
 
-{ const rec = storedStats(); if (rec && rec.choice === 'denied') eraseGaCookies(); }   // declined earlier: no GA cookie may linger
+{ const rec = storedStats(); if (gpc || (rec && rec.choice === 'denied')) eraseGaCookies(); }   // GPC or declined earlier: no GA cookie may linger
 privacyLinks();
 fillSlots();
 watchConsent();

@@ -413,3 +413,47 @@ test('the Google-choices button is not offered on normal pages or when the windo
   p.settingsBtn.click();
   assert.equal(p.button(GOOGLE_BTN).hidden, true);
 });
+
+test('"Privacy settings" in the first 3 s with a silent CMP: window at once, no Google call, no second window later', async () => {
+  const p = await load();
+  p.tcf(HIDDEN);
+  p.tick(1000);
+  p.settingsBtn.click();
+  p.runQueue();
+  assert.equal(p.shown(), true);
+  assert.equal(p.doc.activeElement.id, 'ssc-stats-title');
+  assert.equal(p.calls.filter((c) => c[0] === 'revocation').length, 0, 'Google path not used');
+  assert.equal(p.scripts.length, 0);
+  p.note().fire('keydown', { key: 'Escape' });
+  p.tick(5000);
+  assert.equal(p.shown(), false, 'timer does not open the window again');
+  assert.equal(p.doc.body.all().filter((x) => x.id === 'ssc-stats').length, 1);
+});
+
+test('"Privacy settings" in the first 3 s after Google has spoken: Google decides, no window', async () => {
+  const p = await load();
+  p.tcf({ gdprApplies: true, eventStatus: 'tcloaded', tcString: 'CQyes', purpose: { consents: { 1: true } }, vendor: { consents: { 755: true } } });
+  p.tick(500);
+  p.settingsBtn.click();
+  p.runQueue();
+  assert.equal(p.calls.filter((c) => c[0] === 'revocation').length, 1);
+  p.tick(5000);
+  assert.equal(p.shown(), false);
+});
+
+test('U.S. opt-out through GPP after Allow deletes the GA cookies', async () => {
+  const g = (cmd, cb) => { if (cmd === 'addEventListener') g.cb = cb; };
+  const p = await load({ gpp: g, cookies: GA_COOKIES });
+  p.tcf(HIDDEN);
+  p.tick(3000);
+  p.button('Allow').click();
+  assert.equal(p.win[GA_OFF], false);
+  g.cb({ pingData: { signalStatus: 'ready', applicableSections: [7], parsedSections: { usnat: { SaleOptOut: 1, SharingOptOut: 2, TargetedAdvertisingOptOut: 2 } } } }, true);
+  assert.equal(p.win[GA_OFF], true);
+  assert.deepEqual(p.cookieNames(), ['keep']);
+});
+
+test('Global Privacy Control deletes existing GA cookies at load', async () => {
+  const p = await load({ gpc: true, cookies: GA_COOKIES });
+  assert.deepEqual(p.cookieNames(), ['keep']);
+});

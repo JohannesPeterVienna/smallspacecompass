@@ -145,7 +145,7 @@ for (const [cfg, decision, wantGA, name] of [
   const pv = await s.page.evaluate(() => ({ sw: document.documentElement.scrollWidth, vw: innerWidth, t: document.getElementById('ssc-stats').textContent }));
   check(await visible() && pv.sw <= pv.vw && /current choice: declined/.test(pv.t) && s.st.ga === 1, 'privacy policy at 320 px: window opens on request, shows the stored choice, no overflow, no GA');
   await s.page.emulateMedia({ media: 'print' });
-  check(await visible() && await s.page.evaluate(() => getComputedStyle(document.getElementById('ssc-stats')).display === 'none'), 'window hidden in print');
+  check(await visible() && await s.page.evaluate(() => getComputedStyle(document.getElementById('ssc-stats')).display === 'none' && getComputedStyle(document.body).paddingBottom === '0px'), 'window hidden in print, no reserved space');
   await s.page.emulateMedia({ media: 'screen' });
   const adsBefore = s.st.ads || 0;
   const gbtn = s.page.locator('#ssc-stats .statnote-google');
