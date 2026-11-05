@@ -144,9 +144,9 @@ table.data td.num{font-family:var(--mono);white-space:nowrap}
 /* A slot Google has not filled takes no space at all: zero height, no margin, no “Advertisement” label, no striped
    placeholder. It opens only when the ins carries data-ad-status="filled"; the width stays so AdSense can measure it.
    :has() first; without it site.js adds html.no-has-support and .ad-filled via a MutationObserver. */
-.ad.on:not(:has(ins.adsbygoogle[data-ad-status="filled"])),
+.ad.on:not(:has(ins.adsbygoogle[data-ad-status="filled"])){height:0!important;min-height:0!important;margin-top:0!important;margin-bottom:0!important;padding:0!important;border:0!important;overflow:hidden!important}
 .no-has-support .ad.on:not(.ad-filled){height:0!important;min-height:0!important;margin-top:0!important;margin-bottom:0!important;padding:0!important;border:0!important;overflow:hidden!important}
-.ad.on:not(:has(ins.adsbygoogle[data-ad-status="filled"]))::before,
+.ad.on:not(:has(ins.adsbygoogle[data-ad-status="filled"]))::before{content:none}
 .no-has-support .ad.on:not(.ad-filled)::before{content:none}
 /* tool UI */
 .tool{display:grid;gap:1rem}
