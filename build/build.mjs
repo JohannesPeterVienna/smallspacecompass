@@ -41,9 +41,10 @@ function layout(p) {
   if (p.ld) ld.push(...p.ld);
   const ads = p.ads === true;
   // AdSense loader (and with it the Google CMP) statically in the head of every indexable page,
-  // also where there are no ad slots (home, indexes, layouts, legal pages); never on noindex pages such as the 404.
-  const loader = !p.noindex;
-  // stats: false (imprint, privacy policy, 404) → data-stats="off": site.js never loads Google Analytics there.
+  // also where there are no ad slots (home, indexes, layouts); never on noindex pages such as the 404 or on the mandatory pages.
+  // Mandatory pages (stats: false – imprint, privacy policy, contact, 404) load no ad code at all, so no Auto Ads can
+  // appear there, and data-stats="off" keeps Google Analytics off; Google's consent tool loads there only on an explicit click.
+  const loader = !p.noindex && p.stats !== false;
   const nav = NAV.map(([u, t]) => `<a href="${u}"${p.path.startsWith(u) ? ' aria-current="page"' : ''}>${t}</a>`).join('');
   return `<!doctype html>
 <html lang="en" data-ads="${ads ? 'yes' : 'no'}"${p.stats === false ? ' data-stats="off"' : ''}>

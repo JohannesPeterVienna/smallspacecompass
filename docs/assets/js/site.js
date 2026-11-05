@@ -334,22 +334,35 @@ function privacyLinks() {
     // interim mode, a page without statistics, or no CMP at all: our own note shows and changes the choice
     if (stats.phase === 'waiting' && typeof window.__tcfapi !== 'function') activateStats();
     if (stats.phase === 'active' || stats.phase === 'settings') { openNote(b); return; }
-    window.googlefc = window.googlefc || {};
-    window.googlefc.callbackQueue = window.googlefc.callbackQueue || [];
-    // withdrawing: deny and disable at once; the CMP then reports the new decision through the listeners above
-    const before = { tc: consent.tc, cmReady: consent.cmReady };
-    consent.tc = null; consent.cmReady = false; applyConsent();
-    window.googlefc.callbackQueue.push(() => {
-      try { openPrivacyChoice(before); } catch (e) { /* CMP not available */ }
-    });
-    // pages without ads do not load the ad script up front; load it only when the visitor asks for the consent tool
-    if (!document.querySelector('script[src*="adsbygoogle.js"]')) {
+    openGoogleChoices();
+  }));
+}
+/* Google's consent message / U.S. opt-out dialog. Withdraws first; the CMP then reports the new decision through
+   the listeners in watchConsent (Google has priority). Mandatory pages (data-stats="off") carry no ad code: there
+   only Google's consent script (Funding Choices) is loaded, and only on an explicit click – never adsbygoogle.js. */
+const FC_SRC = 'https://fundingchoicesmessages.google.com/i/pub-' + ADSENSE.client.replace('ca-pub-', '') + '?ers=1';
+function openGoogleChoices() {
+  window.googlefc = window.googlefc || {};
+  window.googlefc.callbackQueue = window.googlefc.callbackQueue || [];
+  // withdrawing: deny and disable at once; the CMP then reports the new decision through the listeners above
+  const before = { tc: consent.tc, cmReady: consent.cmReady };
+  consent.tc = null; consent.cmReady = false; applyConsent();
+  window.googlefc.callbackQueue.push(() => {
+    try { openPrivacyChoice(before); } catch (e) { /* CMP not available */ }
+  });
+  if (statsOff) {
+    if (!document.querySelector('script[src*="fundingchoicesmessages.google.com"]')) {
       const s = document.createElement('script');
-      s.async = true; s.crossOrigin = 'anonymous';
-      s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + ADSENSE.client;
+      s.async = true; s.src = FC_SRC;
       document.head.appendChild(s);
     }
-  }));
+  } else if (!document.querySelector('script[src*="adsbygoogle.js"]')) {
+    // pages without the static loader: load it only when the visitor asks for the consent tool
+    const s = document.createElement('script');
+    s.async = true; s.crossOrigin = 'anonymous';
+    s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + ADSENSE.client;
+    document.head.appendChild(s);
+  }
 }
 
 /* ---------- interim statistics window: phases ---------- */
@@ -414,14 +427,17 @@ function buildNote() {
   ui.picks = h('div', { class: 'statnote-picks' }, ui.allow, ui.decline);
   ui.gpcClose = h('button', { type: 'button', class: 'statnote-pick' }, 'Close');
   ui.gpc = h('div', { class: 'statnote-picks statnote-one' }, ui.gpcClose);
+  // mandatory pages only, and only when opened through "Privacy settings": the way to Google's own choices
+  ui.google = h('button', { type: 'button', class: 'statnote-google' }, 'Open Google\u2019s ad & U.S. privacy choices');
   const el = h('section', { class: 'statnote', id: 'ssc-stats', role: 'dialog', 'aria-modal': 'false',
     'aria-labelledby': 'ssc-stats-title', 'aria-describedby': 'ssc-stats-text' },
-    ui.close, h('p', { class: 'statnote-kicker' }, 'Statistics only · interim notice'), ui.title, ui.text, ui.now, ui.picks, ui.gpc);
+    ui.close, h('p', { class: 'statnote-kicker' }, 'Statistics only · interim notice'), ui.title, ui.text, ui.now, ui.picks, ui.gpc, ui.google);
   el.hidden = true;
   ui.allow.addEventListener('click', () => choose('granted'));
   ui.decline.addEventListener('click', () => choose('denied'));
   ui.close.addEventListener('click', () => closeNote(true));      // closes for now: nothing stored, no consent
   ui.gpcClose.addEventListener('click', () => closeNote(true));
+  ui.google.addEventListener('click', () => { closeNote(true); openGoogleChoices(); });
   el.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); closeNote(true); } });
   const skip = document.querySelector('.skip');                   // early in the tab order, shown fixed at the bottom
   if (skip && skip.parentNode) skip.parentNode.insertBefore(el, skip.nextSibling); else document.body.appendChild(el);
@@ -446,6 +462,7 @@ function fillNote() {
   ui.text.appendChild(h('a', { href: '/privacy/#interim-statistics' }, 'Privacy policy'));
   ui.picks.hidden = gpc;
   ui.gpc.hidden = !gpc;
+  ui.google.hidden = !(statsOff && noteOpener);
 }
 function openNote(opener) {
   try {

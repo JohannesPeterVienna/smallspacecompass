@@ -42,7 +42,9 @@ function makePage({ stats, tcfapi = true, gpc = false, stored, storage = 'ok', c
     body, head: { appendChild: (s) => scripts.push(s.src) }, activeElement: null,
     createElement: (t) => new Node(t),
     createTextNode: (t) => { const n = new Node('#text'); n._text = String(t); return n; },
-    querySelector: (sel) => (sel === '.skip' ? skip : sel.includes('adsbygoogle') && scripts.some((s) => /adsbygoogle/.test(s)) ? {} : null),
+    querySelector: (sel) => (sel === '.skip' ? skip
+      : sel.includes('adsbygoogle') && scripts.some((s) => /adsbygoogle/.test(s)) ? {}
+        : sel.includes('fundingchoicesmessages') && scripts.some((s) => /fundingchoicesmessages/.test(s)) ? {} : null),
     querySelectorAll: (sel) => (sel === '[data-privacy-settings]' ? [settingsBtn] : []),
     get cookie() { return [...jar.keys()].map((k) => k.split('|')[0] + '=1').join('; '); },
     set cookie(v) {
@@ -101,7 +103,7 @@ let n = 0;
 async function load(opts) {
   const p = makePage(opts);
   const mod = await import(`../docs/assets/js/site.js?stats=${++n}`);
-  p.runQueue();
+  if (!(opts && opts.noCmpYet)) p.runQueue();                 // noCmpYet: no Google script on the page, queue waits
   return Object.assign(p, { mod });
 }
 const HIDDEN = { gdprApplies: true, eventStatus: 'cmpuishown', displayStatus: 'hidden' };
@@ -371,4 +373,43 @@ test('cmpSpoke / cmpDecided classify TCF data as specified', async () => {
   assert.equal(mod.cmpSpoke({ gdprApplies: false }), true);
   assert.equal(mod.cmpDecided({ eventStatus: 'tcloaded', tcString: 'x' }), true);
   assert.equal(mod.cmpDecided({ eventStatus: 'cmpuishown', displayStatus: 'visible' }), false);
+});
+
+const GOOGLE_BTN = 'Open Google\u2019s ad & U.S. privacy choices';
+test('mandatory pages: the window offers Google\'s choices; a click loads only the Funding Choices script, then Google decides', async () => {
+  const p = await load({ stats: 'off', ads: 'no', tcfapi: false, noCmpYet: true });
+  p.tick(5000);
+  assert.equal(p.shown(), false);
+  p.settingsBtn.click();
+  assert.equal(p.shown(), true);
+  const btn = p.button(GOOGLE_BTN);
+  assert.ok(btn && !btn.hidden, 'button visible when opened through "Privacy settings"');
+  assert.equal(p.scripts.length, 0, 'nothing loaded before the click');
+  btn.click();
+  assert.equal(p.shown(), false);
+  assert.deepEqual(p.scripts, ['https://fundingchoicesmessages.google.com/i/pub-7811071715414905?ers=1']);
+  assert.equal(p.scripts.filter((x) => /adsbygoogle/.test(x)).length, 0, 'never the ad script');
+  // the consent script arrives: queue runs, TCF listener attached, revocation message opened
+  p.win.__tcfapi = (cmd, v, cb) => { if (cmd === 'addEventListener') p.win.__l = cb; };
+  p.runQueue();
+  assert.ok(p.calls.some((c) => c[0] === 'revocation'));
+  p.win.cmValues = { adStoragePurposeConsentStatus: 1, adUserDataPurposeConsentStatus: 1, adPersonalizationPurposeConsentStatus: 1, analyticsStoragePurposeConsentStatus: 1 };
+  p.win.__l({ gdprApplies: true, eventStatus: 'useractioncomplete', tcString: 'CQyes', purpose: { consents: { 1: true } }, vendor: { consents: { 755: true } } }, true);
+  assert.equal(p.gaScripts(), 0, 'GA stays off on mandatory pages');
+  assert.equal(p.win[GA_OFF], true);
+  const before = p.calls.filter((c) => c[0] === 'revocation').length;
+  p.settingsBtn.click(); p.runQueue();                         // Google has spoken: footer link now opens Google directly
+  assert.equal(p.shown(), false);
+  assert.equal(p.calls.filter((c) => c[0] === 'revocation').length, before + 1);
+  assert.equal(p.scripts.length, 1, 'consent script not loaded twice');
+});
+
+test('the Google-choices button is not offered on normal pages or when the window opens by itself', async () => {
+  const p = await load();
+  p.tcf(HIDDEN);
+  p.tick(3000);
+  assert.equal(p.shown(), true);
+  assert.equal(p.button(GOOGLE_BTN).hidden, true);
+  p.settingsBtn.click();
+  assert.equal(p.button(GOOGLE_BTN).hidden, true);
 });

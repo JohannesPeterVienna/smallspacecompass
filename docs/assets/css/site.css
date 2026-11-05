@@ -196,6 +196,8 @@ input:focus-visible,select:focus-visible{outline:3px solid var(--tape);outline-o
 .statnote-pick{font:600 .9rem/1 var(--mono);text-transform:uppercase;letter-spacing:.04em;min-height:44px;padding:.6rem .5rem;background:var(--paper);color:var(--ink);border:2px solid var(--paper);cursor:pointer}
 .statnote-pick:hover{background:#fff}
 .statnote-pick:focus-visible,.statnote-x:focus-visible,.statnote a:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
+.statnote-google{display:block;width:100%;min-height:44px;margin-top:.7rem;padding:.5rem 0;font:inherit;font-size:.88rem;text-align:left;color:var(--paper);background:none;border:0;border-top:1px solid var(--ink-3);text-decoration:underline;text-decoration-color:var(--tape);text-decoration-thickness:2px;text-underline-offset:3px;cursor:pointer}
+.statnote-google[hidden]{display:none}
 .statnote-x{position:absolute;top:.35rem;right:.35rem;width:44px;height:44px;display:grid;place-items:center;font:400 1.6rem/1 var(--body);background:none;color:var(--paper);border:0;cursor:pointer}
 .statnote-x:hover{color:var(--tape)}
 body.stats-open{padding-bottom:calc(var(--stats-room,0px) + 24px)}

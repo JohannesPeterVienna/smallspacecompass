@@ -49,7 +49,8 @@ async function session(cfg) {
   const st = { ga: 0 };
   await ctx.route(/^https?:\/\/(?!127\.0\.0\.1)/, (r) => {
     const u = r.request().url();
-    if (/adsbygoogle\.js/.test(u)) return r.fulfill({ contentType: 'text/javascript', body: STUB });
+    if (/adsbygoogle\.js/.test(u)) { st.ads = (st.ads || 0) + 1; return r.fulfill({ contentType: 'text/javascript', body: STUB }); }
+    if (/fundingchoicesmessages\.google\.com\/i\/pub-7811071715414905\?ers=1/.test(u)) { st.fc = (st.fc || 0) + 1; return r.fulfill({ contentType: 'text/javascript', body: STUB }); }
     if (/googletagmanager\.com\/gtag\/js/.test(u)) { st.ga++; return r.fulfill({ contentType: 'text/javascript', body: '' }); }
     return r.abort();
   });
@@ -144,7 +145,17 @@ for (const [cfg, decision, wantGA, name] of [
   const pv = await s.page.evaluate(() => ({ sw: document.documentElement.scrollWidth, vw: innerWidth, t: document.getElementById('ssc-stats').textContent }));
   check(await visible() && pv.sw <= pv.vw && /current choice: declined/.test(pv.t) && s.st.ga === 1, 'privacy policy at 320 px: window opens on request, shows the stored choice, no overflow, no GA');
   await s.page.emulateMedia({ media: 'print' });
-  check(await s.page.evaluate(() => getComputedStyle(document.getElementById('ssc-stats')).display === 'none'), 'window hidden in print');
+  check(await visible() && await s.page.evaluate(() => getComputedStyle(document.getElementById('ssc-stats')).display === 'none'), 'window hidden in print');
+  await s.page.emulateMedia({ media: 'screen' });
+  const adsBefore = s.st.ads || 0;
+  const gbtn = s.page.locator('#ssc-stats .statnote-google');
+  check(await gbtn.isVisible() && /Google’s ad & U\.S\. privacy choices/.test(await gbtn.textContent()) && (await gbtn.boundingBox()).height >= 44, 'privacy policy: window offers “Open Google’s ad & U.S. privacy choices” (≥ 44 px)');
+  await gbtn.click(); await s.page.waitForTimeout(200);
+  const fcOk = await s.page.evaluate(() => ({ fc: !!document.querySelector('script[src*="fundingchoicesmessages.google.com"]'), ads: !!document.querySelector('script[src*="adsbygoogle.js"]') }));
+  check(s.st.fc === 1 && fcOk.fc && !fcOk.ads && (s.st.ads || 0) === adsBefore, 'privacy policy: click loads only Google’s consent script, no ad script');
+  await s.page.evaluate(() => window.__decide('accept')); await s.page.waitForTimeout(100);
+  x = await s.state();
+  check(x.disabled === true && s.st.ga === 1, 'privacy policy: Google consent is evaluated, GA still stays off there');
   await s.ctx.close();
 }
 await browser.close(); srv.close();
