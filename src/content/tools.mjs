@@ -51,7 +51,7 @@ const storageApp = `<section class="tool" data-storage aria-label="Storage wall 
 export const TOOLS = [
   {
     path: '/tools/clearance-planner/', short: 'Clearance Planner', script: 'planner.js',
-    title: 'Clearance Planner – check walkways, door swings and chair space in your room',
+    title: 'Clearance Planner: Walkways, Door Swings & Chair Space',
     description: 'Free room planner that measures the narrowest walkway from your door to the bed, desk and window, draws door swings and chair, drawer and wardrobe zones, and flags every conflict.',
     h1: 'Clearance Planner', lede: 'Draw the room, drop in measured furniture and see whether you can still walk through it. The planner finds the widest route from the entry to every bed, desk and window, marks its narrowest point and compares it with 36 in (915 mm) – the ADA 2010 §403.5.1 clear width for walking surfaces on accessible routes, used here as a width reference, not as a full accessibility assessment.',
     app: plannerApp('plan'),
@@ -89,7 +89,7 @@ export const TOOLS = [
   },
   {
     path: '/tools/will-it-fit/', short: 'Will It Fit?', script: 'delivery.js',
-    title: 'Will It Fit? Sofa, mattress and wardrobe delivery check (door, hallway corner, stairs)',
+    title: 'Will It Fit? Sofa, Mattress & Wardrobe Delivery Check',
     description: 'Check whether a sofa, mattress or wardrobe can be carried through your door, around a 90° hallway corner and up a stair landing – straight, tilted or turned – with a drawing of the move.',
     h1: 'Will It Fit? Delivery Check', lede: 'Type in the outside dimensions of a sofa, mattress or wardrobe and the narrowest parts of the route into your home. The check tries every orientation – straight, on its side, on end, tilted – and draws the one that works.',
     app: deliveryApp,
@@ -149,7 +149,7 @@ export const TOOLS = [
   },
   {
     path: '/tools/storage-wall/', short: 'Storage Wall Audit', script: 'storage.js',
-    title: 'Storage Wall Audit – shelf volume by reach height (cu ft and liters)',
+    title: 'Storage Wall Audit: Shelf Volume by Reach Height',
     description: 'Draw a storage wall, add shelves and cabinets and see how much volume sits within easy reach (15–48 in), above it and below it – plus an equal-compartment divider calculator.',
     h1: 'Storage Wall Audit', lede: 'How much of your storage can you actually reach? Draw the wall, add the units, and the audit splits their volume into three bands: below 15 in, 15–48 in, and above 48 in – the reach range from the ADA Standards.',
     app: storageApp,

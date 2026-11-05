@@ -126,7 +126,7 @@ ${table(['Item', 'Measure', 'Your value'], [
   },
   {
     slug: 'small-kitchen-clearances', group: 'Kitchens and bathrooms', kicker: 'Kitchens', short: 'Small kitchen clearances',
-    title: 'Small Kitchen Clearances: Aisles, Doors and Dishwashers (NKBA Guidelines)',
+    title: 'Small Kitchen Clearances: Aisles, Doors and Dishwashers',
     h1: 'Small kitchen clearances: aisles, doors and dishwashers',
     description: 'The NKBA kitchen clearances that matter in small kitchens – 42/48 in work aisles, 36 in walkways, 21 in beside the dishwasher, seating clearances – with measured galley and studio plans.',
     lede: 'A small kitchen works or fails on a handful of distances: the aisle between counters, the space beside the dishwasher door, the route past a seated person. The National Kitchen & Bath Association publishes all of them.',
