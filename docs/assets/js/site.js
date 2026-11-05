@@ -30,11 +30,11 @@ function fillSlots() {
   });
 }
 
-// Fallback for browsers without :has(): the slot only opens (.ad-filled, see site.css) once Google
-// marks its ins with data-ad-status="filled"; "unfilled" or no answer keeps it collapsed.
+// Fallback for browsers without :has(): label, margins and placeholder (.ad-filled, see site.css) only appear once
+// Google marks its ins with data-ad-status="filled" or "unfill-optimized". The ins itself is never hidden.
 function watchFill(box, ins) {
   if (!(window.CSS && CSS.supports && CSS.supports('selector(:has(a))'))) document.documentElement.classList.add('no-has-support');
-  const sync = () => box.classList.toggle('ad-filled', ins.getAttribute('data-ad-status') === 'filled');
+  const sync = () => box.classList.toggle('ad-filled', ['filled', 'unfill-optimized'].includes(ins.getAttribute('data-ad-status')));
   sync();
   if (typeof MutationObserver === 'function') new MutationObserver(sync).observe(ins, { attributes: true, attributeFilter: ['data-ad-status'] });
 }

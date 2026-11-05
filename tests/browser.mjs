@@ -30,9 +30,21 @@ for (const width of [390, 1366]) {
     page.on('console', m => { if (m.type() === 'error' && !/ERR_FAILED|net::|Failed to load resource/.test(m.text())) errs.push(m.text()); });
     page.on('response', res => { if (res.status() === 404 && res.url().startsWith(base) && path !== '/404.html') errs.push('local 404: ' + res.url().slice(base.length)); });
     await page.goto(base + path, { waitUntil: 'networkidle' });
-    // no ad unit is filled here (third-party requests blocked), so no ad box may take any room
-    const empty = await page.evaluate(() => [...document.querySelectorAll('.ad')].filter(a => a.getBoundingClientRect().height > 0).map(a => a.dataset.slot));
-    if (empty.length) { fail++; console.log(`✗ ${width}px ${path}: empty ad box visible (${empty.join(', ')})`); }
+    // no ad unit is filled here (third-party requests blocked): the ins stays visible and unclipped (AdSense help
+    // 10762946), but no label, no margin, no striped placeholder
+    const empty = await page.evaluate(() => [...document.querySelectorAll('.ad.on')].flatMap(a => {
+      const cs = getComputedStyle(a), ins = a.querySelector('ins.adsbygoogle'), out = [];
+      if (getComputedStyle(a, '::before').content.includes('Advertisement')) out.push(a.dataset.slot + ' label');
+      if (parseFloat(cs.marginTop) || parseFloat(cs.marginBottom)) out.push(a.dataset.slot + ' margin');
+      if (ins) {
+        const ci = getComputedStyle(ins);
+        if (ci.display === 'none' || ci.visibility !== 'visible' || !ins.getBoundingClientRect().width) out.push(a.dataset.slot + ' ins hidden');
+        if (cs.overflowX !== 'visible' || cs.overflowY !== 'visible' || a.getBoundingClientRect().height < ins.getBoundingClientRect().height) out.push(a.dataset.slot + ' ins clipped');
+        if (ci.backgroundImage !== 'none') out.push(a.dataset.slot + ' placeholder');
+      }
+      return out;
+    }));
+    if (empty.length) { fail++; console.log(`✗ ${width}px ${path}: ad extras before Google answers (${empty.join(', ')})`); }
     // every ad box forced visible (as if all slot IDs were filled): at least 150 px to any button, input, select, textarea or summary
     const near = await page.evaluate(() => {
       const ads = [...document.querySelectorAll('.ad')];
@@ -85,33 +97,57 @@ for (const width of [390, 1366]) {
   if (!/cu ft/.test(await p.textContent('[data-bands]'))) { fail++; console.log('✗ storage bands missing'); }
   await ctx.close();
 }
-// Ad slots with a stubbed adsbygoogle.js that never fills anything: nothing visible (no label, no gap);
-// data-ad-status="unfilled" stays collapsed, "filled" opens the box with its label and margin.
+// Ad slots with a stubbed adsbygoogle.js that never fills anything (AdSense help 10762946):
+// no status → the ins stays visible and unclipped, but no label, no margin, no placeholder;
+// "unfilled" → ins display:none, nothing else; "filled" / "unfill-optimized" → box with label and margin.
 for (const width of [390, 1366]) {
   const ctx = await browser.newContext({ viewport: { width, height: 900 } });
   await ctx.route(/^https?:\/\/(?!127\.0\.0\.1)/, r => r.fulfill({ status: 200, contentType: 'text/javascript', body: '/* stub: no ad */' }));
   for (const path of ['/guides/studio-apartment-layouts/', '/guides/small-kitchen-clearances/', '/tools/clearance-planner/']) {
-    const p = await ctx.newPage(); const errs = [];
-    p.on('pageerror', e => errs.push(e.message));
-    await p.goto(base + path, { waitUntil: 'networkidle' });
-    const r = await p.evaluate(async () => {
-      const tick = () => new Promise(ok => setTimeout(ok, 0));   // MutationObserver reports asynchronously
-      const shown = () => [...document.querySelectorAll('.ad')].filter(a => { const cs = getComputedStyle(a); return cs.display !== 'none' && (a.getBoundingClientRect().height > 0 || parseFloat(cs.marginTop) > 0 || parseFloat(cs.marginBottom) > 0); }).length;
-      const ins = [...document.querySelectorAll('.ad.on ins.adsbygoogle')];
-      const stub = shown();
-      ins.forEach(i => i.setAttribute('data-ad-status', 'unfilled')); await tick();
-      const unfilled = shown();
-      ins.forEach(i => i.setAttribute('data-ad-status', 'filled')); await tick();
-      return { ins: ins.length, stub, unfilled, filled: shown(),
-               label: ins.every(i => getComputedStyle(i.parentElement, '::before').content.includes('Advertisement')),
-               cls: ins.every(i => i.parentElement.classList.contains('ad-filled')) };
-    });
-    if (!r.ins) { fail++; console.log(`✗ stub ${width}px ${path}: no ad slot filled in`); }
-    if (r.stub || r.unfilled) { fail++; console.log(`✗ stub ${width}px ${path}: empty ad visible (${r.stub}/${r.unfilled})`); }
-    if (r.filled !== r.ins || !r.label || !r.cls) { fail++; console.log(`✗ stub ${width}px ${path}: filled ad not shown (${r.filled}/${r.ins}, label ${r.label}, class ${r.cls})`); }
-    if (errs.length) { fail++; console.log(`✗ stub ${width}px ${path}: ${errs.join(' / ')}`); }
-    await p.close();
+    for (const status of ['filled', 'unfill-optimized']) {
+      const p = await ctx.newPage(); const errs = [];
+      p.on('pageerror', e => errs.push(e.message));
+      await p.goto(base + path, { waitUntil: 'networkidle' });
+      const r = await p.evaluate(async (status) => {
+        const tick = () => new Promise(ok => setTimeout(ok, 0));   // MutationObserver reports asynchronously
+        const ins = [...document.querySelectorAll('.ad.on ins.adsbygoogle')];
+        const state = () => ins.map(i => {
+          const a = i.parentElement, ca = getComputedStyle(a), ci = getComputedStyle(i), ri = i.getBoundingClientRect();
+          return { display: ci.display, vis: ci.visibility, w: ri.width, insH: ri.height, boxH: a.getBoundingClientRect().height,
+                   overflow: ca.overflowX + '/' + ca.overflowY, boxVis: ca.visibility,
+                   label: getComputedStyle(a, '::before').content.includes('Advertisement'), gap: parseFloat(ca.marginTop) + parseFloat(ca.marginBottom) };
+        });
+        const none = state();
+        ins.forEach(i => i.setAttribute('data-ad-status', 'unfilled')); await tick();
+        const unfilled = state();
+        ins.forEach(i => i.setAttribute('data-ad-status', status)); await tick();
+        return { n: ins.length, none, unfilled, after: state(), cls: ins.every(i => i.parentElement.classList.contains('ad-filled')) };
+      }, status);
+      const at = `stub ${width}px ${path}`;
+      if (!r.n) { fail++; console.log(`✗ ${at}: no ad slot filled in`); }
+      if (!r.none.every(x => x.display !== 'none' && x.vis === 'visible' && x.boxVis === 'visible' && x.w > 0 && x.overflow === 'visible/visible' && x.boxH >= x.insH)) { fail++; console.log(`✗ ${at}: ins hidden or clipped without status ${JSON.stringify(r.none)}`); }
+      if (r.none.some(x => x.label || x.gap)) { fail++; console.log(`✗ ${at}: label/margin without status`); }
+      if (!r.unfilled.every(x => x.display === 'none' && !x.label && x.boxH === 0)) { fail++; console.log(`✗ ${at}: unfilled not display:none ${JSON.stringify(r.unfilled)}`); }
+      if (!r.after.every(x => x.label && x.gap > 0 && x.boxH > 0) || !r.cls) { fail++; console.log(`✗ ${at}: ${status} box not shown (class ${r.cls}) ${JSON.stringify(r.after)}`); }
+      if (errs.length) { fail++; console.log(`✗ ${at}: ${errs.join(' / ')}`); }
+      await p.close();
+    }
   }
+  // browser without :has(): drop the :has() rules, force the fallback class
+  const p = await ctx.newPage();
+  await p.goto(base + '/guides/studio-apartment-layouts/', { waitUntil: 'networkidle' });
+  const f = await p.evaluate(async () => {
+    for (const sh of document.styleSheets) { try { for (let k = sh.cssRules.length - 1; k >= 0; k--) if (sh.cssRules[k].cssText.includes(':has(')) sh.deleteRule(k); } catch (e) {} }
+    document.documentElement.classList.add('no-has-support');
+    const ins = [...document.querySelectorAll('.ad.on ins.adsbygoogle')];
+    const state = () => ins.map(i => ({ shown: getComputedStyle(i).display !== 'none' && i.getBoundingClientRect().width > 0 && getComputedStyle(i.parentElement).overflowY === 'visible',
+                                        label: getComputedStyle(i.parentElement, '::before').content.includes('Advertisement') }));
+    const none = state();
+    ins.forEach(i => i.setAttribute('data-ad-status', 'unfill-optimized')); await new Promise(ok => setTimeout(ok, 0));
+    return { n: ins.length, none, after: state() };
+  });
+  if (!f.n || !f.none.every(x => x.shown && !x.label) || !f.after.every(x => x.label)) { fail++; console.log(`✗ ${width}px no :has() fallback wrong ${JSON.stringify(f)}`); }
+  await p.close();
   await ctx.close();
 }
 // Codex counterexamples (Nov 2026), end to end in the real pages

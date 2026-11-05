@@ -141,13 +141,21 @@ table.data td.num{font-family:var(--mono);white-space:nowrap}
 @media (min-width:1100px){.ad-side.on{display:block!important}.ad-side.on .slot{width:300px;height:600px}}
 .ad-inline.on .slot{width:300px;height:250px;max-width:100%}
 .ad.on{max-width:100%;overflow:hidden} /* 320-px phones: never wider than the column (responsive units can request full width) */
-/* A slot Google has not filled takes no space at all: zero height, no margin, no “Advertisement” label, no striped
-   placeholder. It opens only when the ins carries data-ad-status="filled"; the width stays so AdSense can measure it.
-   :has() first; without it site.js adds html.no-has-support and .ad-filled via a MutationObserver. */
-.ad.on:not(:has(ins.adsbygoogle[data-ad-status="filled"])){height:0!important;min-height:0!important;margin-top:0!important;margin-bottom:0!important;padding:0!important;border:0!important;overflow:hidden!important}
-.no-has-support .ad.on:not(.ad-filled){height:0!important;min-height:0!important;margin-top:0!important;margin-bottom:0!important;padding:0!important;border:0!important;overflow:hidden!important}
-.ad.on:not(:has(ins.adsbygoogle[data-ad-status="filled"]))::before{content:none}
+/* Ad slots before Google answers: the <ins class="adsbygoogle"> always stays visible and unclipped
+   (AdSense help 10762946: don't load ad units as initially hidden). Only the extras – label, min-height,
+   border, background, padding, margins – appear once data-ad-status is "filled" or "unfill-optimized".
+   Here the .slot rules size the ins itself, so it keeps its size until then.
+   :has() first; fallback without :has(): .no-has-support .ad.on:not(.ad-filled) (class set by a MutationObserver) in separate rules. */
+.ad.on:not(:has(ins.adsbygoogle[data-ad-status="filled"])):not(:has(ins.adsbygoogle[data-ad-status="unfill-optimized"])){min-height:0!important;margin-top:0!important;margin-bottom:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;overflow:visible!important}
+.no-has-support .ad.on:not(.ad-filled){min-height:0!important;margin-top:0!important;margin-bottom:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;overflow:visible!important}
+.ad.on:not(:has(ins.adsbygoogle[data-ad-status="filled"])):not(:has(ins.adsbygoogle[data-ad-status="unfill-optimized"]))::before{content:none}
 .no-has-support .ad.on:not(.ad-filled)::before{content:none}
+/* the ins itself is the .slot here: it keeps its size, only the striped placeholder waits for Google;
+   overflow:hidden (320-px guard above) only applies once the slot is filled */
+.ad.on:not(:has(ins.adsbygoogle[data-ad-status="filled"])):not(:has(ins.adsbygoogle[data-ad-status="unfill-optimized"])) .slot{background:none!important}
+.no-has-support .ad.on:not(.ad-filled) .slot{background:none!important}
+/* Google's pattern for unfilled ad units (AdSense help 10762946) */
+ins.adsbygoogle[data-ad-status="unfilled"]{display:none!important}
 /* tool UI */
 .tool{display:grid;gap:1rem}
 @media (min-width:1000px){.tool{grid-template-columns:minmax(0,1fr) 340px;align-items:start}}
