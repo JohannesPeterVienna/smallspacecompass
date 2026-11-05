@@ -106,7 +106,7 @@ ${table(['Hall widths', 'Item width (carried flat)', 'Longest length that turns'
   },
   {
     slug: 'studio-apartment-layouts', group: 'Layouts', kicker: 'Layouts', short: 'Studio apartment layouts',
-    title: 'Studio Apartment Layouts: 6 Measured Floor Plans (with Walkway Widths)',
+    title: 'Studio Apartment Layouts: 6 Measured Floor Plans',
     h1: 'Studio apartment layouts: 6 measured floor plans',
     description: 'Six studio floor plans drawn to the inch – corner bed, alcove, long narrow room, wall bed, kitchen wall and sofa bed – with door swings, chair zones and the measured width of every route.',
     lede: 'Six common studio shapes, each drawn to the inch with door swings, chair and drawer zones and the narrowest point between the entry and the bed, desk and window. Open any of them in the planner and change the walls to match yours.',
@@ -203,7 +203,7 @@ ${figLayout('bedroom-12x10-full-desk', 'Full bed in the corner, desk opposite: o
   },
   {
     slug: 'space-between-bed-and-wall', group: 'Bedrooms', kicker: 'Bedrooms', short: 'Space between bed and wall',
-    title: 'How Much Space Between Bed and Wall? Side, Foot and Corner Measurements',
+    title: 'How Much Space Between Bed and Wall? Measurements',
     h1: 'How much space between bed and wall?',
     description: 'How much space to leave beside and at the foot of a bed, when pushing it against the wall makes sense, and how nightstands, dressers and doors change the numbers – with measured plans.',
     lede: 'Leave about 24 in beside every side of the bed you use and 36 in wherever it is also a walkway. Pushing one side against the wall saves space but makes the bed harder to make. Here is how to decide, with measurements.',

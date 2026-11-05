@@ -262,7 +262,7 @@ ${figPlan(BATH55, `5 × 5 ft bathroom at code minimums: 30 × 30 in shower, toil
   },
   {
     slug: 'moving-into-a-studio-furniture', group: 'Moving and deliveries', kicker: 'Moving', short: 'Moving into a studio',
-    title: 'Moving Into a Studio: Furniture to Keep, Sell or Skip (with Measurements)',
+    title: 'Moving Into a Studio: Furniture to Keep, Sell or Skip',
     h1: 'Moving into a studio: furniture to keep, sell, skip',
     description: 'Which furniture to take when moving into a studio: a measured method using the new floor plan, use zones and the delivery route – plus a keep/sell/skip table for the usual pieces.',
     lede: 'Moving from a one-bedroom into a studio usually means losing a third of the furniture. Decide with measurements, not memories: draw the new room, add each piece with its use zone, and check the route in.',
@@ -319,7 +319,7 @@ ${figLayout('studio-20x15-queen-corner', 'What made it into a 240 × 180 in stud
   },
   {
     slug: 'murphy-bed-room-size', group: 'Fold-away furniture', kicker: 'Fold-away', short: 'Murphy bed room size',
-    title: 'Murphy Bed Room Size: How Much Space a Wall Bed Needs (Queen, Full, Twin)',
+    title: 'Murphy Bed Room Size: How Much Space a Wall Bed Needs',
     h1: 'Murphy bed room size: how much space a wall bed needs',
     description: 'How much room a Murphy bed needs: wall width, ceiling height and floor depth for queen, full and twin wall beds, vertical vs. horizontal, plus the clearance to keep in front at night.',
     lede: 'A wall bed needs three things: enough wall, enough ceiling height and enough clear floor in front when it is down. Here is how to size each one for a queen, full or twin, and what has to stay free at night.',

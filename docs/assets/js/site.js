@@ -3,7 +3,8 @@
    an empty ID means the slot is not rendered and no space is reserved. */
 const ADSENSE = {
   client: 'ca-pub-7811071715414905',
-  slots: { leader: '', side: '', inline: '' }
+  // Shared responsive AdSense units “Themen-Websites – …” (created 17 Oct 2026)
+  slots: { leader: '7497607759', side: '1292301217', inline: '1292301217' }
 };
 const GA_ID = 'G-T00HRG2YVF';
 const GOOGLE_VENDOR_ID = 755;

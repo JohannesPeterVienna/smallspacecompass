@@ -28,6 +28,9 @@ function write(path, html) {
   writeFileSync(file, html);
 }
 
+// Search snippets: Google cuts titles at ~60–65 and descriptions at ~155–160 characters.
+function shortTitle(t) { let s = String(t); while (s.length > 65 && /\s[–—-]\s|:\s/.test(s)) { const i = Math.max(s.lastIndexOf(' – '), s.lastIndexOf(' — '), s.lastIndexOf(' - ')); if (i < 20) break; s = s.slice(0, i); } return s; }
+function shortDesc(d) { let s = String(d); if (s.length <= 160) return s; const cut = s.slice(0, 160); const i = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf(' – ')); return i > 80 ? s.slice(0, i).replace(/[ –]+$/, '') + '.' : cut.replace(/\s+\S*$/, '') + '…'; }
 function ad(slot) { return `<div class="ad ad-${slot}" data-slot="${slot}"></div>`; }
 
 function layout(p) {
@@ -46,13 +49,17 @@ function layout(p) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(p.title)}</title>
-<meta name="description" content="${esc(p.description)}">
+<title>${esc(shortTitle(p.title))}</title>
+<meta name="description" content="${esc(shortDesc(p.description))}">
 ${p.canonical === false ? '' : `<link rel="canonical" href="${url}">\n`}${p.noindex ? '<meta name="robots" content="noindex, follow">\n' : ''}<meta name="google-adsense-account" content="ca-pub-7811071715414905">
 <meta property="og:type" content="${p.ogType || 'website'}">
-<meta property="og:title" content="${esc(p.title)}">
-<meta property="og:description" content="${esc(p.description)}">
+<meta property="og:title" content="${esc(shortTitle(p.title))}">
+<meta property="og:description" content="${esc(shortDesc(p.description))}">
 <meta property="og:url" content="${url}">
+<meta property="og:image" content="${ORIGIN}/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <meta property="og:site_name" content="Small Space Compass">
 <meta name="theme-color" content="#1C2127">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
