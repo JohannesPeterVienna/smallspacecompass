@@ -123,6 +123,10 @@ for (const [cfg, decision, wantGA, name] of [
   check(s.st.ga === 1 && x.disabled === false && JSON.stringify(x.last) === '{"analytics_storage":"granted"}', 'Allow: GA loaded once, update is analytics_storage only');
   await s.page.click('[data-privacy-settings]'); await s.page.waitForTimeout(100);
   check(await visible(), '"Privacy settings" reopens the window');
+  await s.page.evaluate(() => document.getElementById('main').focus({ preventScroll: true }));
+  await s.page.keyboard.press('Escape'); await s.page.waitForTimeout(50);
+  check(!(await visible()), 'Escape closes the window without focus in it');
+  await s.page.click('[data-privacy-settings]'); await s.page.waitForTimeout(100);
   await s.page.click('#ssc-stats [data-stats-pick="denied"]'); await s.page.waitForTimeout(100);
   x = await s.state();
   const cookies = await s.page.evaluate(() => document.cookie);
@@ -151,8 +155,8 @@ for (const [cfg, decision, wantGA, name] of [
   const gbtn = s.page.locator('#ssc-stats .statnote-google');
   check(await gbtn.isVisible() && /Google’s ad & U\.S\. privacy choices/.test(await gbtn.textContent()) && (await gbtn.boundingBox()).height >= 44, 'privacy policy: window offers “Open Google’s ad & U.S. privacy choices” (≥ 44 px)');
   await gbtn.click(); await s.page.waitForTimeout(200);
-  const fcOk = await s.page.evaluate(() => ({ fc: !!document.querySelector('script[src*="fundingchoicesmessages.google.com"]'), ads: !!document.querySelector('script[src*="adsbygoogle.js"]') }));
-  check(s.st.fc === 1 && fcOk.fc && !fcOk.ads && (s.st.ads || 0) === adsBefore, 'privacy policy: click loads only Google’s consent script, no ad script');
+  const fcOk = await s.page.evaluate(() => ({ fc: !!document.querySelector('script[src*="fundingchoicesmessages.google.com"]'), ads: !!document.querySelector('script[src*="adsbygoogle.js"]'), frame: !!document.querySelector('iframe[name="googlefcPresent"]') }));
+  check(s.st.fc === 1 && fcOk.fc && fcOk.frame && !fcOk.ads && (s.st.ads || 0) === adsBefore, 'privacy policy: click loads only Google’s consent script, no ad script');
   await s.page.evaluate(() => window.__decide('accept')); await s.page.waitForTimeout(100);
   x = await s.state();
   check(x.disabled === true && s.st.ga === 1, 'privacy policy: Google consent is evaluated, GA still stays off there');

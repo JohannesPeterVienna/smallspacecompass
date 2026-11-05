@@ -13,6 +13,7 @@ const MONTH = 30 * 864e5;
 class Node {
   constructor(tag) { this.tagName = tag.toUpperCase(); this.attrs = {}; this.children = []; this.parentNode = null; this.listeners = {}; this.hidden = false; this._text = ''; this.style = { props: {}, setProperty(k, v) { this.props[k] = v; } }; this.offsetHeight = 260; const cls = new Set(); this.classList = { add: (c) => cls.add(c), remove: (c) => cls.delete(c), contains: (c) => cls.has(c) }; }
   setAttribute(k, v) { this.attrs[k] = String(v); if (k === 'id') this.id = String(v); }
+  hasAttribute(k) { return k in this.attrs; }
   getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; }
   appendChild(n) { n.parentNode = this; this.children.push(n); return n; }
   insertBefore(n, ref) { n.parentNode = this; const i = ref ? this.children.indexOf(ref) : -1; if (i < 0) this.children.push(n); else this.children.splice(i, 0, n); return n; }
@@ -35,14 +36,23 @@ function makePage({ stats, tcfapi = true, gpc = false, stored, storage = 'ok', c
   const calls = [], scripts = [], timers = [];
   let clock = 0, tcfListener = null;
   const body = new Node('body');
+  const order = [];
+  const docListeners = {};
+  const main = new Node('main'); main.setAttribute('id', 'main');
+  const origAppend = body.appendChild.bind(body);
+  body.appendChild = (x) => { order.push('body:' + x.tagName + ':' + (x.getAttribute('name') || '')); return origAppend(x); };
   const skip = new Node('a'); skip.setAttribute('class', 'skip'); body.appendChild(skip);
   const settingsBtn = new Node('button'); settingsBtn.setAttribute('data-privacy-settings', ''); body.appendChild(settingsBtn);
+  body.appendChild(main);
   doc = {
     documentElement: { dataset: { ads, ...(stats ? { stats } : {}) } },
-    body, head: { appendChild: (s) => scripts.push(s.src) }, activeElement: null,
+    body, head: { appendChild: (s) => { order.push('head:' + s.src); scripts.push(s.src); } }, activeElement: null,
+    getElementById: (id) => body.find((x) => x.id === id),
+    addEventListener: (t, f) => { (docListeners[t] = docListeners[t] || []).push(f); },
     createElement: (t) => new Node(t),
     createTextNode: (t) => { const n = new Node('#text'); n._text = String(t); return n; },
     querySelector: (sel) => (sel === '.skip' ? skip
+      : sel === 'iframe[name="googlefcPresent"]' ? body.find((x) => x.getAttribute('name') === 'googlefcPresent')
       : sel.includes('adsbygoogle') && scripts.some((s) => /adsbygoogle/.test(s)) ? {}
         : sel.includes('fundingchoicesmessages') && scripts.some((s) => /fundingchoicesmessages/.test(s)) ? {} : null),
     querySelectorAll: (sel) => (sel === '[data-privacy-settings]' ? [settingsBtn] : []),
@@ -89,7 +99,8 @@ function makePage({ stats, tcfapi = true, gpc = false, stored, storage = 'ok', c
     for (let t; (t = timers.filter((x) => x.at <= clock).sort((a, b) => a.at - b.at)[0]);) { timers.splice(timers.indexOf(t), 1); t.f(); }
   };
   return {
-    win, doc, store, jar, calls, scripts, settingsBtn, runQueue, tick,
+    win, doc, store, jar, calls, scripts, settingsBtn, runQueue, tick, order, main,
+    docKey: (key, target) => { const e = { key, target, defaultPrevented: false, preventDefault() { e.defaultPrevented = true; } }; (docListeners.keydown || []).forEach((f) => f(e)); return e; },
     tcf: (tc) => tcfListener && tcfListener(tc, true),
     note: () => body.find((n) => n.id === 'ssc-stats'),
     shown() { const n = this.note(); return !!n && !n.hidden; },
@@ -388,6 +399,9 @@ test('mandatory pages: the window offers Google\'s choices; a click loads only t
   btn.click();
   assert.equal(p.shown(), false);
   assert.deepEqual(p.scripts, ['https://fundingchoicesmessages.google.com/i/pub-7811071715414905?ers=1']);
+  const fcOrder = p.order.filter((x) => /googlefcPresent|fundingchoices/.test(x));
+  assert.deepEqual(fcOrder, ['body:IFRAME:googlefcPresent', 'head:https://fundingchoicesmessages.google.com/i/pub-7811071715414905?ers=1'], 'Google snippet order: iframe, then script');
+  assert.equal(p.doc.body.find((x) => x.getAttribute('name') === 'googlefcPresent').style.display, 'none');
   assert.equal(p.scripts.filter((x) => /adsbygoogle/.test(x)).length, 0, 'never the ad script');
   // the consent script arrives: queue runs, TCF listener attached, revocation message opened
   p.win.__tcfapi = (cmd, v, cb) => { if (cmd === 'addEventListener') p.win.__l = cb; };
@@ -404,14 +418,50 @@ test('mandatory pages: the window offers Google\'s choices; a click loads only t
   assert.equal(p.scripts.length, 1, 'consent script not loaded twice');
 });
 
-test('the Google-choices button is not offered on normal pages or when the window opens by itself', async () => {
+test('Google-choices button: not in the window that appears by itself; on ad pages it opens the loaded CMP without loading anything', async () => {
   const p = await load();
   p.tcf(HIDDEN);
   p.tick(3000);
   assert.equal(p.shown(), true);
   assert.equal(p.button(GOOGLE_BTN).hidden, true);
+  p.note().fire('keydown', { key: 'Escape' });
   p.settingsBtn.click();
-  assert.equal(p.button(GOOGLE_BTN).hidden, true);
+  const b = p.button(GOOGLE_BTN);
+  assert.equal(b.hidden, false, 'visible when opened through "Privacy settings"');
+  p.scripts.push('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7811071715414905');   // static loader of an ad page
+  const n0 = p.scripts.length;
+  b.click(); p.runQueue();
+  assert.equal(p.scripts.length, n0, 'nothing loaded');
+  assert.equal(p.doc.body.find((x) => x.getAttribute('name') === 'googlefcPresent'), null);
+  assert.equal(p.calls.filter((c) => c[0] === 'revocation').length, 1);
+  for (const u of p.updates()) for (const k of AD_KEYS) assert.notEqual(u[k], 'granted');
+});
+
+test('Escape closes the window without focus in it, but not when another dialog or menu handles Escape', async () => {
+  const p = await load();
+  p.tcf(HIDDEN);
+  p.tick(3000);
+  assert.equal(p.shown(), true);
+  const menu = new Node('div');
+  menu.closest = (sel) => (sel.includes('aria-expanded') ? menu : null);
+  p.docKey('Escape', menu);
+  assert.equal(p.shown(), true, 'open menu keeps its Escape');
+  const pre = p.docKey('Escape', p.main);
+  pre.defaultPrevented = false;
+  assert.equal(p.shown(), false, 'Escape on the page closes the window');
+  assert.equal(p.store.has(KEY), false, 'nothing stored');
+  p.tick(10000);
+  assert.equal(p.shown(), false, 'no automatic reopening in the same page view');
+});
+
+test('closing without an opener while focus is in the window moves focus to the main content', async () => {
+  const p = await load();
+  p.tcf(HIDDEN);
+  p.tick(3000);
+  p.note().find((x) => x.getAttribute('class') === 'statnote-x').focus();
+  p.note().find((x) => x.getAttribute('class') === 'statnote-x').click();
+  assert.equal(p.doc.activeElement, p.main);
+  assert.equal(p.main.getAttribute('tabindex'), '-1');
 });
 
 test('"Privacy settings" in the first 3 s with a silent CMP: window at once, no Google call, no second window later', async () => {

@@ -352,19 +352,23 @@ function openGoogleChoices() {
   window.googlefc.callbackQueue.push(() => {
     try { openPrivacyChoice(before); } catch (e) { /* CMP not available */ }
   });
-  if (statsOff) {
-    if (!document.querySelector('script[src*="fundingchoicesmessages.google.com"]')) {
-      const s = document.createElement('script');
-      s.async = true; s.src = FC_SRC;
-      document.head.appendChild(s);
-    }
-  } else if (!document.querySelector('script[src*="adsbygoogle.js"]')) {
-    // pages without the static loader: load it only when the visitor asks for the consent tool
-    const s = document.createElement('script');
-    s.async = true; s.crossOrigin = 'anonymous';
-    s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + ADSENSE.client;
-    document.head.appendChild(s);
+  // CMP already on the page (static ad loader or loaded before): nothing is loaded, the queued call opens it.
+  // Otherwise Google's standard snippet is rebuilt: queue (above) → hidden iframe "googlefcPresent" → consent script.
+  // The ad script adsbygoogle.js is never loaded from here.
+  if (document.querySelector('script[src*="adsbygoogle.js"]') || document.querySelector('script[src*="fundingchoicesmessages.google.com"]')) return;
+  if (!document.querySelector('iframe[name="googlefcPresent"]')) {
+    const f = document.createElement('iframe');
+    f.setAttribute('name', 'googlefcPresent');
+    f.setAttribute('title', 'Google consent presence marker');
+    f.setAttribute('aria-hidden', 'true');
+    f.setAttribute('tabindex', '-1');
+    f.style.width = '0'; f.style.height = '0'; f.style.border = 'none'; f.style.zIndex = '-1000';
+    f.style.left = '-1000px'; f.style.top = '-1000px'; f.style.display = 'none';
+    document.body.appendChild(f);
   }
+  const s = document.createElement('script');
+  s.async = true; s.src = FC_SRC;
+  document.head.appendChild(s);
 }
 
 /* ---------- interim statistics window: phases ---------- */
@@ -441,6 +445,15 @@ function buildNote() {
   ui.gpcClose.addEventListener('click', () => closeNote(true));
   ui.google.addEventListener('click', () => { closeNote(true); openGoogleChoices(); });
   el.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); closeNote(true); } });
+  // Escape also works without focus in the window – unless something else on the page handles Escape itself
+  // (an open menu or another dialog, or a handler that already called preventDefault)
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || !note || note.hidden || e.defaultPrevented) return;
+    if (inside(note, e.target)) return;                          // handled by the window's own listener
+    const t = e.target;
+    if (t && typeof t.closest === 'function' && t.closest('[role="dialog"],dialog[open],[aria-expanded="true"],[aria-modal="true"]')) return;
+    e.preventDefault(); closeNote(true);
+  });
   const skip = document.querySelector('.skip');                   // early in the tab order, shown fixed at the bottom
   if (skip && skip.parentNode) skip.parentNode.insertBefore(el, skip.nextSibling); else document.body.appendChild(el);
   return el;
@@ -464,7 +477,7 @@ function fillNote() {
   ui.text.appendChild(h('a', { href: '/privacy/#interim-statistics' }, 'Privacy policy'));
   ui.picks.hidden = gpc;
   ui.gpc.hidden = !gpc;
-  ui.google.hidden = !(statsOff && noteOpener);
+  ui.google.hidden = !noteOpener;                     // only when opened through "Privacy settings"
 }
 function openNote(opener) {
   try {
@@ -478,12 +491,18 @@ function openNote(opener) {
     if (opener) ui.title.focus();                    // opened on request: focus moves in; shown by itself: focus stays
   } catch (e) { /* no DOM: nothing to show */ }
 }
+function inside(root, n) { for (; n; n = n.parentNode) if (n === root) return true; return false; }
 function closeNote(returnFocus) {
   if (!note || note.hidden) return;
+  const hadFocus = inside(note, document.activeElement);
   note.hidden = true;
   try {
     document.body.classList.remove('stats-open');
     if (returnFocus && noteOpener && typeof noteOpener.focus === 'function') noteOpener.focus();
+    else if (hadFocus) {                               // no opener: focus must not get lost with the hidden window
+      const main = document.getElementById('main');
+      if (main) { if (!main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1'); main.focus(); }
+    }
   } catch (e) { /* ignore */ }
   noteOpener = null;
 }

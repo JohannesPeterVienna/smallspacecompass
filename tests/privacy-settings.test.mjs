@@ -31,8 +31,10 @@ async function loadPage(usStatus, { withEnum = true, gpp, gdprApplies = false, w
     documentElement: { dataset: { ads: 'no' } },
     querySelectorAll: (sel) => (sel === '[data-privacy-settings]' ? [{ addEventListener: (ev, fn) => { onClick = fn; } }] : []),
     querySelector: (sel) => (sel.includes('adsbygoogle') && scripts.some((s) => /adsbygoogle/.test(s.src)) ? {} : null),
-    createElement: () => ({}),
-    head: { appendChild: (s) => scripts.push(s) }
+    createElement: () => ({ style: {}, setAttribute(k, v) { this[k] = v; } }),
+    head: { appendChild: (s) => scripts.push(s) },
+    body: { appendChild: (f) => scripts.push(f) },
+    addEventListener: () => {}
   };
   globalThis.matchMedia = () => ({ matches: false });
   await import(`../docs/assets/js/site.js?case=${++n}`);
@@ -53,7 +55,8 @@ test('U.S. state law applies: opt-out dialog instead of the EU message; opting o
   assert.equal(p.last().analytics_storage, 'granted');
   p.click();
   assert.equal(p.last().analytics_storage, 'denied', 'withdrawn at once on click');
-  assert.ok(p.scripts.some((s) => /adsbygoogle\.js/.test(s.src)), 'ad/CMP script loaded on demand');
+  assert.ok(p.scripts.some((s) => /fundingchoicesmessages\.google\.com\/i\/pub-7811071715414905\?ers=1/.test(s.src)), 'Google consent script loaded on demand');
+  assert.ok(!p.scripts.some((s) => /adsbygoogle\.js/.test(s.src || '')), 'never the ad script');
   p.runQueue();
   assert.deepEqual(p.calls, ['usDialog']);
   p.us.status = 3;
