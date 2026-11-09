@@ -30,7 +30,7 @@ export const LEGAL = [
     crumbs: [['Imprint', '/imprint/']], ads: false, stats: false,
     body: sheet('Imprint', 'Legal notice', `<p>Information pursuant to § 5 Austrian E-Commerce Act (ECG) and § 25 Austrian Media Act (MedienG).</p>
 <h2 id="owner">Owner and publisher</h2>
-<p>AdStern – Agentur für digitales Marketing<br>Seilerstätte 8/8<br>1010 Vienna<br>Austria</p>
+<p>AdStern – Agentur für digitales Marketing<br>Seilerstätte 8/8<br>1010 Wien<br>Österreich</p>
 <p>Email: <a href="mailto:office@adstern.com">office@adstern.com</a></p>
 <h2 id="business">Business details</h2>
 <ul><li>Business: advertising agency (Werbeagentur)</li>
@@ -50,7 +50,7 @@ export const LEGAL = [
     crumbs: [['Privacy', '/privacy/']], ads: false, stats: false,
     body: sheet('Privacy policy', 'Privacy', `<p>This policy explains what data is processed when you visit smallspacecompass.com, why, and what rights you have. Last updated: November 5, 2026.</p>
 <h2 id="controller">Controller</h2>
-<p>AdStern – Agentur für digitales Marketing, Seilerstätte 8/8, 1010 Vienna, Austria (full details in the <a href="/imprint/">imprint</a>).</p>
+<p>AdStern – Agentur für digitales Marketing, Seilerstätte 8/8, 1010 Wien, Österreich (full details in the <a href="/imprint/">imprint</a>).</p>
 <h2 id="hosting">Hosting</h2>
 <p>The site is a static website hosted on GitHub Pages, a service of GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA. When you load a page, your browser sends technical data such as your IP address, the requested address, date and time, browser type and referring page to GitHub's servers. GitHub processes this data to deliver the site and to protect its service, and may store it in log files for a limited time. The legal basis is our legitimate interest in a secure and reliable website (Art. 6(1)(f) GDPR). GitHub's own privacy statement is available at <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">docs.github.com</a>. Data transfers to the USA are based on the EU–U.S. Data Privacy Framework, under which GitHub is certified, or on standard contractual clauses.</p>
 <h2 id="plans">Your plans and inputs</h2>
