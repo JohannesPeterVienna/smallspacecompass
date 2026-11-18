@@ -167,6 +167,26 @@ export function decodeDelivery(v2raw, v1raw) {
     return out;
   } catch (e) { return null; }
 }
+/* Share link for the delivery check: the numbers travel in the URL fragment (#…), which browsers do not send to the
+   web server. Only known field names, plain decimal numbers within the storage limits and 0/1 flags are accepted. */
+export function deliveryToFragment(state) {
+  const p = new URLSearchParams();
+  p.set('u', state.unit === 'cm' ? 'cm' : 'in');
+  for (const k of DELIVERY_LENGTHS) { const v = state.lengths?.[k]; if (typeof v === 'number' && Number.isFinite(v) && lenOk(v)) p.set(k, String(+v.toFixed(3))); }
+  for (const k of DELIVERY_CHECKS) p.set(k, state.checks?.[k] ? '1' : '0');
+  return p.toString();
+}
+export function deliveryFromFragment(fragment) {
+  const s = String(fragment ?? '').replace(/^#/, '');
+  if (!s || s.length > 600) return null;
+  let p; try { p = new URLSearchParams(s); } catch (e) { return null; }
+  // a delivery link always names the three item dimensions; anything else (e.g. #faq) is not ours
+  if (!['W', 'D', 'H'].every(k => /^\d{1,5}(\.\d{1,4})?$/.test(p.get(k) ?? ''))) return null;
+  const out = { unit: p.get('u') === 'cm' ? 'cm' : 'in', lengths: {}, checks: {} };
+  for (const k of DELIVERY_LENGTHS) { const t = p.get(k); if (t === null) { if (k === 'diag') out.lengths[k] = null; continue; } if (/^\d{1,5}(\.\d{1,4})?$/.test(t) && lenOk(Number(t))) out.lengths[k] = Number(t); }
+  for (const k of DELIVERY_CHECKS) { const t = p.get(k); if (t === '1' || t === '0') out.checks[k] = t === '1'; }
+  return out;
+}
 export const toDisplay = (inch, unit) => !(typeof inch === 'number' && Number.isFinite(inch)) ? '' : String(unit === 'cm' ? +(inch * CM).toFixed(1) : +inch.toFixed(2));
 export const fromDisplay = (text, unit) => {
   const t = String(text ?? '').trim();

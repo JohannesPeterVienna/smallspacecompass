@@ -36,12 +36,6 @@
   "kind": "article"
  },
  {
-  "path": "/guides/wall-bed-vs-sofa-bed/",
-  "ads": true,
-  "noindex": false,
-  "kind": "article"
- },
- {
   "path": "/guides/how-to-measure-a-room-for-furniture/",
   "ads": true,
   "noindex": false,
@@ -66,12 +60,6 @@
   "kind": "article"
  },
  {
-  "path": "/guides/divide-a-studio-without-walls/",
-  "ads": true,
-  "noindex": false,
-  "kind": "article"
- },
- {
   "path": "/guides/dining-table-small-space/",
   "ads": true,
   "noindex": false,
@@ -79,12 +67,6 @@
  },
  {
   "path": "/guides/entryway-storage-without-a-closet/",
-  "ads": true,
-  "noindex": false,
-  "kind": "article"
- },
- {
-  "path": "/guides/rug-size-small-living-room/",
   "ads": true,
   "noindex": false,
   "kind": "article"
@@ -168,6 +150,12 @@
   "kind": "other"
  },
  {
+  "path": "/tools/clearance-check/",
+  "ads": true,
+  "noindex": false,
+  "kind": "tool"
+ },
+ {
   "path": "/tools/clearance-planner/",
   "ads": true,
   "noindex": false,
@@ -193,6 +181,12 @@
  },
  {
   "path": "/tools/",
+  "ads": false,
+  "noindex": false,
+  "kind": "other"
+ },
+ {
+  "path": "/reference/",
   "ads": false,
   "noindex": false,
   "kind": "other"

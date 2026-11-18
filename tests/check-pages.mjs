@@ -64,25 +64,42 @@ for (const p of all) {
     if (!existsSync(fileOf(u)) && !existsSync(join(DOCS, u))) err(p.path, `broken link ${u}`);
   }
   const w = words(h);
-  if (p.kind === 'article' && w < 900) err(p.path, `only ${w} words`);
+  // Guides: since the 2026-11-18 revision the gate is substance, not length – the 900-word minimum made pages grow
+  // filler. A guide needs an own plan figure (checked below), a data table, a link into a tool or the reference
+  // table, and enough text to explain them (700 words is a floor against stubs, not a target).
+  if (p.kind === 'article' && w < 700) err(p.path, `only ${w} words`);
+  if (p.kind === 'article' && !/<table class="data"/.test(h)) err(p.path, 'guide without a data table');
+  if (p.kind === 'article' && !/href="\/(tools\/[a-z-]+\/|reference\/)/.test(h)) err(p.path, 'guide without a link into a tool or the reference table');
   if (p.kind === 'layout' && w < 800) err(p.path, `layout page only ${w} words`);
   if (['/tools/', '/layouts/'].includes(p.path)) {
     const mw = h.slice(h.indexOf('<main'), h.indexOf('</main>')).replace(/<svg[\s\S]*?<\/svg>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/g, ' ').split(/\s+/).filter(x => /[A-Za-z]/.test(x)).length;
     if (mw < 700) err(p.path, `index page only ${mw} words`);
   }
-  if (p.kind === 'article' && !h.includes('Last reviewed: October 2026')) err(p.path, 'no review date');
+  if (p.kind === 'article' && !/Last reviewed: (October|November) 2026/.test(h)) err(p.path, 'no review date');
   if (p.kind === 'article' && !/<svg class="(plan|elev)/.test(h)) err(p.path, 'no own plan figure');
   if ((p.kind === 'article' || p.kind === 'tool') && !(hasAdScript && slots)) err(p.path, 'expected ad setup');
   report.push([p.path, p.kind, w, hasAdScript ? 'ads' : '-']);
 }
 for (const [from, to] of redirects) {
-  const h = readFileSync(join(DOCS, from), 'utf8');
+  const h = readFileSync(fileOf(from), 'utf8');
   if (!h.includes('noindex') || !h.includes(`url=${to}`) || !h.includes(`canonical" href="https://smallspacecompass.com${to}"`)) err(from, 'bad redirect');
   if (!existsSync(fileOf(to))) err(from, 'redirect target missing');
 }
 for (const f of ['ads.txt', 'robots.txt', 'sitemap.xml', 'CNAME', '.nojekyll', '404.html']) if (!existsSync(join(DOCS, f))) err(f, 'missing');
 if (readFileSync(join(DOCS, 'CNAME'), 'utf8') !== 'smallspacecompass.com') err('CNAME', 'must be exactly smallspacecompass.com without newline');
-for (const m of readFileSync(join(DOCS, 'sitemap.xml'), 'utf8').matchAll(/<lastmod>([^<]*)<\/lastmod>/g)) if (m[1] !== '2026-11-04') { err('sitemap', 'lastmod ' + m[1]); break; }
+// lastmod: 2026-11-04 for untouched pages, 2026-11-18 for pages changed in that revision – and never a date in between
+for (const m of readFileSync(join(DOCS, 'sitemap.xml'), 'utf8').matchAll(/<lastmod>([^<]*)<\/lastmod>/g)) if (!['2026-11-04', '2026-11-18'].includes(m[1])) { err('sitemap', 'lastmod ' + m[1]); break; }
+// reference table: every row is in the page with an anchor, a source link and the retrieval date; redirect pages stay out of the sitemap
+{
+  const { REFERENCE, SOURCES, RETRIEVED } = await import('../docs/assets/js/refdata.js');
+  const ref = readFileSync(fileOf('/reference/'), 'utf8');
+  for (const r of REFERENCE) if (!ref.includes(`<tr id="${r.id}" data-id="${r.id}">`)) err('/reference/', 'row missing: ' + r.id);
+  for (const k of Object.keys(SOURCES)) if (!ref.includes(SOURCES[k].url.replace(/&/g, '&amp;'))) err('/reference/', 'source link missing: ' + k);
+  if (!ref.includes(RETRIEVED)) err('/reference/', 'retrieval date missing');
+  // links from guides and tools to a reference row must hit an existing row
+  const ids = new Set(REFERENCE.map(r => r.id));
+  for (const p of all) { const f = fileOf(p.path); if (!existsSync(f)) continue; for (const m of readFileSync(f, 'utf8').matchAll(/href="\/reference\/#([^"]+)"/g)) if (!ids.has(m[1])) err(p.path, 'link to unknown reference row ' + m[1]); }
+}
 if (readFileSync(join(DOCS, 'ads.txt'), 'utf8').trim() !== 'google.com, pub-7811071715414905, DIRECT, f08c47fec0942fa0') err('ads.txt', 'content');
 const sm = readFileSync(join(DOCS, 'sitemap.xml'), 'utf8');
 for (const [from] of redirects) if (sm.includes(from)) err('sitemap', `contains redirect ${from}`);

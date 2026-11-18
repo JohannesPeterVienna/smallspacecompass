@@ -1,7 +1,7 @@
 /* Will It Fit? Delivery Check */
 import { deliveryCheck, fmtLen } from './geometry.js';
 import { esc, dimLine } from './render.js';
-import { DELIVERY_STORE, DELIVERY_STORE_V1, DELIVERY_LENGTHS, DELIVERY_CHECKS, encodeDelivery, decodeDelivery, toDisplay, fromDisplay } from './validate.js';
+import { DELIVERY_STORE, DELIVERY_STORE_V1, DELIVERY_LENGTHS, DELIVERY_CHECKS, encodeDelivery, decodeDelivery, deliveryToFragment, deliveryFromFragment, toDisplay, fromDisplay } from './validate.js';
 
 const app = document.querySelector('[data-delivery]');
 const $ = (s) => app.querySelector(s);
@@ -12,6 +12,14 @@ const PRESET = {
   kingbox: { W: 80, D: 38, H: 9, label: 'Split-king box spring' },
   wardrobe: { W: 40, D: 24, H: 78, upright: true, label: 'Wardrobe (kept upright)' },
   fridge: { W: 30, D: 31, H: 68, upright: true, label: 'Fridge (kept upright)' }
+};
+// Complete worked routes (item and building), in inches. Constructed examples, not measurements of real buildings.
+const ROUTE = { doorW: 32, doorH: 80, hallA: 36, hallB: 36, hallH: 96, stairW: 36, stairH: 80, door2W: 30, door2H: 80 };
+const EXAMPLES = {
+  sofaok: { lengths: { W: 84, D: 35, H: 34, diag: 31, ...ROUTE }, checks: { upright: false, useDoor: true, useCorner: true, useLanding: false, useDoor2: false } },
+  sofastuck: { lengths: { W: 84, D: 37, H: 34, diag: 31, ...ROUTE }, checks: { upright: false, useDoor: true, useCorner: true, useLanding: false, useDoor2: false } },
+  mattress: { lengths: { W: 80, D: 60, H: 12, diag: null, ...ROUTE, doorW: 30 }, checks: { upright: false, useDoor: true, useCorner: true, useLanding: true, useDoor2: true } },
+  wardrobe: { lengths: { W: 40, D: 24, H: 78, diag: null, ...ROUTE }, checks: { upright: true, useDoor: true, useCorner: true, useLanding: false, useDoor2: true } }
 };
 // Lengths are kept canonically in inches at full precision; inputs only show them rounded in the chosen unit.
 let units = 'in';
@@ -77,29 +85,58 @@ ${dimLine(0, H, W, H, fmtLen(W, units), 10)}${dimLine(W, H, W, 0, fmtLen(H, unit
 <polygon points="${poly}" class="xs ${r.ok ? '' : 'bad'}"/>
 ${dimLine(0, a, 0, 0, fmtLen(a, units), -8)}${dimLine(ix, -ext + a + 10, ext, -ext + a + 10, fmtLen(b, units), 8)}</svg>`;
 }
+let lastText = '';
+const plain = (html) => html.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+const say = (t) => { const n = $('[data-msg]'); if (!n) return; n.textContent = t; clearTimeout(say.t); say.t = setTimeout(() => { n.textContent = ''; }, 4000); };
+async function copyText(text, done) {
+  try { await navigator.clipboard.writeText(text); say(done); }
+  catch (e) {
+    const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e2) { /* ignore */ }
+    ta.remove(); say(ok ? done : 'Copying is blocked in this browser – select the text and copy it by hand.');
+  }
+}
+function setActions(on) { app.querySelectorAll('[data-share]').forEach(b => { b.disabled = !on; }); }
 function run() {
   const { item, cps, bad } = readState();
   persist();
+  lastText = ''; setActions(false);
   const out = $('[data-result]');
   if (bad.length) { out.innerHTML = `<p class="status bad" role="alert">Enter a number above 0 for: ${bad.map(k => esc(LABEL[k])).join(', ')}.</p>`; return; }
   if (!cps.length) { out.innerHTML = '<p class="status">Enter the three outside dimensions of the item and at least one checkpoint.</p>'; return; }
   const res = deliveryCheck(item, cps);
   const deg = (r) => Math.round(r * 180 / Math.PI);
-  out.innerHTML = `<div class="status ${res.ok ? 'good' : 'bad'}" role="status"><span class="big">${res.ok ? 'Fits along the whole route' : 'Does not fit at ' + res.results.filter(r => !r.ok).map(r => esc(r.cp.name)).join(', ')}</span>
+  const headline = res.ok ? 'Fits along the whole route' : 'Does not fit at ' + res.results.filter(r => !r.ok).map(r => r.cp.name).join(', ');
+  const hows = [];
+  // next step: the tightest passing checkpoint, or what to ask for when one fails
+  const doors = res.results.filter(r => r.ok && r.cp.kind === 'door' && !r.best.profile);
+  const spare = doors.length ? Math.min(...doors.map(r => r.cp.width - (r.best.upright ? r.best.w : Math.min(r.best.w, r.best.t)))) : null;
+  const next = res.ok
+    ? `${spare !== null ? `The tightest doorway leaves ${fmtLen(Math.max(0, spare), units)} in width. ` : ''}Allow a couple of inches for hands, straps and packaging, and take doors off their hinges if the margin is smaller than that. Then place the piece in the <a href="/tools/clearance-planner/">Clearance Planner</a> to see what it does to the walkways.`
+    : `Ask the retailer what comes off – legs, arms, back cushions, a split box spring – and enter the reduced dimensions again; the figures above say how much is missing. The <a href="/guides/will-my-sofa-fit-through-the-door/">sofa delivery guide</a> shows where to measure.`;
+  out.innerHTML = `<div class="status ${res.ok ? 'good' : 'bad'}" role="status"><span class="big">${esc(headline)}</span>
 <p class="note-small" style="margin:.4rem 0 0">Geometric check of a rigid box with your outside dimensions. Allow for packaging, handles and the person carrying it.</p></div>
+<p style="margin:1rem 0 0"><b>Next step:</b> ${next}</p>
 ${res.results.map(r => {
     const b = r.best;
     let how = '';
     if (r.cp.kind === 'door') how = b.profile ? `Tip it onto its back or end and roll it through using the diagonal depth (${fmtLen(item.diag, units)}).` : (b.upright ? `Carry it upright, ${esc(b.label)}. Cross-section ${fmtLen(b.w, units)} wide × ${fmtLen(b.t, units)} high${b.ok ? ` – ${fmtLen(Math.max(0, r.cp.width - b.w), units)} spare in width.` : (b.t > r.cp.height ? ` – ${fmtLen(b.t - r.cp.height, units)} taller than the opening, and it may not be tipped.` : ` – ${fmtLen(b.w - r.cp.width, units)} wider than the opening.`)}` : `Carry it ${esc(b.label)}. Cross-section ${fmtLen(Math.min(b.w, b.t), units)} × ${fmtLen(Math.max(b.w, b.t), units)}${b.ok ? ` – ${fmtLen(Math.max(0, r.cp.width - Math.min(b.w, b.t)), units)} spare in width.` : '.'}`);
     else if (!b.ok && !b.limit) how = `${fmtLen(b.w, units)} across is wider than the narrower hall, so it cannot turn this corner in any position${item.upright ? ' that keeps it upright' : ''}.`;
     else how = b.ok ? `Carry it ${esc(b.label)}${b.phi > 0.02 ? `, tilted up about ${deg(b.phi)}°` : ' flat'}; the tightest angle in the turn is about ${deg(b.theta)}°. Longest length that passes at this width: ${fmtLen(b.limit, units)}.` : item.upright ? (b.t > r.cp.height ? `Kept upright it is ${fmtLen(b.t - r.cp.height, units)} taller than the ${fmtLen(r.cp.height, units)} headroom.` : `Longest length that can turn here upright with ${fmtLen(b.w, units)} width: ${fmtLen(Math.max(0, b.limit || 0), units)}; it is ${fmtLen(-b.margin, units)} too long and may not be tilted.`) : `Longest length that can turn here with ${fmtLen(b.w, units)} width: ${fmtLen(Math.max(0, b.limit || 0), units)} flat; even tilted within the ${fmtLen(r.cp.height, units)} ceiling it is ${fmtLen(-b.margin, units)} too long.`;
+    hows.push(`${r.cp.name}: ${r.ok ? 'passes' : 'blocked'}. ${plain(how)}`);
     return `<section class="panel" style="margin-top:1rem"><h3><span class="dot ${r.ok ? 'ok' : 'bad'}"></span> ${esc(r.cp.name)}: ${r.ok ? 'passes' : 'blocked'}</h3><p style="margin:0">${how}</p>${sketch(r, item)}</section>`;
   }).join('')}`;
+  const dims = `Item ${fmtLen(item.W, units)} × ${fmtLen(item.D, units)} × ${fmtLen(item.H, units)}${item.diag ? `, diagonal depth ${fmtLen(item.diag, units)}` : ''}${item.upright ? ', kept upright' : ''}`;
+  lastText = ['Will It Fit? – delivery check', headline, dims, '', ...hows, '', 'Geometric check of a rigid box; allow for packaging and hands. smallspacecompass.com/tools/will-it-fit/'].join('\n');
+  setActions(true);
 }
 function restore() {
   for (const k of DELIVERY_LENGTHS) LEN[k] = fromDisplay(input(k)?.value, 'in');
   let s = null;
-  try { s = decodeDelivery(localStorage.getItem(DELIVERY_STORE), localStorage.getItem(DELIVERY_STORE_V1)); } catch (e) { /* storage blocked */ }
+  // a shared link (#W=…&D=…) wins over what this browser remembered; the fragment is then removed from the address bar
+  const shared = deliveryFromFragment(location.hash);
+  if (shared) { s = shared; try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignore */ } }
+  else try { s = decodeDelivery(localStorage.getItem(DELIVERY_STORE), localStorage.getItem(DELIVERY_STORE_V1)); } catch (e) { /* storage blocked */ }
   if (s) {
     Object.assign(LEN, s.lengths);
     for (const [k, v] of Object.entries(s.checks)) { const i = input(k); if (i) i.checked = v; }
@@ -123,6 +160,17 @@ app.addEventListener('click', (e) => {
   }
   if (b.dataset.units && b.dataset.units !== units) {
     setUnits(b.dataset.units); showLengths(); run();
+  }
+  if (b.dataset.share === 'copy' && lastText) copyText(lastText, 'Result copied.');
+  if (b.dataset.share === 'link' && lastText) {
+    const checks = Object.fromEntries(DELIVERY_CHECKS.map(k => [k, !!input(k)?.checked]));
+    copyText(`${location.origin}${location.pathname}#${deliveryToFragment({ unit: units, lengths: LEN, checks })}`, 'Link copied. It contains the dimensions you entered.');
+  }
+  if (b.dataset.share === 'print') window.print();
+  if (b.dataset.example) {
+    const ex = EXAMPLES[b.dataset.example];
+    Object.assign(LEN, ex.lengths); for (const [k, v] of Object.entries(ex.checks)) { const i = input(k); if (i) i.checked = v; }
+    showLengths(); run();
   }
 });
 restore(); run();

@@ -2,6 +2,7 @@
 import { storageBands, cuIn2cuFt, cuIn2L, divideOpening, fmtLen, CM, REACH_LOW, REACH_HIGH } from './geometry.js';
 import { elevationSVG, esc } from './render.js';
 import { storageFieldError, validStorage } from './validate.js';
+import { csvLine, csvFile } from './csv.js';
 
 const app = document.querySelector('[data-storage]');
 const $ = (s) => app.querySelector(s);
@@ -83,6 +84,24 @@ app.addEventListener('click', (e) => {
     const old = units; units = b.dataset.units; app.querySelectorAll('[data-units]').forEach(x => x.setAttribute('aria-pressed', x === b));
     app.querySelectorAll('[data-divider] input[type=number]').forEach(i => { if (i.name === 'parts') return; const v = parseFloat(i.value); i.value = old === 'in' ? +(v * CM).toFixed(1) : +(v / CM).toFixed(2); });
     render();
+  }
+});
+// CSV of the wall: one line per unit with its volume in each band, in the unit shown on screen
+function wallCsv() {
+  const L = (v) => String(toU(v)), V3 = (ci) => (units === 'cm' ? cuIn2L(ci).toFixed(1) : cuIn2cuFt(ci).toFixed(2));
+  const vu = units === 'cm' ? 'L' : 'cu ft';
+  const head = ['Unit', `From left (${units})`, `Width (${units})`, `Bottom (${units})`, `Top (${units})`, `Depth (${units})`, `Below ${fmtLen(REACH_LOW, units)} (${vu})`, `${fmtLen(REACH_LOW, units)}–${fmtLen(REACH_HIGH, units)} (${vu})`, `Above ${fmtLen(REACH_HIGH, units)} (${vu})`, `Total (${vu})`];
+  const lines = S.units.map(u => { const b = storageBands([u]); return csvLine([u.label, L(u.x), L(u.w), L(u.bottom), L(u.top), L(u.depth), V3(b.low), V3(b.reach), V3(b.high), V3(b.low + b.reach + b.high)]); });
+  const t = storageBands(S.units);
+  return csvFile([csvLine(head), ...lines, csvLine(['All units', '', '', '', '', '', V3(t.low), V3(t.reach), V3(t.high), V3(t.low + t.reach + t.high)])]);
+}
+app.addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-out]'); if (!b) return;
+  if (b.dataset.out === 'print') window.print();
+  if (b.dataset.out === 'csv') {
+    const url = URL.createObjectURL(new Blob(['\ufeff' + wallCsv()], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a'); a.href = url; a.download = 'storage-wall.csv'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
 });
 app.addEventListener('keydown', (e) => { const u = e.target.closest?.('.unit[data-id]'); if (u && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); sel = u.dataset.id; render(); $('[data-unit] input')?.focus(); } });

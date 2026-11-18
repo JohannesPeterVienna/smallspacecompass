@@ -13,6 +13,14 @@
 | /privacy.html | /privacy/ |
 | /advertise.html | /contact/ |
 
+## Guides merged on 18 November 2026 (noindex meta-refresh pages with canonical, not in the sitemap)
+
+| Old URL | New URL | Why |
+|---|---|---|
+| /guides/wall-bed-vs-sofa-bed/ | /guides/murphy-bed-room-size/ (section `#sofa-bed`) | same footprints and plans; comparison now computed in one place |
+| /guides/divide-a-studio-without-walls/ | /guides/studio-apartment-layouts/ (section `#dividers`) | mostly general advice; the measurable part is a table in the layouts guide |
+| /guides/rug-size-small-living-room/ | /guides/dining-table-small-space/ (section `#rug`) | no primary source for rug conventions; only the chair-zone arithmetic was kept |
+
 ## Former subdomains (to be handled by DNS/hosting – NOT done in this repo)
 
 Function is integrated into the main domain. Recommended: 301 redirect of every path to the target below, then remove the old projects.

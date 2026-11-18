@@ -25,3 +25,24 @@ export const rule = (v, title, src) => `<div class="rule-card"><span class="v">$
 export const table = (head, rows) => `<div class="table-scroll"><table class="data"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((c, i) => i && /^[\d.,–×\s]+(in|cm|ft|sq ft|%|m²)?/.test(String(c)) ? `<td class="num">${c}</td>` : `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 export const bs = (d = 24, sides = ['E', 'W']) => sides.map(side => ({ side, depth: d, kind: 'bedside', walk: true }));
 export const chair = (side = 'S', d = 32) => [{ side, depth: d, kind: 'chair' }];
+
+/* ---- November 2026: links into the tools with the guide's own numbers, and the newly read primary documents ---- */
+import { encodeQuick } from '../../docs/assets/js/quickfit.js';
+import { deliveryToFragment } from '../../docs/assets/js/validate.js';
+import { refById, SOURCES as RS, refUrl } from '../../docs/assets/js/refdata.js';
+export const qlink = (key, values, unit = 'in') => `/tools/clearance-check/#${encodeQuick(key, values, unit).replace(/&/g, '&amp;')}`;
+const ROUTE = { doorW: 32, doorH: 80, hallA: 36, hallB: 36, hallH: 96, stairW: 36, stairH: 80, door2W: 30, door2H: 80 };
+export const dlink = (lengths, checks = {}) => `/tools/will-it-fit/#${deliveryToFragment({ unit: 'in', lengths: { ...ROUTE, ...lengths }, checks: { upright: false, useDoor: true, useCorner: true, useLanding: false, useDoor2: false, ...checks } }).replace(/&/g, '&amp;')}`;
+// "try it with these numbers" box
+export const tryIt = (href, button, text) => `<p class="try no-print"><a class="btn small" href="${href}">${button}</a><span>${text}</span></p>`;
+// link to a row of the reference table, e.g. ref('adm-bed-principal', '750 mm')
+export const ref = (id, text) => { if (!refById[id]) throw new Error('unknown reference row ' + id); return `<a href="/reference/#${id}">${text}</a>`; };
+const RET = 'retrieved 2026-11-18';
+S.adm = ['Approved Document M, Volume 1: Dwellings, 2015 edition incorporating 2016 amendments (UK Government)', RS.adm.url, RET];
+S.ndss = ['Technical housing standards – nationally described space standard (UK Government, 2015)', RS.ndss.url, RET];
+S.hud = ['24 CFR Part 3280, Manufactured Home Construction and Safety Standards, Subpart B (edition of April 1, 2024)', RS.hud.url, RET];
+S.ada804 = ['2010 ADA Standards, §804.2.1 Pass Through Kitchen', ADA + '#ada-804_2_1', RET];
+S.ada803 = ['2010 ADA Standards, §803.5 Coat Hooks and Shelves; §404.2.7 Door Hardware', ADA + '#ada-803_5', RET];
+export { refUrl };
+S.ada903 = ['2010 ADA Standards, §903 Benches', ADA + '#ada-903_5', RET];
+S.spec = ['Spec sheet “Adonis Queen Murphy Bed”, model ADONQNP (PDF dated November 2023; the sheet does not name its manufacturer)', 'https://cdn.shopify.com/s/files/1/0818/6976/6973/files/ADONQNP_Spec_Sheet.pdf', RET + ' – one example model, not a survey'];

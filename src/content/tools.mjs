@@ -25,6 +25,8 @@ const num = (name, label, val, extra = '') => `<label class="f">${lab(label)}<in
 const deliveryApp = `<section class="tool" data-delivery aria-label="Delivery check">
 <div class="panel delivery-in">
 <div class="row">${unitSeg}</div>
+<h2>Worked routes to start from</h2>
+<div class="row"><button class="btn small ghost" type="button" data-example="sofaok">84 in sofa that passes</button><button class="btn small ghost" type="button" data-example="sofastuck">Same sofa, 2 in deeper</button><button class="btn small ghost" type="button" data-example="mattress">Queen mattress, stairs</button><button class="btn small ghost" type="button" data-example="wardrobe">Wardrobe kept upright</button></div>
 <h2>1 · The item (outside dimensions)</h2>
 <div class="row">${['sofa', 'loveseat', 'queenmattress', 'kingbox', 'wardrobe', 'fridge'].map(k => `<button class="btn small ghost" type="button" data-preset="${k}">${{ sofa: 'Sofa', loveseat: 'Loveseat', queenmattress: 'Queen mattress', kingbox: 'Box spring', wardrobe: 'Wardrobe', fridge: 'Fridge' }[k]}</button>`).join('')}</div>
 <div class="fields">${num('W', 'Length / width', 84)}${num('D', 'Depth', 35)}${num('H', 'Height', 34)}${num('diag', 'Diagonal depth (sofas)', 31)}</div>
@@ -35,7 +37,9 @@ const deliveryApp = `<section class="tool" data-delivery aria-label="Delivery ch
 <fieldset><legend class="row note-small"><label><input type="checkbox" name="useLanding"> Stair landing turn</label></legend><div class="fields">${num('stairW', 'Stair / landing width', 36)}${num('stairH', 'Headroom at turn', 80)}</div></fieldset>
 <fieldset><legend class="row note-small"><label><input type="checkbox" name="useDoor2"> Room door</label></legend><div class="fields">${num('door2W', 'Clear width', 30)}${num('door2H', 'Clear height', 80)}</div></fieldset>
 </div>
-<div data-result aria-live="polite" class="delivery-out" style="min-width:0"></div>
+<div class="delivery-out" style="min-width:0"><div data-result aria-live="polite"></div>
+<div class="row no-print" style="margin-top:1rem"><button class="btn small ghost" type="button" data-share="copy">Copy result</button><button class="btn small ghost" type="button" data-share="link">Copy link</button><button class="btn small ghost" type="button" data-share="print">Print</button><span class="note-small" data-msg role="status"></span></div>
+<p class="note-small no-print" style="margin:.6rem 0 0">“Copy link” puts your dimensions into the link itself, after the # sign. Nothing is uploaded; whoever opens the link sees the same numbers.</p></div>
 </section>`;
 
 const storageApp = `<section class="tool" data-storage aria-label="Storage wall audit">
@@ -45,10 +49,57 @@ const storageApp = `<section class="tool" data-storage aria-label="Storage wall 
 <div class="fields"><label class="f">${lab('Wall width')}<input type="number" data-wall-w step="1"></label><label class="f">${lab('Ceiling height')}<input type="number" data-wall-h step="1"></label></div>
 <div data-unit class="item-editor"></div>
 <div data-divider class="item-editor"><h3>Equal compartments</h3><div class="fields"><label class="f">Inside opening<input type="number" name="opening" value="30" step="0.25"></label><label class="f">Compartments<input type="number" name="parts" value="3" min="1" max="20" step="1"></label><label class="f">Divider thickness<input type="number" name="thick" value="0.75" step="0.0625"></label></div><div data-div aria-live="polite"></div></div>
-<p class="note-small" style="margin:0">Saved in this browser only.</p></div>
+<div class="row no-print"><button class="btn small ghost" type="button" data-out="csv">Export CSV</button><button class="btn small ghost" type="button" data-out="print">Print</button></div>
+<p class="note-small" style="margin:0">Saved in this browser only. The CSV lists every unit with its volume per band.</p></div>
+</section>`;
+
+// Clearance Check: the shell is static HTML; quick.js fills it. Used on the home page and on its own tool page.
+export const quickShell = `<section class="tool quick" data-quick aria-label="Clearance Check">
+<div class="panel">
+<div class="row"><div class="seg" role="group" aria-label="What to check" data-q-scen></div><div class="seg" role="group" aria-label="Units" data-q-units></div></div>
+<div class="row" data-q-ex aria-label="Examples"></div>
+<div class="fields" data-q-fields></div>
+<div class="row no-print"><button class="btn small ghost" type="button" data-q-act="copy">Copy result</button><button class="btn small ghost" type="button" data-q-act="link">Copy link</button><button class="btn small ghost" type="button" data-q-act="print">Print</button><span class="note-small" data-q-msg role="status"></span></div>
+<p class="note-small no-print" style="margin:0">Nothing is stored or uploaded. “Copy link” puts your numbers into the link itself, after the # sign; whoever opens it sees the same numbers.</p>
+</div>
+<div class="q-out" data-q-out aria-live="polite"><noscript><p class="status bad">The Clearance Check needs JavaScript. The <a href="/reference/">reference table</a> with all widths works without it.</p></noscript></div>
 </section>`;
 
 export const TOOLS = [
+  {
+    path: '/tools/clearance-check/', short: 'Clearance Check', script: 'quick.js', updated: true,
+    title: 'Clearance Check: Bed, Walkway, Table & Kitchen Aisle Widths',
+    description: 'Type in a wall and a bed, a gap, a table or a kitchen width: the check shows the subtraction, the clear width that is left and which published reference widths it meets – in inches or centimeters.',
+    h1: 'Clearance Check', lede: 'Four quick sums for the questions that come up before any drawing: is there room beside the bed, is this gap still a walkway, how wide may the table be, is the kitchen aisle wide enough? Each result shows its working and is compared with published widths from five primary documents, each linked to its entry in the reference table.',
+    app: quickShell,
+    body: `<h2 id="how">What the check does</h2>
+<p>Each of the four checks is a subtraction you could do on paper – the value of the tool is that it shows the working, compares the result with every published width that applies, and tells you how much is missing for the next one. It works on one section through the room: a wall with a bed against it, a gap with use zones on either side, a room with a table in it, a kitchen with one or two counter runs.</p>
+<div class="table-scroll"><table class="data"><thead><tr><th>Check</th><th>Working</th><th>Compared with</th></tr></thead><tbody>
+<tr><td>Bed on a wall</td><td>(wall − bed width) ÷ sides in use; room depth − bed length. The tighter of the two is compared.</td><td>24 in bedside strip (this site’s assumption); 750 mm and 1000 mm clear access zones of Approved Document M; 36 in ADA walking surface</td></tr>
+<tr><td>Walkway</td><td>gap − use zone A − use zone B</td><td>28 in (24 CFR 3280.112), 750 mm and 900 mm (Approved Document M), 32 in pinch and 36 in (ADA §403.5.1)</td></tr>
+<tr><td>Table and chairs</td><td>(room width − table width) ÷ sides with chairs</td><td>32, 36 and 44 in from table edge to wall (NKBA Kitchen Guideline 8)</td></tr>
+<tr><td>Kitchen aisle</td><td>wall to wall − counter depths</td><td>36 in walkway and 42 / 48 in work aisle (NKBA 7 and 6), 40 in (ADA §804.2.1), 1200 mm (Approved Document M)</td></tr></tbody></table></div>
+<h2 id="zones">The use zones in the walkway check</h2>
+<p>A gap is not a walkway until you subtract what happens in it. The check offers three zone depths. The 32 in for a desk or dining chair is the distance the <a href="/reference/#nkba-seat-none">NKBA guideline</a> gives from a table edge to a wall where nobody passes. The 18 in for an open drawer or sofa legroom and the 24 in bedside strip are this site’s own planning assumptions – no standard we could read states them – so they are labelled as such wherever they appear. If your chair, drawer or door leaf is deeper, subtract it by hand and enter the smaller gap.</p>
+<h2 id="read">Reading the result</h2>
+<p>The list of reference widths is sorted from the smallest to the largest. A row says “meets” when your clear width is at least that wide, and gives the margin either way. The documents were written for different purposes: an accessibility standard for public buildings, a federal standard for factory-built homes, English building-regulations guidance, a trade association’s kitchen guidelines. None of them governs how you furnish a private room. Together they bracket the range from “a person can physically pass” to “comfortable for a wheelchair user”, which is more useful than a single rule of thumb. The <a href="/reference/">reference table</a> shows each figure with its section number, scope and link.</p>
+<p>“Next step” names the largest piece – or the smallest room – that would still reach the next width up, so you know what to change. A sum on one section cannot see door swings, a second piece of furniture further along or a route that turns a corner; for that, draw the room in the <a href="/tools/clearance-planner/">Clearance Planner</a>.</p>
+<h2 id="limits">Limits</h2>
+<ul><li>One straight section, rectangles only. Skirting boards, radiators, handles and bed frames wider than the mattress have to be included in the numbers you type.</li>
+<li>Metric figures from the English documents are compared exactly (750 mm = 29.5 in); inch figures from the U.S. documents likewise. Results are rounded to 0.1 in or 0.1 cm for display only.</li>
+<li>Meeting a width here is not a statement that a room complies with any code or accessibility standard.</li></ul>`,
+    faq: [
+      ['Is 24 inches beside a bed a rule?', 'No. It is this site’s planning assumption. The only bedside figure we found in a primary document is the 750 mm (29.5 in) clear access zone of England’s Approved Document M for accessible and adaptable dwellings, and 1000 mm for wheelchair user dwellings; the check shows both.'],
+      ['Why does the kitchen check list both 40 and 42 inches?', 'They come from different documents: 40 in is the minimum clearance in a pass-through kitchen in the 2010 ADA Standards (§804.2.1), 42 in is the work aisle the NKBA recommends for one cook (guideline 6).'],
+      ['What does “Copy link” contain?', 'The check you chose, the unit and the numbers you typed, written after the # sign of the link. Browsers do not send that part to the web server. Nothing is stored on this site.']
+    ],
+    sources: [
+      ['2010 ADA Standards for Accessible Design, §403.5.1, §804.2.1 (U.S. Access Board)', 'https://www.access-board.gov/ada/#ada-403_5_1', 'retrieved 2026-11-18'],
+      ['NKBA Kitchen Planning Guidelines with Access Standards (PDF)', 'https://kb.nkba.org/uploads/2022/05/Kitchen-Planning-Guidelines.pdf', 'guidelines 6, 7 and 8; retrieved 2026-11-18'],
+      ['Approved Document M, Volume 1: Dwellings, 2015 edition incorporating 2016 amendments (UK Government)', 'https://www.gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m', 'paragraphs 1.15, 2.22, 2.24, 2.25, 3.35; retrieved 2026-11-18'],
+      ['24 CFR Part 3280, Manufactured Home Construction and Safety Standards, § 3280.112 (edition of April 1, 2024)', 'https://www.govinfo.gov/content/pkg/CFR-2024-title24-vol5/pdf/CFR-2024-title24-vol5-part3280.pdf', 'retrieved 2026-11-18']
+    ]
+  },
   {
     path: '/tools/clearance-planner/', short: 'Clearance Planner', script: 'planner.js',
     title: 'Clearance Planner: Walkways, Door Swings & Chair Space',
@@ -88,7 +139,7 @@ export const TOOLS = [
     sources: [['2010 ADA Standards for Accessible Design, §403.5.1, §404.2.3 (U.S. Access Board)', 'https://www.access-board.gov/ada/chapter/ch04/'], ['NKBA Kitchen Planning Guidelines with Access Standards (PDF)', 'https://kb.nkba.org/uploads/2022/05/Kitchen-Planning-Guidelines.pdf', 'guidelines 6, 7 and 8']]
   },
   {
-    path: '/tools/will-it-fit/', short: 'Will It Fit?', script: 'delivery.js',
+    path: '/tools/will-it-fit/', short: 'Will It Fit?', script: 'delivery.js', updated: true,
     title: 'Will It Fit? Sofa, Mattress & Wardrobe Delivery Check',
     description: 'Check whether a sofa, mattress or wardrobe can be carried through your door, around a 90° hallway corner and up a stair landing – straight, tilted or turned – with a drawing of the move.',
     h1: 'Will It Fit? Delivery Check', lede: 'Type in the outside dimensions of a sofa, mattress or wardrobe and the narrowest parts of the route into your home. The check tries every orientation – straight, on its side, on end, tilted – and draws the one that works.',
@@ -109,7 +160,9 @@ export const TOOLS = [
 <li><b>Item:</b> the outside dimensions with packaging if it arrives boxed; feet and cushions that can be removed can be left out.</li></ol>
 <h2 id="read">Reading the result</h2>
 <p>Each checkpoint shows whether it passes and how: which side leads, which side is vertical, how far the item has to be tilted and how much room is left. If a corner fails, the result says by how much the item is too long even when tilted within the ceiling height. That number tells you what to ask the retailer: a sofa with removable arms or legs, a split box spring, a modular or “sofa-in-a-box” design.</p>
-<p>The form opens with a sofa that makes it: 84 in long, 35 in deep, 34 in high, 31 in diagonal depth, through a 32 in door and around a corner between two 36 in halls. Change the depth to 37 in – the <a href="/guides/will-my-sofa-fit-through-the-door/#example">worked example in the sofa guide</a> – and the same sofa still passes the door but fails at the hallway corner by about an inch. Those 2 in of depth are exactly what to ask the retailer about.</p>`,
+<p>The form opens with a sofa that makes it: 84 in long, 35 in deep, 34 in high, 31 in diagonal depth, through a 32 in door and around a corner between two 36 in halls. Change the depth to 37 in – the <a href="/guides/will-my-sofa-fit-through-the-door/#example">worked example in the sofa guide</a> – and the same sofa still passes the door but fails at the hallway corner by about an inch. Those 2 in of depth are exactly what to ask the retailer about. Both cases are among the “worked routes” buttons above the form; they are constructed examples, not measurements of real buildings.</p>
+<h2 id="share">Sending the result to someone</h2>
+<p>“Copy result” puts the verdict for every checkpoint on the clipboard as plain text – for a message to the retailer or the movers. “Copy link” creates a link that reopens the check with your dimensions: they are written after the # sign of the address, which browsers do not transmit to the web server, and nothing is stored on this site. “Print” prints the form, the result and the sketches without navigation and ads.</p>`,
     faq: [
       ['What is the diagonal depth of a sofa?', 'The distance from the top of the back frame to the front edge of the seat, measured in a straight line from the side. Many retailers list it; otherwise measure with a straightedge across the side profile.'],
       ['Does the check account for people carrying the item?', 'No. It checks the rigid geometry of a box with the dimensions you enter. Allow a couple of inches for hands, straps and packaging.'],
@@ -134,7 +187,7 @@ export const TOOLS = [
 <tr><td>Full wall bed (vertical)</td><td class="num">18 in</td><td class="num">63 in more</td><td class="num">53 × 75 in</td></tr>
 <tr><td>Sofa bed</td><td class="num">36 in</td><td class="num">54 in more</td><td class="num">varies</td></tr>
 <tr><td>Drop-leaf table</td><td class="num">10 in</td><td class="num">20 in more</td><td class="num">–</td></tr></tbody></table></div>
-<p>Mattress sizes are the U.S. standard sizes as published in <a href="https://casper.com/mattress-size-comparison/">Casper's size chart</a>. For the space a wall bed needs in front of it, see <a href="/guides/murphy-bed-room-size/">Murphy bed room size</a> and <a href="/guides/wall-bed-vs-sofa-bed/">wall bed vs. sofa bed</a>.</p>
+<p>Mattress sizes are the U.S. standard sizes as published in <a href="https://casper.com/mattress-size-comparison/">Casper's size chart</a>. For the space a wall bed needs in front of it, see <a href="/guides/murphy-bed-room-size/">Murphy bed room size</a>, which also plans the same room with a wall bed and with a sofa bed.</p>
 <h2 id="checks">The night-time checks that matter most</h2>
 <ul><li><b>The door must still open.</b> If the open bed sits inside the swing of the entry door, the planner marks it red. A bed that blocks the only exit is a safety problem, not just an inconvenience.</li>
 <li><b>A route to the bed and the window.</b> At night you want to reach the bed without climbing over furniture, and the window should stay reachable.</li>
@@ -148,7 +201,7 @@ export const TOOLS = [
     sources: [['Casper mattress size comparison (U.S. mattress sizes)', 'https://casper.com/mattress-size-comparison/'], ['2010 ADA Standards, §403.5.1 Clear Width', 'https://www.access-board.gov/ada/chapter/ch04/']]
   },
   {
-    path: '/tools/storage-wall/', short: 'Storage Wall Audit', script: 'storage.js',
+    path: '/tools/storage-wall/', short: 'Storage Wall Audit', script: 'storage.js', updated: true,
     title: 'Storage Wall Audit: Shelf Volume by Reach Height',
     description: 'Draw a storage wall, add shelves and cabinets and see how much volume sits within easy reach (15–48 in), above it and below it – plus an equal-compartment divider calculator.',
     h1: 'Storage Wall Audit', lede: 'How much of your storage can you actually reach? Draw the wall, add the units, and the audit splits their volume into three bands: below 15 in, 15–48 in, and above 48 in – the reach range from the ADA Standards.',
@@ -162,7 +215,8 @@ export const TOOLS = [
 <ol><li>Measure the wall: width between corners or obstructions, and the ceiling height.</li>
 <li>For each unit, enter its distance from the left, width, bottom and top height above the floor, and inside depth. Wall shelves start at their mounting height.</li>
 <li>List the shelf heights above the floor so the drawing shows them; the volume does not depend on them.</li>
-<li>Move units and shelves until the everyday band holds what you use every day – see the <a href="/guides/vertical-storage-by-reach/">guide to vertical storage by reach</a>.</li></ol>`,
+<li>Move units and shelves until the everyday band holds what you use every day – see the <a href="/guides/vertical-storage-by-reach/">guide to vertical storage by reach</a>.</li>
+<li>“Export CSV” saves one line per unit with its position, size and volume in each band, in the unit shown on screen, for a spreadsheet or a carpenter. “Print” prints the elevation and the table.</li></ol>`,
     faq: [
       ['What do 15 and 48 inches mean?', 'They are the low and high limits of the unobstructed reach range in ADA 2010 §308.2.1 (forward reach) and §308.3.1 (side reach): 15 in minimum and 48 in maximum above the floor.'],
       ['Are the volumes usable capacity?', 'No, they are gross volumes of the unit outlines. They are best used to compare layouts.'],

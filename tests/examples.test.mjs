@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { FIGURES } from '../build/figs.mjs';
 import { ARTICLES } from '../src/content/index.mjs';
 import '../src/content/layout-notes.mjs';
-import { BATH_PLANS } from '../src/content/articles-3.mjs';
+import { BATH_PLANS, FOLD_FREE } from '../src/content/articles-3.mjs';
 import { LAYOUTS } from '../docs/assets/js/layouts.js';
 import { analyzePlan, findConflicts, sideClearance, ADA_ROUTE } from '../docs/assets/js/geometry.js';
 
@@ -16,7 +16,7 @@ const hard = (c) => c.filter(x => x.severity !== 'warn');
 const label = (f) => f.caption.replace(/<[^>]+>/g, '').slice(0, 80);
 
 test('guide figures were registered', () => {
-  assert.ok(ARTICLES.length >= 18);
+  assert.ok(ARTICLES.length >= 15); // 18 until three overlapping guides were merged on 2026-11-18
   assert.ok(FIGURES.length >= 30, `only ${FIGURES.length} figures registered`);
 });
 
@@ -69,4 +69,12 @@ test('sideClearance measures to walls and to the nearest solid in front', () => 
   assert.equal(sideClearance(p, 'a', 'S'), 20);
   assert.equal(sideClearance(p, 'a', 'N'), 10);
   assert.equal(sideClearance(p, 'a', 'E'), 70);
+});
+
+test('wall bed vs. sofa bed: the published conclusion holds for the computed plans', () => {
+  // the guide says the wall-bed room has less free floor than the sofa-bed room because of its separate loveseat
+  assert.ok(FOLD_FREE.wbDay < FOLD_FREE.sbDay && FOLD_FREE.wbNight < FOLD_FREE.sbNight, JSON.stringify(FOLD_FREE));
+  assert.equal(FOLD_FREE.wbDay, 77, 'the studio layouts guide states 77 % for the wall-bed plan by day');
+  const love = LAYOUTS.find(l => l.slug === 'studio-15x15-wall-bed').items.find(i => /loveseat/i.test(i.label));
+  assert.equal((love.w * love.d / 144).toFixed(1), '14.2');
 });
