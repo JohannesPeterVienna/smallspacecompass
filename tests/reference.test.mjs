@@ -44,18 +44,23 @@ test('single-value rows: inches and millimetres agree (documents round to 5 mm a
     if (!i || !m) continue;
     checked++;
     assert.ok(Math.abs(Number(i[1]) * 25.4 - Number(m[1])) <= 3.2, `${r.id}: ${r.imp} vs ${r.met}`);
+    // our own conversion of a single figure never understates it (these rows are all minimums except hud-window)
+    if (r.conv === 'imp' && r.id !== 'ndss-headroom') assert.ok(Number(i[1]) * 25.4 >= Number(m[1]) - 1e-6, `${r.id}: ${r.imp} is below ${r.met}`);
+    if (r.conv === 'met' && r.id !== 'hud-window') assert.ok(Number(m[1]) >= Number(i[1]) * 25.4 - 1e-6, `${r.id}: ${r.met} is below ${r.imp}`);
+    if (r.id === 'hud-window') assert.ok(Number(m[1]) <= Number(i[1]) * 25.4, 'a converted maximum is rounded down');
   }
   assert.ok(checked >= 20, `only ${checked} rows checked`);
 });
 
 test('spot values against the documents', () => {
   assert.equal(refById['ada-walk'].imp, '36 in'); assert.equal(refById['ada-walk'].met, '915 mm');
-  assert.equal(refById['hud-hall'].imp, '28 in'); assert.equal(refById['hud-hall'].met, '711 mm');
-  assert.equal(refById['adm-bed-route'].met, '750 mm'); assert.equal(refById['adm-bed-route'].imp, '29.5 in');
-  assert.equal(refById['adm-hall2'].imp, '35.4 in');
+  assert.equal(refById['hud-hall'].imp, '28 in'); assert.equal(refById['hud-hall'].met, '712 mm', '711.2 mm, rounded up');
+  assert.equal(refById['adm-bed-route'].met, '750 mm'); assert.equal(refById['adm-bed-route'].imp, '29.53 in');
+  assert.equal(refById['adm-hall2'].imp, '35.44 in'); assert.equal(refById['adm-switch'].imp, '17.72 in–47.24 in', 'range: low end up, high end down');
+  assert.equal(refById['adm-f-single'].imp, '74.8 in × 35.4 in', 'furniture sizes: nearest 0.1 in');
   assert.equal(refById['nkba-seat-walk'].imp, '44 in');
-  assert.match(refById['ndss-single'].imp, /^80\.7 sq ft, at least 84\.6 in wide$/);
-  assert.match(refById['hud-bedroom'].met, /^4\.6 m²; 6\.5 m²$/);
+  assert.equal(refById['ndss-single'].imp, '80.8 sq ft, at least 84.65 in wide');
+  assert.equal(refById['hud-bedroom'].met, '4.65 m²; 6.51 m²');
 });
 
 test('ADA links carry the section anchor', () => {

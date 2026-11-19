@@ -77,6 +77,16 @@ for (const width of [390, 1366]) {
     const refs = await page.evaluate(() => [...document.querySelectorAll('[data-q-out] a[href^="/reference/#"]')].map(a => a.getAttribute('href').split('#')[1]));
     const refHtml = readFileSync(join(ROOT, 'reference/index.html'), 'utf8');
     ok(refs.length > 0 && refs.every(id => refHtml.includes(`<tr id="${id}"`)), tag(`${path}: result links to reference rows`));
+    // keyboard: after Enter on a scenario, unit or example button the focus stays on that button (the controls are rebuilt)
+    for (const [sel, key, val] of [['[data-scen="table"]', 'scen', 'table'], ['[data-unit="cm"]', 'unit', 'cm'], ['[data-unit="in"]', 'unit', 'in'], ['[data-q-ex] button >> nth=2', 'ex', '2'], ['[data-scen="bed"]', 'scen', 'bed']]) {
+      await page.focus(sel); await page.keyboard.press('Enter');
+      const got = await page.evaluate((k) => document.activeElement?.dataset?.[k] ?? 'none:' + document.activeElement?.tagName, key);
+      ok(got === val, tag(`${path}: focus stays on ${key}=${val} after Enter (is ${got})`));
+    }
+    await page.focus('[data-scen="walkway"]'); await page.keyboard.press('Space');
+    ok(await page.evaluate(() => document.activeElement?.dataset?.scen) === 'walkway', tag(`${path}: focus stays after Space`));
+    await page.keyboard.press('Tab');
+    ok(await page.evaluate(() => document.activeElement?.dataset?.scen) === 'table', tag(`${path}: Tab continues from the focused button`));
     // units
     await page.click('[data-scen="aisle"]'); await page.click('[data-q-ex] button >> nth=0'); await page.click('[data-unit="cm"]');
     ok(/116\.8 cm clear/.test(await out.innerText()), tag(`${path}: centimetres`));
@@ -120,6 +130,31 @@ for (const width of [390, 1366]) {
     ok(await shows(page, '[data-q-out]', /in clear/), tag(`hostile fragment still renders: ${frag.slice(0, 30)}`));
     ok(await page.locator('[data-quick] img, [data-quick] script, [data-quick] svg[onload]').count() === 0, tag(`hostile fragment injected nothing: ${frag.slice(0, 30)}`));
     ok(page.errs.length === 0, tag(`hostile fragment ${frag.slice(0, 30)}: ${page.errs.join(' / ')}`));
+    await page.close();
+  }
+  // a link with an option the check does not know, or with unusable numbers, says so
+  {
+    const page = await open('/tools/clearance-check/#c=bed&wall=120&bedW=60&depth=144&bedL=80&sides=7');
+    ok(await shows(page, '[data-q-note]', /option this check does not know \(Sides you get in from\)/) && await shows(page, '[data-q-out]', /30 in clear/), tag('unknown option in a link is reported'));
+    await page.click('[data-q-ex] button >> nth=1');
+    ok((await page.locator('[data-q-note]').innerText()).trim() === '', tag('the note goes away with the next own input'));
+    await page.close();
+    const broken = await open('/tools/clearance-check/#c=table&room=abc&tableW=36');
+    ok(await shows(broken, '[data-q-note]', /incomplete or contained numbers/) && await broken.locator('[data-scen="table"][aria-pressed="true"]').count() === 1, tag('broken link is reported, the named check is shown'));
+    await broken.close();
+    const fine = await open('/tools/clearance-check/#c=bed&wall=120&bedW=60&depth=144&bedL=80&sides=1');
+    ok(await shows(fine, '[data-q-out]', /clear/) && (await fine.locator('[data-q-note]').innerText()).trim() === '', tag('valid link shows no note'));
+    await fine.close();
+    // reference widths are shown rounded up
+    const up = await open('/tools/clearance-check/');
+    ok(await shows(up, '[data-q-out]', /29\.53 in/) && !/29\.5 in/.test(await up.locator('[data-q-out]').innerText()), tag('750 mm is shown as 29.53 in'));
+    await up.close();
+  }
+  // merged guides land on their section
+  for (const [from, to] of [['/guides/wall-bed-vs-sofa-bed/', '/guides/murphy-bed-room-size/#sofa-bed'], ['/guides/divide-a-studio-without-walls/', '/guides/studio-apartment-layouts/#dividers'], ['/guides/rug-size-small-living-room/', '/guides/dining-table-small-space/#rug']]) {
+    const page = await ctx.newPage(); await page.goto(base + from, { waitUntil: 'load' });
+    const there = await page.waitForURL(base + to, { timeout: 5000 }).then(() => true, () => false);
+    ok(there && await page.locator('#' + to.split('#')[1]).count() === 1, tag(`${from} → ${to} (is ${page.url().slice(base.length)})`));
     await page.close();
   }
   // a guide's "try it" link opens the check with the guide's numbers
@@ -198,6 +233,28 @@ for (const width of [390, 1366]) {
       ok(await p2.inputValue('input[name="D"]') === '37' && /Does not fit at Hallway corner/.test(await p2.locator('[data-result]').innerText()), tag('delivery: share link restores the check'));
       ok(await p2.evaluate(() => location.hash) === '' && errs.length === 0, tag('delivery: fragment removed, no errors'));
       await fresh.close();
+    }
+    // an opened share link is shown but does not replace what this browser had saved – until the visitor changes a value
+    {
+      await page.click('[data-example="sofaok"]');   // saved here: depth 35
+      const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem('ssc-delivery-v2')).lengths);
+      ok((await stored()).D === 35, tag('delivery: own check saved'));
+      const linked = await open('/tools/will-it-fit/#u=in&W=90&D=37&H=34&diag=31&doorW=32&doorH=80&hallA=36&hallB=36&hallH=96&useDoor=1&useCorner=1');
+      ok(await linked.inputValue('input[name="D"]') === '37' && await linked.inputValue('input[name="W"]') === '90', tag('delivery: link values are shown'));
+      ok(/come from the link you opened/.test(await linked.locator('[data-result]').innerText()), tag('delivery: note that the numbers come from a link'));
+      ok((await stored()).D === 35 && (await stored()).W === 84, tag('delivery: saved check untouched after opening a link'));
+      await linked.click('[data-units="cm"]'); await linked.click('[data-units="in"]');
+      const plain = await open('/tools/will-it-fit/');
+      ok(await plain.inputValue('input[name="D"]') === '35' && !/come from the link/.test(await plain.locator('[data-result]').innerText()), tag('delivery: own check is still there on the next visit'));
+      await plain.close();
+      const again = await open('/tools/will-it-fit/#u=in&W=90&D=37&H=34&diag=31&doorW=32&doorH=80&hallA=36&hallB=36&hallH=96&useDoor=1&useCorner=1');
+      await again.fill('input[name="H"]', '33');
+      ok((await stored()).D === 37 && (await stored()).H === 33 && !/come from the link/.test(await again.locator('[data-result]').innerText()), tag('delivery: after an own change the shown check is saved'));
+      await again.close();
+      const part = await open('/tools/will-it-fit/#W=84&D=35&H=34&doorW=wide&upright=maybe');
+      ok(/could not be used \(Entry door clear width, upright\)/.test(await part.locator('[data-result]').innerText()), tag('delivery: unusable link values are named'));
+      await part.close();
+      await page.reload({ waitUntil: 'networkidle' });
     }
     // invalid input: actions disabled, message shown
     await page.fill('input[name="W"]', '-3');

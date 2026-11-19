@@ -110,6 +110,13 @@ export function fmt(inch, unit = 'in') {
   return `${+inch.toFixed(1)} in`;
 }
 
+// A reference width is a minimum: its display is rounded UP (750 mm → 29.53 in, never 29.5 in).
+export function fmtMin(inch, unit = 'in') {
+  if (!Number.isFinite(inch)) return '–';
+  const up = (v, d) => Math.ceil(+(v * 10 ** d).toFixed(6)) / 10 ** d;
+  return unit === 'cm' ? `${up(inch * CM, 1)} cm` : `${up(inch, 2)} in`;
+}
+
 /* ---------- validation ---------- */
 const num = (v) => (typeof v === 'number' ? v : (String(v ?? '').trim() === '' ? NaN : Number(v)));
 // Returns { ok, values } or { ok:false, errors:[field labels] }. Values are inches.
@@ -141,7 +148,7 @@ function measuresOf(key, v) {
         ...(two ? [{ text: 'Shared between two sides', a: rest, op: '÷', b: 2, r: side, plain: true }] : []),
         { text: 'Room depth − bed length', a: v.depth, op: '−', b: v.bedL, r: foot }
       ],
-      measures: [{ id: 'side', label: two ? 'Beside the bed, each side' : 'Beside the bed, open side', value: side }, { id: 'foot', label: 'At the foot of the bed', value: foot }],
+      measures: [{ id: 'side', label: two ? 'Beside the bed, each side' : 'Beside the bed, open side', value: side, rest }, { id: 'foot', label: 'At the foot of the bed', value: foot, rest: foot }],
       // the widest piece that still leaves `need` on every side that is used
       limit: (need, tight) => (tight === 'foot' ? { label: 'Longest bed for this room depth', value: v.depth - need } : { label: 'Widest bed for this wall', value: v.wall - (two ? 2 : 1) * need }),
       bar: { total: v.wall, parts: two ? [['clear', side], ['piece', v.bedW, 'bed'], ['clear', side]] : [['piece', v.bedW, 'bed'], ['clear', side]] }
@@ -151,7 +158,7 @@ function measuresOf(key, v) {
     const a = Number(v.zoneA), b = Number(v.zoneB), clear = v.gap - a - b;
     return {
       steps: [{ text: 'Gap − use zone A − use zone B', a: v.gap, op: '−', b: a, c: b, r: clear }],
-      measures: [{ id: 'clear', label: 'Walkway that is left', value: clear }],
+      measures: [{ id: 'clear', label: 'Walkway that is left', value: clear, rest: clear }],
       limit: (need) => ({ label: 'Gap needed', value: need + a + b }),
       bar: { total: v.gap, parts: [...(a ? [['zone', a, 'zone A']] : []), ['clear', clear], ...(b ? [['zone', b, 'zone B']] : [])] }
     };
@@ -163,7 +170,7 @@ function measuresOf(key, v) {
         { text: 'Room width − table width', a: v.room, op: '−', b: v.tableW, r: rest },
         ...(two ? [{ text: 'Shared between two sides', a: rest, op: '÷', b: 2, r: behind, plain: true }] : [])
       ],
-      measures: [{ id: 'behind', label: two ? 'Table edge to wall, each side' : 'Table edge to the far wall', value: behind }],
+      measures: [{ id: 'behind', label: two ? 'Table edge to wall, each side' : 'Table edge to the far wall', value: behind, rest }],
       limit: (need) => ({ label: 'Widest table', value: v.room - (two ? 2 : 1) * need }),
       bar: { total: v.room, parts: two ? [['clear', behind], ['piece', v.tableW, 'table'], ['clear', behind]] : [['piece', v.tableW, 'table'], ['clear', behind]] }
     };
@@ -172,7 +179,7 @@ function measuresOf(key, v) {
     const aisle = v.room - v.runA - v.runB;
     return {
       steps: [{ text: 'Wall to wall − counter A − counter B', a: v.room, op: '−', b: v.runA, c: v.runB, r: aisle }],
-      measures: [{ id: 'aisle', label: 'Aisle between the counter fronts', value: aisle }],
+      measures: [{ id: 'aisle', label: 'Aisle between the counter fronts', value: aisle, rest: aisle }],
       limit: (need) => ({ label: 'Room width needed', value: need + v.runA + v.runB }),
       bar: { total: v.room, parts: [['piece', v.runA, 'counter'], ['clear', aisle], ...(v.runB ? [['piece', v.runB, 'counter']] : [])] }
     };
@@ -206,7 +213,8 @@ export function quickCheck(key, raw) {
 /* One-line verdict in the chosen unit. */
 export function summaryOf(res, unit = 'in') {
   const f = (x) => fmt(x, unit), t = res.tightest, n = res.checks.length, met = res.checks.filter(x => x.pass).length;
-  if (t.value < -EPS) return `Does not fit: the pieces are ${f(-t.value)} wider than the space.`;
+  // the overhang is the whole remainder (wall − bed), not the half that each of two sides would get
+  if (t.value < -EPS) return `Does not fit: the pieces are ${f(-(t.rest ?? t.value))} wider than the space.`;
   if (t.value <= EPS) return 'Fits with nothing to spare – no clear width is left.';
   if (!res.best) return `${f(t.value)} clear – below every reference width in the list.`;
   if (!res.next) return `${f(t.value)} clear – meets all ${n} reference widths.`;
@@ -224,7 +232,7 @@ export function resultText(res, unit = 'in') {
   lines.push('');
   for (const c of res.checks) {
     const src = c.ref ? (() => { const r = REFERENCE.find(x => x.id === c.ref); return `${SOURCES[r.src].short} ${r.sec}`; })() : 'site assumption';
-    lines.push(`${c.pass ? 'meets ' : 'below '} ${f(c.need)} – ${c.label} (${src})${c.pass ? '' : `, short by ${f(-c.margin)}`}`);
+    lines.push(`${c.pass ? 'meets ' : 'below '} ${fmtMin(c.need, unit)} – ${c.label} (${src})${c.pass ? '' : `, short by ${f(-c.margin)}`}`);
   }
   lines.push('', 'Arithmetic only: rectangles on a flat floor, no building-code or accessibility review. smallspacecompass.com/tools/clearance-check/');
   return lines.join('\n');
@@ -240,6 +248,8 @@ export function encodeQuick(key, values, unit = 'in') {
   return p.toString();
 }
 // Accepts only known scenarios, known field names, finite numbers in range and listed option values.
+// `ignored` lists the labels of options whose value in the link was not on the list (the default is used instead).
+// A link that names a known check but carries unusable numbers yields { key, unit, broken: true } – the caller says so.
 export function decodeQuick(fragment) {
   const s = String(fragment ?? '').replace(/^#/, '');
   if (!s || s.length > 400) return null;
@@ -248,8 +258,9 @@ export function decodeQuick(fragment) {
   if (!Object.prototype.hasOwnProperty.call(SCENARIOS, key)) return null;
   const sc = SCENARIOS[key], raw = {};
   for (const [name] of sc.fields) { const t = p.get(name); if (t !== null && /^-?\d{1,5}(\.\d{1,4})?$/.test(t)) raw[name] = Number(t); }
-  for (const [name, , choices] of sc.options) { const t = p.get(name); if (choices.some(c => c[0] === t)) raw[name] = t; }
-  const c = cleanInput(key, raw);
-  if (!c.ok) return null;
-  return { key, unit: p.get('u') === 'cm' ? 'cm' : 'in', values: c.values };
+  const ignored = [];
+  for (const [name, label, choices] of sc.options) { const t = p.get(name); if (choices.some(c => c[0] === t)) raw[name] = t; else if (t !== null) ignored.push(label); }
+  const unit = p.get('u') === 'cm' ? 'cm' : 'in', c = cleanInput(key, raw);
+  if (!c.ok) return { key, unit, broken: true };
+  return { key, unit, values: c.values, ignored };
 }

@@ -104,6 +104,7 @@ export const layoutNotes = {
 <p>The 25 in counter depth is the usual depth of base cabinets with a countertop. The 42 in work aisle is guideline 6 of the NKBA Kitchen Planning Guidelines for one cook. The 24 in bedside strip and 32 in chair zone are this site's planning allowances, and 36 in is the ADA reference width for the routes.</p>`
   },
   'studio-24x14-sofa-bed': {
+    updated: true,
     description: 'Measured 24 × 14 ft studio that sleeps on a sofa bed – day and night plans, coffee table that moves away, and walkway widths in both states.',
     lede: 'No separate bed: the sofa bed sits against the window wall and opens towards the room at night. The coffee table is the only piece that has to move, and the desk and dining table stay usable in both states.',
     body: `<p>The room measures 288 × 168 in (7.32 × 4.27 m), 336 sq ft. The sofa bed is 78 × 36 in closed and grows by about 54 in when opened; the coffee table in front of it is marked as day only. Everything else stays put: desk and bookshelf in the top-left corner, a table for four in the bottom-right corner, and a TV unit against the bottom wall.</p>

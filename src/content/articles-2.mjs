@@ -72,7 +72,7 @@ ${table(['Item', 'Measure', 'Your value'], [
     sources: [S.ada4042, S.ada308]
   },
   {
-    slug: 'small-kitchen-clearances', updated: true, group: 'Kitchens and bathrooms', kicker: 'Kitchens', short: 'Small kitchen clearances',
+    slug: 'small-kitchen-clearances', updated: '2026-11-19', group: 'Kitchens and bathrooms', kicker: 'Kitchens', short: 'Small kitchen clearances',
     title: 'Small Kitchen Clearances: Aisles, Doors and Dishwashers',
     h1: 'Small kitchen clearances: aisles, doors and dishwashers',
     description: 'The NKBA kitchen clearances that matter in small kitchens – 42/48 in work aisles, 36 in walkways, 21 in beside the dishwasher, seating clearances – with measured galley and studio plans.',
@@ -98,7 +98,7 @@ ${table(['Space', 'Recommended', 'Guideline'], [
 ${table(['Document', 'Clearance between opposing counters, appliances or walls', 'Applies to'], [
   ['2010 ADA Standards §804.2.1', ref('ada-galley', '40 in (1015 mm) minimum'), 'pass-through kitchens in facilities covered by the ADA; U-shaped kitchens need 60 in (§804.2.2)'],
   ['NKBA Kitchen Planning Guideline 6', ref('nkba-aisle', '42 in (1067 mm), 48 in for multiple cooks'), 'recommendation for any home kitchen'],
-  ['Approved Document M (England) para 2.24b', ref('adm-kitchen', '1200 mm (47.2 in) minimum'), 'in front of and between all kitchen units in an accessible and adaptable new dwelling']])}
+  ['Approved Document M (England) para 2.24b', ref('adm-kitchen', '1200 mm (47.25 in) minimum'), 'in front of and between all kitchen units in an accessible and adaptable new dwelling']])}
 <h2 id="galley">The galley</h2>
 ${figLayout('galley-kitchen-8x12', 'Galley kitchen 96 × 144 in: two 25 in runs leave a 46 in aisle. The dishwasher door and fridge door are drawn as zones in the aisle.')}
 <p>A galley with two 25 in deep counter runs in an 8 ft (96 in) wide room leaves a 46 in aisle: above the 42 in one-cook figure, below the 48 in for two cooks. In practice that means one person cooks and a second can pass but not work back to back. A 7 ft 4 in room (88 in) gives exactly 38 in – a walkway, but tight for cooking. Below that, consider a single-wall kitchen with the other side free.</p>
@@ -175,7 +175,7 @@ ${table(['Desk', 'Footprint', 'With 32 in chair zone'], [
     sources: [S.nkbaK, S.adm]
   },
   {
-    slug: 'vertical-storage-by-reach', updated: true, group: 'Storage', kicker: 'Storage', short: 'Vertical storage by reach',
+    slug: 'vertical-storage-by-reach', updated: '2026-11-19', group: 'Storage', kicker: 'Storage', short: 'Vertical storage by reach',
     title: 'Vertical Storage by Reach: What to Store at Which Height (15–48 in)',
     h1: 'Vertical storage by reach height',
     description: 'How to plan wall storage by reach: the 15–48 in reach range from the ADA Standards, what to store above and below it, shelf depths, and how much volume a typical storage wall holds in each band.',
@@ -212,7 +212,7 @@ ${table(['Band', 'Approx. volume', 'Share'], [
 ${table(['What', 'Height above the floor', 'Source'], [
   ['Shelves in dressing and locker rooms', ref('ada-shelf', '40–48 in (1015–1220 mm)'), 'ADA Standards §803.5'],
   ['Door handles, latches and locks', ref('ada-hardware', '34–48 in (865–1220 mm)'), 'ADA Standards §404.2.7'],
-  ['Switches and sockets in habitable rooms', ref('adm-switch', '450–1200 mm (17.7–47.2 in)'), 'Approved Document M para 1.18a'],
+  ['Switches and sockets in habitable rooms', ref('adm-switch', '450–1200 mm (17.72–47.24 in)'), 'Approved Document M para 1.18a'],
   ['Kitchen storage that counts only as “miscellaneous”', ref('nkba-storage', 'above 84 in (2134 mm)'), 'NKBA Kitchen Guideline 27'],
   ['Wall objects that may protrude more than 4 in into a route', ref('ada-protrude', 'below 27 in or above 80 in'), 'ADA Standards §307.2']])}
 <p>The English range for switches (450–1200 mm) is almost the same band as the ADA reach range (380–1220 mm): two regulators arrived at nearly the same everyday zone. The NKBA line at 84 in marks the other end – storage above it is not counted as wall, base or pantry storage at all. Whatever the height, anchor tall units to the wall, and keep heavy things low.</p>

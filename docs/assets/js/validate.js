@@ -182,9 +182,10 @@ export function deliveryFromFragment(fragment) {
   let p; try { p = new URLSearchParams(s); } catch (e) { return null; }
   // a delivery link always names the three item dimensions; anything else (e.g. #faq) is not ours
   if (!['W', 'D', 'H'].every(k => /^\d{1,5}(\.\d{1,4})?$/.test(p.get(k) ?? ''))) return null;
-  const out = { unit: p.get('u') === 'cm' ? 'cm' : 'in', lengths: {}, checks: {} };
-  for (const k of DELIVERY_LENGTHS) { const t = p.get(k); if (t === null) { if (k === 'diag') out.lengths[k] = null; continue; } if (/^\d{1,5}(\.\d{1,4})?$/.test(t) && lenOk(Number(t))) out.lengths[k] = Number(t); }
-  for (const k of DELIVERY_CHECKS) { const t = p.get(k); if (t === '1' || t === '0') out.checks[k] = t === '1'; }
+  // `dropped` names the fields whose value in the link was unusable, so the page can say so
+  const out = { unit: p.get('u') === 'cm' ? 'cm' : 'in', lengths: {}, checks: {}, dropped: [] };
+  for (const k of DELIVERY_LENGTHS) { const t = p.get(k); if (t === null) { if (k === 'diag') out.lengths[k] = null; continue; } if (/^\d{1,5}(\.\d{1,4})?$/.test(t) && lenOk(Number(t))) out.lengths[k] = Number(t); else out.dropped.push(k); }
+  for (const k of DELIVERY_CHECKS) { const t = p.get(k); if (t === '1' || t === '0') out.checks[k] = t === '1'; else if (t !== null) out.dropped.push(k); }
   return out;
 }
 export const toDisplay = (inch, unit) => !(typeof inch === 'number' && Number.isFinite(inch)) ? '' : String(unit === 'cm' ? +(inch * CM).toFixed(1) : +inch.toFixed(2));

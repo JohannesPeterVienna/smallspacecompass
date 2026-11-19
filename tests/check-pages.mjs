@@ -82,13 +82,16 @@ for (const p of all) {
 }
 for (const [from, to] of redirects) {
   const h = readFileSync(fileOf(from), 'utf8');
-  if (!h.includes('noindex') || !h.includes(`url=${to}`) || !h.includes(`canonical" href="https://smallspacecompass.com${to}"`)) err(from, 'bad redirect');
-  if (!existsSync(fileOf(to))) err(from, 'redirect target missing');
+  // the refresh goes to the section (#…), the canonical names the page; the section id must exist on the target
+  const [toPath, frag] = to.split('#');
+  if (!h.includes('noindex') || !h.includes(`url=${to}"`) || !h.includes(`canonical" href="https://smallspacecompass.com${toPath}"`)) err(from, 'bad redirect');
+  if (!existsSync(fileOf(toPath))) err(from, 'redirect target missing');
+  else if (frag && !readFileSync(fileOf(toPath), 'utf8').includes(`id="${frag}"`)) err(from, `redirect section #${frag} missing on ${toPath}`);
 }
 for (const f of ['ads.txt', 'robots.txt', 'sitemap.xml', 'CNAME', '.nojekyll', '404.html']) if (!existsSync(join(DOCS, f))) err(f, 'missing');
 if (readFileSync(join(DOCS, 'CNAME'), 'utf8') !== 'smallspacecompass.com') err('CNAME', 'must be exactly smallspacecompass.com without newline');
 // lastmod: 2026-11-04 for untouched pages, 2026-11-18 for pages changed in that revision – and never a date in between
-for (const m of readFileSync(join(DOCS, 'sitemap.xml'), 'utf8').matchAll(/<lastmod>([^<]*)<\/lastmod>/g)) if (!['2026-11-04', '2026-11-18'].includes(m[1])) { err('sitemap', 'lastmod ' + m[1]); break; }
+for (const m of readFileSync(join(DOCS, 'sitemap.xml'), 'utf8').matchAll(/<lastmod>([^<]*)<\/lastmod>/g)) if (!['2026-11-04', '2026-11-18', '2026-11-19'].includes(m[1])) { err('sitemap', 'lastmod ' + m[1]); break; }
 // reference table: every row is in the page with an anchor, a source link and the retrieval date; redirect pages stay out of the sitemap
 {
   const { REFERENCE, SOURCES, RETRIEVED } = await import('../docs/assets/js/refdata.js');
@@ -103,6 +106,7 @@ for (const m of readFileSync(join(DOCS, 'sitemap.xml'), 'utf8').matchAll(/<lastm
 if (readFileSync(join(DOCS, 'ads.txt'), 'utf8').trim() !== 'google.com, pub-7811071715414905, DIRECT, f08c47fec0942fa0') err('ads.txt', 'content');
 const sm = readFileSync(join(DOCS, 'sitemap.xml'), 'utf8');
 for (const [from] of redirects) if (sm.includes(from)) err('sitemap', `contains redirect ${from}`);
+for (const [from, to] of redirects.filter(r => r[0].startsWith('/guides/'))) if (!to.includes('#')) err(from, 'merged guide must redirect to its section');
 const imp = readFileSync(fileOf('/imprint/'), 'utf8');
 for (const s of ['Seilerstätte 8/8', 'ATU54682507', 'office@adstern.com', 'Magistratisches Bezirksamt', 'WKO', 'ris.bka.gv.at']) if (!imp.includes(s)) err('/imprint/', 'missing ' + s);
 if (/\+43|tel:/i.test(imp)) err('/imprint/', 'phone number present');

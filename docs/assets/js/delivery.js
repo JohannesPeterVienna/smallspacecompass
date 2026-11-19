@@ -28,7 +28,11 @@ const LABEL = { W: 'Length / width', D: 'Depth', H: 'Height', diag: 'Diagonal de
 const input = (k) => $(`[name="${k}"]`);
 function showLengths() { for (const k of DELIVERY_LENGTHS) { const i = input(k); if (i) i.value = toDisplay(LEN[k], units); } }
 function readLength(k) { const i = input(k); if (i) LEN[k] = fromDisplay(i.value, units); }
+// While the numbers on screen come from an opened share link, nothing is written to localStorage: the visitor's own
+// saved check survives until they change a value themselves.
+let fromLink = false, linkNote = '';
 function persist() {
+  if (fromLink) return;
   const checks = Object.fromEntries(DELIVERY_CHECKS.map(k => [k, !!input(k)?.checked]));
   try { localStorage.setItem(DELIVERY_STORE, encodeDelivery({ unit: units, lengths: LEN, checks })); } catch (e) { /* ignore */ }
 }
@@ -114,7 +118,7 @@ function run() {
   const next = res.ok
     ? `${spare !== null ? `The tightest doorway leaves ${fmtLen(Math.max(0, spare), units)} in width. ` : ''}Allow a couple of inches for hands, straps and packaging, and take doors off their hinges if the margin is smaller than that. Then place the piece in the <a href="/tools/clearance-planner/">Clearance Planner</a> to see what it does to the walkways.`
     : `Ask the retailer what comes off – legs, arms, back cushions, a split box spring – and enter the reduced dimensions again; the figures above say how much is missing. The <a href="/guides/will-my-sofa-fit-through-the-door/">sofa delivery guide</a> shows where to measure.`;
-  out.innerHTML = `<div class="status ${res.ok ? 'good' : 'bad'}" role="status"><span class="big">${esc(headline)}</span>
+  out.innerHTML = `${linkNote ? `<p class="status" data-link-note>${esc(linkNote)}</p>` : ''}<div class="status ${res.ok ? 'good' : 'bad'}" role="status"><span class="big">${esc(headline)}</span>
 <p class="note-small" style="margin:.4rem 0 0">Geometric check of a rigid box with your outside dimensions. Allow for packaging, handles and the person carrying it.</p></div>
 <p style="margin:1rem 0 0"><b>Next step:</b> ${next}</p>
 ${res.results.map(r => {
@@ -135,13 +139,17 @@ function restore() {
   let s = null;
   // a shared link (#W=…&D=…) wins over what this browser remembered; the fragment is then removed from the address bar
   const shared = deliveryFromFragment(location.hash);
-  if (shared) { s = shared; try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignore */ } }
+  if (shared) {
+    s = shared; fromLink = true;
+    linkNote = 'These numbers come from the link you opened. They are not saved in this browser unless you change one.' + (shared.dropped.length ? ` The link also contained values that could not be used (${shared.dropped.map(k => LABEL[k] || k).join(', ')}); the form’s own values are shown for them.` : '');
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignore */ }
+  }
   else try { s = decodeDelivery(localStorage.getItem(DELIVERY_STORE), localStorage.getItem(DELIVERY_STORE_V1)); } catch (e) { /* storage blocked */ }
   if (s) {
     Object.assign(LEN, s.lengths);
     for (const [k, v] of Object.entries(s.checks)) { const i = input(k); if (i) i.checked = v; }
     setUnits(s.unit);
-    try { localStorage.setItem(DELIVERY_STORE, encodeDelivery({ unit: units, lengths: LEN, checks: s.checks })); localStorage.removeItem(DELIVERY_STORE_V1); } catch (e) { /* ignore */ }
+    if (!fromLink) try { localStorage.setItem(DELIVERY_STORE, encodeDelivery({ unit: units, lengths: LEN, checks: s.checks })); localStorage.removeItem(DELIVERY_STORE_V1); } catch (e) { /* ignore */ }
   }
   showLengths();
 }
@@ -150,9 +158,11 @@ function setUnits(u) {
   app.querySelectorAll('[data-units]').forEach(x => x.setAttribute('aria-pressed', x.dataset.units === units));
   app.querySelectorAll('[data-unit-label]').forEach(e => e.textContent = units);
 }
-app.addEventListener('input', (e) => { if (e.target.name && DELIVERY_LENGTHS.includes(e.target.name)) readLength(e.target.name); run(); });
+const own = () => { fromLink = false; linkNote = ''; };   // the visitor changed something: from now on it is their check
+app.addEventListener('input', (e) => { own(); if (e.target.name && DELIVERY_LENGTHS.includes(e.target.name)) readLength(e.target.name); run(); });
 app.addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.preset || b.dataset.example) own();   // switching in/cm only changes the display, it does not adopt the link's numbers
   if (b.dataset.preset) {
     const p = PRESET[b.dataset.preset];
     for (const k of ['W', 'D', 'H']) LEN[k] = p[k];

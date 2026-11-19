@@ -17,10 +17,10 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'docs');
 const ORIGIN = 'https://smallspacecompass.com';
 const REVIEWED = 'October 2026';
-const VERSION = '20261118a';
-// lastmod / dateModified: pages whose content changed in the November 18 revision carry `updated: true`
+const VERSION = '20261119a';
+// lastmod / dateModified: `updated: true` = content changed in the November 18 revision; a date string = changed on that day
 const MODIFIED = '2026-11-04', MODIFIED_NEW = '2026-11-18', REVIEWED_NEW = 'November 2026';
-const modOf = (p) => (p.updated ? MODIFIED_NEW : MODIFIED);
+const modOf = (p) => (typeof p.updated === 'string' ? p.updated : p.updated ? MODIFIED_NEW : MODIFIED);
 const pages = [];
 
 const NAV = [['/tools/clearance-planner/', 'Planner'], ['/tools/will-it-fit/', 'Will it fit?'], ['/layouts/', 'Layouts'], ['/guides/', 'Guides'], ['/reference/', 'Reference'], ['/about/', 'About']];
@@ -110,7 +110,7 @@ function articlePage(a) {
   if (a.howto) ld.push({ '@context': 'https://schema.org', '@type': 'HowTo', name: a.howto.name, tool: (a.howto.tools || []).map(t => ({ '@type': 'HowToTool', name: t })), step: a.howto.steps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s[0], text: s[1] })) });
   const related = (a.related || []).map(s => ARTICLES.find(x => x.slug === s)).filter(Boolean);
   page({
-    path, title: a.title, description: a.description, ads: true, ogType: 'article', updated: !!a.updated,
+    path, title: a.title, description: a.description, ads: true, ogType: 'article', updated: a.updated || false,
     crumbs: [['Guides', '/guides/'], [a.short || a.h1, path]], ld,
     body: `<div class="cols"><article class="sheet" data-words>
 <header class="titleblock"><span class="kicker">${esc(a.kicker || 'Measured guide')}</span><h1>${esc(a.h1)}</h1><p class="lede">${a.lede}</p>
@@ -146,7 +146,7 @@ function layoutPages() {
     }).join('');
     const items = L.items.map(i => `<tr><td>${esc(i.label)}</td><td class="num">${fmtLen(i.w)} × ${fmtLen(i.d)}</td><td class="num">${fmtLen(i.w, 'cm')} × ${fmtLen(i.d, 'cm')}</td><td>${(i.zones || []).map(z => `${z.kind} ${z.depth} in`).join(', ') || '–'}</td></tr>`).join('');
     page({
-      path, title: `${L.title} – measured plan`, description: note.description, ads: false,
+      path, title: `${L.title} – measured plan`, description: note.description, ads: false, updated: note.updated || false,
       crumbs: [['Layouts', '/layouts/'], [L.short, path]],
       body: `<article class="sheet" style="max-width:none" data-words><header class="titleblock"><span class="kicker">Measured layout</span><h1>${esc(L.title)}</h1><p class="lede">${note.lede}</p>
 <p class="row no-print"><a class="btn" href="/tools/${L.states ? 'day-night-swap' : 'clearance-planner'}/?layout=${L.slug}">Open in the ${L.states ? 'Day/Night Floor Swap' : 'Clearance Planner'}</a></p></header>
@@ -193,10 +193,10 @@ function referencePage() {
   const body = TOPICS.map(t => `<tbody data-topic="${esc(t)}"><tr class="grp"><th colspan="5" scope="colgroup">${esc(t)}</th></tr>${REFERENCE.filter(r => r.topic === t).map(r => `<tr id="${r.id}" data-id="${r.id}"><td>${esc(r.what)}${r.note ? `<br><span class="note-small">${esc(r.note)}</span>` : ''}</td><td class="num${r.conv === 'imp' ? ' conv' : ''}">${esc(r.imp)}</td><td class="num${r.conv === 'met' ? ' conv' : ''}">${esc(r.met)}</td><td>${srcLink(r)}<br><span class="note-small">${esc(r.sec)}</span></td><td class="no-print"><button type="button" class="btn small ghost" data-row-link="${r.id}" data-js hidden aria-label="Copy a link to this entry">Link</button></td></tr>`).join('')}</tbody>`).join('');
   const counts = Object.fromEntries(Object.keys(SOURCES).map(k => [k, REFERENCE.filter(r => r.src === k).length]));
   page({
-    path: '/reference/', title: 'Clearance & Dimension Reference for Small Homes (in + mm)', updated: true,
+    path: '/reference/', title: 'Clearance & Dimension Reference for Small Homes (in + mm)', updated: '2026-11-19',
     description: `${REFERENCE.length} clearances, room sizes and reach heights for small homes, each read in a primary document – ADA Standards, NKBA guidelines, 24 CFR 3280, England’s space standard and Approved Document M – with section, scope and retrieval date.`,
     crumbs: [['Reference', '/reference/']], ads: false,
-    ld: [{ '@context': 'https://schema.org', '@type': 'Dataset', name: 'Clearance and dimension reference for small homes', description: `${REFERENCE.length} clearances, room sizes and reach heights compiled from six primary documents, in inches and millimetres, with section references.`, url: ORIGIN + '/reference/', dateModified: MODIFIED_NEW, inLanguage: 'en', isAccessibleForFree: true, creator: { '@type': 'Organization', name: 'Small Space Compass' }, publisher: { '@type': 'Organization', name: 'AdStern – Agentur für digitales Marketing' } }],
+    ld: [{ '@context': 'https://schema.org', '@type': 'Dataset', name: 'Clearance and dimension reference for small homes', description: `${REFERENCE.length} clearances, room sizes and reach heights compiled from six primary documents, in inches and millimetres, with section references.`, url: ORIGIN + '/reference/', dateModified: '2026-11-19', inLanguage: 'en', isAccessibleForFree: true, creator: { '@type': 'Organization', name: 'Small Space Compass' }, publisher: { '@type': 'Organization', name: 'AdStern – Agentur für digitales Marketing' } }],
     scripts: `<script type="module" src="/assets/js/reference.js?v=${VERSION}"></script>`,
     body: `<header class="titleblock"><span class="kicker">Reference</span><h1>Clearance and dimension reference</h1><p class="lede">${REFERENCE.length} widths, room sizes and heights that matter when space is short, each read in the primary document it comes from. Every entry names the section, links the source and says what kind of rule it is – because a federal standard for factory-built homes, an accessibility standard for public buildings and a trade guideline for kitchens are not the same thing.</p></header>
 <div data-ref>
@@ -211,9 +211,9 @@ function referencePage() {
 <p class="status" data-ref-none hidden>No entry matches. Try a shorter search term, or clear the filters.</p>
 </div>
 <div class="intro" style="max-width:78ch">
-<p class="note-small"><span class="conv-key">shaded</span> = our conversion (× or ÷ 25.4; areas with 1 sq ft = 0.0929 m²), because the document gives only the other unit. All sources retrieved on ${RETRIEVED}.</p>
+<p class="note-small"><span class="conv-key">shaded</span> = our conversion (× or ÷ 25.4; areas with 1 sq ft = 0.0929 m²), because the document gives only the other unit. Converted minimums are rounded up and converted maximums down, so that a converted figure never understates what the document requires; furniture sizes are rounded to the nearest 0.1 in. All sources retrieved on ${RETRIEVED}.</p>
 <h2 id="read">How to read the table</h2>
-<p>The table mixes documents of very different weight, on purpose: there is no single rulebook for furnishing a small home, and the figures bracket each other. A 28 in hallway is legal in a U.S. manufactured home; 36 in is the walking-surface width of the ADA Standards; England’s guidance for adaptable homes asks for 900 mm (35.4 in). None of them governs where you put your sofa. Read each entry with its scope:</p>
+<p>The table mixes documents of very different weight, on purpose: there is no single rulebook for furnishing a small home, and the figures bracket each other. A 28 in hallway is legal in a U.S. manufactured home; 36 in is the walking-surface width of the ADA Standards; England’s guidance for adaptable homes asks for 900 mm (35.44 in). None of them governs where you put your sofa. Read each entry with its scope:</p>
 <div class="table-scroll"><table class="data"><thead><tr><th>Source</th><th>What kind of document</th><th>Scope</th><th>Entries</th></tr></thead><tbody>
 ${Object.entries(SOURCES).map(([k, v]) => `<tr><td><a href="${v.url}" rel="noopener">${esc(v.name)}</a><br><span class="note-small">${esc(v.publisher)}</span></td><td>${esc(v.kind)}</td><td>${esc(v.scope)}</td><td class="num">${counts[k]}</td></tr>`).join('')}
 </tbody></table></div>
@@ -222,14 +222,15 @@ ${Object.entries(SOURCES).map(([k, v]) => `<tr><td><a href="${v.url}" rel="noope
 <p>Three limits apply. First, editions: codes are revised, and the edition in force where you live may differ. Second, the International Residential Code: its figures appear here only as quoted in the NKBA guidelines, which state that their code references are based on the 2015 edition; we could not open the code text itself and therefore list no IRC figure on our own account. Third, mattress and furniture sizes: no standard we could read fixes them, so the only furniture sizes in the table are the ones England’s Approved Document M prescribes for checking a layout drawing.</p>
 <h2 id="use">Using a figure</h2>
 <p>To test one of these widths against your own room, the <a href="/tools/clearance-check/">Clearance Check</a> does the subtraction and compares the result with the matching rows; the <a href="/tools/clearance-planner/">Clearance Planner</a> measures whole routes. If you find an entry that does not match its source, write to <a href="mailto:office@adstern.com">office@adstern.com</a> with the entry and the section – corrections are made in the table and noted on the <a href="/about/#corrections">About page</a>.</p>
-<p class="reviewed">Compiled and last checked against the sources: November 18, 2026. Not legal advice and not a compliance review.</p></div>`
+<p class="note-small" id="licence">The entries from the nationally described space standard and from Approved Document M: Contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener">Open Government Licence v3.0</a>.</p>
+<p class="reviewed">Compiled and last checked against the sources: November 18, 2026; conversions revised November 19, 2026. Not legal advice and not a compliance review.</p></div>`
   });
 }
 
 /* ---------- tools ---------- */
 function toolPages() {
   for (const t of TOOLS) page({
-    path: t.path, title: t.title, description: t.description, ads: true, updated: !!t.updated,
+    path: t.path, title: t.title, description: t.description, ads: true, updated: t.updated || false,
     crumbs: [['Tools', '/tools/'], [t.short, t.path]],
     ld: [{ '@context': 'https://schema.org', '@type': 'WebApplication', name: t.h1, url: ORIGIN + t.path, applicationCategory: 'DesignApplication', operatingSystem: 'Any (web browser)', offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' } },
       ...(t.faq ? [{ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: t.faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a.replace(/<[^>]+>/g, '') } })) }] : [])],
@@ -306,14 +307,14 @@ const OLD = [
   ['/room-layout-paper.html', '/tools/clearance-planner/'],
   ['/about.html', '/about/'], ['/imprint.html', '/imprint/'], ['/privacy.html', '/privacy/'], ['/advertise.html', '/contact/'],
   // guides merged on 2026-11-18
-  ['/guides/wall-bed-vs-sofa-bed/', '/guides/murphy-bed-room-size/'],
-  ['/guides/divide-a-studio-without-walls/', '/guides/studio-apartment-layouts/'],
-  ['/guides/rug-size-small-living-room/', '/guides/dining-table-small-space/']
+  ['/guides/wall-bed-vs-sofa-bed/', '/guides/murphy-bed-room-size/#sofa-bed'],
+  ['/guides/divide-a-studio-without-walls/', '/guides/studio-apartment-layouts/#dividers'],
+  ['/guides/rug-size-small-living-room/', '/guides/dining-table-small-space/#rug']
 ];
 function redirects() {
   for (const [from, to] of OLD) write(from, `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Moved – Small Space Compass</title>
-<meta name="robots" content="noindex, follow"><link rel="canonical" href="${ORIGIN}${to}">
+<meta name="robots" content="noindex, follow"><link rel="canonical" href="${ORIGIN}${to.split('#')[0]}">
 <meta http-equiv="refresh" content="0; url=${to}"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
 <body><p>This page has moved to <a href="${to}">${ORIGIN}${to}</a>.</p></body></html>
 `);

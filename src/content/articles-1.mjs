@@ -3,7 +3,7 @@ const it = (id, label, x, y, w, d, extra = {}) => ({ id, label, x, y, w, d, ...e
 
 export const A1 = [
   {
-    slug: 'walkway-space-around-furniture', updated: true, group: 'Clearances', kicker: 'Clearances', short: 'Walkway space around furniture',
+    slug: 'walkway-space-around-furniture', updated: '2026-11-19', group: 'Clearances', kicker: 'Clearances', short: 'Walkway space around furniture',
     title: 'How Much Walkway Space Do You Need Around Furniture? (Measured)',
     h1: 'How much walkway space do you need around furniture?',
     description: 'Walkway widths with sources: 36 in (915 mm) for a main route, where a 32 in pinch is acceptable, and the extra space chairs, drawers and doors take – with measured plans.',
@@ -41,12 +41,12 @@ ${table(['Situation', 'Plan for', 'Source'], [
 <h2 id="range">How low do published minimums go?</h2>
 <p>The 36 in figure is not the smallest width a regulator accepts for a home, and not the largest. Three other primary documents bracket it; all are in the ${a('/reference/', 'reference table')} with their sections:</p>
 ${table(['Document', 'Width', 'What it applies to'], [
-  ['U.S. manufactured-home standard, 24 CFR 3280.112', ref('hud-hall', '28 in (711 mm)'), 'minimum hallway width, finished wall to finished wall, in factory-built homes'],
-  ['Approved Document M (England), para 1.15b and 2.22b', ref('adm-hall1', '750 mm (29.5 in)'), 'narrowest point of a hall at a radiator or similar obstruction, at most 2 m long'],
+  ['U.S. manufactured-home standard, 24 CFR 3280.112', ref('hud-hall', '28 in (712 mm)'), 'minimum hallway width, finished wall to finished wall, in factory-built homes'],
+  ['Approved Document M (England), para 1.15b and 2.22b', ref('adm-hall1', '750 mm (29.53 in)'), 'narrowest point of a hall at a radiator or similar obstruction, at most 2 m long'],
   ['ADA Standards §403.5.1, exception', ref('ada-pinch', '32 in (815 mm)'), 'pinch of at most 24 in length on an accessible route'],
-  ['Approved Document M (England), para 2.22a', ref('adm-hall2', '900 mm (35.4 in)'), 'halls and landings of an accessible and adaptable dwelling'],
+  ['Approved Document M (England), para 2.22a', ref('adm-hall2', '900 mm (35.44 in)'), 'halls and landings of an accessible and adaptable dwelling'],
   ['ADA Standards §403.5.1', ref('ada-walk', '36 in (915 mm)'), 'walking surfaces of an accessible route'],
-  ['Approved Document M (England), para 3.24a', ref('adm-hall3', '1050 mm (41.3 in)'), 'halls of a wheelchair user dwelling']])}
+  ['Approved Document M (England), para 3.24a', ref('adm-hall3', '1050 mm (41.34 in)'), 'halls of a wheelchair user dwelling']])}
 <p>Read as a scale: below 28 in you are under what U.S. federal rules allow even for a hallway in a manufactured home; 28–32 in is passable but below every accessibility figure; 36 in is where the U.S. and the English documents roughly agree for a route one person walks. None of these documents regulates the gap between your own furniture – they are reference points for judging it.</p>
 <h2 id="how-to-measure">How to measure an existing walkway</h2>
 <ol><li>Walk the route you use most – door to bed, door to desk, bed to bathroom – and note where you turn your shoulders or slow down. Those are your pinch points.</li>
@@ -180,7 +180,7 @@ ${table(['Room shape', 'Start with', 'Key measurement'], [
     sources: [S.ada4035, S.nkbaK, S.casper]
   },
   {
-    slug: '12x10-bedroom-layout', updated: true, group: 'Bedrooms', kicker: 'Bedrooms', short: '12×10 bedroom layouts',
+    slug: '12x10-bedroom-layout', updated: '2026-11-19', group: 'Bedrooms', kicker: 'Bedrooms', short: '12×10 bedroom layouts',
     title: '12x10 Bedroom Layout Ideas: Queen or Full Bed, Measured',
     h1: '12 × 10 bedroom layout ideas (queen or full)',
     description: 'Measured 12 × 10 ft bedroom layouts with a queen or full bed: which wall the bed goes on, how much space is left at the foot and sides, where the dresser and desk fit, and what the door swing costs.',
@@ -199,7 +199,7 @@ ${tryIt(qlink('bed', { wall: 120, bedW: 60, depth: 144, bedL: 80, sides: '2' }),
 <p>How does the room rate against published minimums? At 120 sq ft (11.1 m²) it is well above the 70 sq ft the U.S. manufactured-home standard requires for a two-person bedroom (${ref('hud-bedroom', '24 CFR 3280.109')}), and just under the 11.5 m² that England’s space standard sets for a double bedroom in a new home (${ref('ndss-double', 'para 10d')}) – though its 3.05 m width clears that standard’s 2.75 m. So a queen with access on both sides is possible, with little to spare.</p>
 <h2 id="queen-short">Layout A: queen bed, headboard on the 10 ft wall</h2>
 ${figLayout('bedroom-12x10-queen', 'Queen bed with the headboard on the 10 ft wall; 24 in strips on both sides; dresser at the far end.')}
-<p>With the headboard on a short wall, the queen's 80 in length runs along the 12 ft dimension. The 60 in left across the room gives 30 in on each side: the 24 in strip this site plans with, plus 6 in – and half an inch more than the 750 mm (29.5 in) access zone that England’s Approved Document M asks for on both sides of the principal bed in an adaptable home (${ref('adm-bed-principal', 'para 2.25b')}). 64 in remain at the foot. That is enough for the door, a walkway and a dresser with its drawers open.</p>
+<p>With the headboard on a short wall, the queen's 80 in length runs along the 12 ft dimension. The 60 in left across the room gives 30 in on each side: the 24 in strip this site plans with, plus 6 in – and half an inch more than the 750 mm (29.53 in) access zone that England’s Approved Document M asks for on both sides of the principal bed in an adaptable home (${ref('adm-bed-principal', 'para 2.25b')}). 64 in remain at the foot. That is enough for the door, a walkway and a dresser with its drawers open.</p>
 <p>Put the door on the wall at the foot end if you can choose, and make sure its swing ends against a wall rather than the dresser. In the plan above, the door is on the long wall near the corner and swings into the corner, so nothing is inside its arc.</p>
 <h2 id="queen-long">Layout B: queen bed, headboard on the 12 ft wall</h2>
 ${figPlan(room(144, 120, [it('bed', 'Queen bed', 42, 0, 60, 80, { target: true, zones: bs(24), zoneIgnore: ['n1', 'n2'] }), it('n1', 'Nightstand', 18, 0, 18, 16), it('n2', 'Nightstand', 108, 0, 18, 16), it('dr', 'Dresser', 0, 60, 18, 40, { zones: [{ side: 'E', depth: 18, kind: 'drawer' }] })], [door('S', 104, 30, 'end')], [{ id: 'w', wall: 'N', offset: 0, width: 16 }]), 'Queen bed with the headboard on the 12 ft wall: 40 in at the foot – a walkway, but nothing else fits there.')}
@@ -228,7 +228,7 @@ ${figLayout('bedroom-12x10-full-desk', 'Full bed in the corner, desk opposite: o
     sources: [S.casper, S.ada4035, S.adm, S.ndss, S.hud]
   },
   {
-    slug: 'space-between-bed-and-wall', updated: true, group: 'Bedrooms', kicker: 'Bedrooms', short: 'Space between bed and wall',
+    slug: 'space-between-bed-and-wall', updated: '2026-11-19', group: 'Bedrooms', kicker: 'Bedrooms', short: 'Space between bed and wall',
     title: 'How Much Space Between Bed and Wall? Measurements',
     h1: 'How much space between bed and wall?',
     description: 'How much space to leave beside and at the foot of a bed, when pushing it against the wall makes sense, and how nightstands, dressers and doors change the numbers – with measured plans.',
@@ -237,12 +237,12 @@ ${figLayout('bedroom-12x10-full-desk', 'Full bed in the corner, desk opposite: o
     tool: `draw your bedroom in the ${a('/tools/clearance-planner/', 'Clearance Planner')}; every bed preset carries an adjustable bedside zone.`,
     body: `<h2 id="short">Short answer</h2>
 ${rule('24 in', 'Bedside strip on each side you use (610 mm)', 'site planning assumption – see reasoning below')}
-<p>The 24 in figure used on this site is a planning assumption, not a rule: it is enough to stand facing the bed, bend to tuck in a sheet and get in and out without turning sideways. The one published bedside figure we found is in England’s Approved Document M: in an “accessible and adaptable” new home, the principal double bedroom must allow a clear access zone at least 750 mm (29.5 in) wide on both sides and at the foot of the bed, every other double bedroom on one side and at the foot (${ref('adm-bed-principal', 'para 2.25')}); for wheelchair user dwellings the zone is 1000 mm (39.4 in) (${ref('adm-bed-wheel', 'para 3.35')}). That guidance applies to new dwellings in England where a planning condition requires it, and its diagram allows bedside furniture inside the side zones. The U.S. documents we read set no bedside width. Where the strip is also the way to somewhere else – a window, a wardrobe, the bathroom – it becomes a walkway, and this site uses the 36 in clear width from ${a('https://www.access-board.gov/ada/chapter/ch04/', 'ADA 2010 §403.5.1')} as the reference for that.</p>
+<p>The 24 in figure used on this site is a planning assumption, not a rule: it is enough to stand facing the bed, bend to tuck in a sheet and get in and out without turning sideways. The one published bedside figure we found is in England’s Approved Document M: in an “accessible and adaptable” new home, the principal double bedroom must allow a clear access zone at least 750 mm (29.53 in) wide on both sides and at the foot of the bed, every other double bedroom on one side and at the foot (${ref('adm-bed-principal', 'para 2.25')}); for wheelchair user dwellings the zone is 1000 mm (39.38 in) (${ref('adm-bed-wheel', 'para 3.35')}). That guidance applies to new dwellings in England where a planning condition requires it, and its diagram allows bedside furniture inside the side zones. The U.S. documents we read set no bedside width. Where the strip is also the way to somewhere else – a window, a wardrobe, the bathroom – it becomes a walkway, and this site uses the 36 in clear width from ${a('https://www.access-board.gov/ada/chapter/ch04/', 'ADA 2010 §403.5.1')} as the reference for that.</p>
 <h2 id="sides">Beside the bed</h2>
 <p>The space beside a bed is used in three ways: standing to make the bed, getting in and out, and reaching a nightstand. A nightstand typically stands within the strip at the head of the bed – the strip is about standing room, and a nightstand at the head does not take it away because you stand beside the mattress, not beside the nightstand.</p>
 ${table(['Situation', 'Plan for', 'Why'], [
   ['Side you sleep on, no one passes', '24 in', 'stand, bend, get in (site assumption)'],
-  ['Same, by England’s adaptable-home guidance', '750 mm (29.5 in)', 'Approved Document M para 2.25b'],
+  ['Same, by England’s adaptable-home guidance', '750 mm (29.53 in)', 'Approved Document M para 2.25b'],
   ['Side that is also the route to a window or wardrobe', '36 in', 'walkway width (ADA §403.5.1)'],
   ['Short squeeze past a nightstand', '32 in', 'pinch point up to 24 in long (ADA exception)'],
   ['Side against the wall', '0–2 in', 'leave a gap only for bedding and air']])}
@@ -273,7 +273,7 @@ ${table(['Size', 'U.S. (Casper)', 'UK (Silentnight)'], [
 <li>Add drawer and door-swing zones of anything facing the bed.</li>
 <li>Draw it in the planner; it will show the narrowest point of every route.</li></ol>`,
     faq: [
-      ['How much space should be on each side of a bed?', 'This site plans with 24 in on each side you use – an assumption, not a rule – and 36 in if that side is also a walkway. The one published figure we found is the 750 mm (29.5 in) clear access zone in England’s Approved Document M for accessible and adaptable new homes (para 2.25).'],
+      ['How much space should be on each side of a bed?', 'This site plans with 24 in on each side you use – an assumption, not a rule – and 36 in if that side is also a walkway. The one published figure we found is the 750 mm (29.53 in) clear access zone in England’s Approved Document M for accessible and adaptable new homes (para 2.25).'],
       ['Is it OK to push a bed against the wall?', 'Yes, especially for a single sleeper or a studio. It saves about 13 sq ft with a queen bed but makes the bed harder to make, and on cold exterior walls you should leave a small gap for air.'],
       ['How much space at the foot of the bed?', 'At least 24 in to walk round, 36 in if it is the main route, plus 18 in for each drawer zone if a dresser faces the bed.'],
       ['What size room do I need for a queen bed with two nightstands?', 'Across the bed: 60 in mattress + 2 × 24 in strips = 108 in, so a 9 ft wall is the practical minimum. Along the bed: 80 in plus at least 24–36 in at the foot.']

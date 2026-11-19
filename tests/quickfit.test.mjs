@@ -1,7 +1,7 @@
 // Clearance Check: arithmetic, comparison with the reference rows, share-link round trip, hostile input.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SCENARIOS, SCENARIO_KEYS, quickCheck, summaryOf, resultText, encodeQuick, decodeQuick, thresholdsOf, cleanInput, fmt } from '../docs/assets/js/quickfit.js';
+import { SCENARIOS, SCENARIO_KEYS, quickCheck, summaryOf, resultText, encodeQuick, decodeQuick, thresholdsOf, cleanInput, fmt, fmtMin } from '../docs/assets/js/quickfit.js';
 import { refById } from '../docs/assets/js/refdata.js';
 import { deliveryToFragment, deliveryFromFragment, DELIVERY_LENGTHS } from '../docs/assets/js/validate.js';
 
@@ -18,7 +18,7 @@ test('thresholds are ascending and each one cites an existing reference row with
       // the needed width must literally appear in that row (in inches or millimetres)
       const inText = `${r.imp} ${r.met} ${r.note}`;
       const asIn = String(+t.need.toFixed(1)), asMm = String(Math.round(t.need * 25.4));
-      assert.ok(inText.includes(`${asIn} in`) || inText.includes(`${asMm} mm`), `${k}: ${t.need} not in row ${t.ref} (${inText})`);
+      assert.ok(new RegExp(`(^|[^\\d.])${asIn} in`).test(inText) || inText.includes(`${asMm} mm`), `${k}: ${t.need} not in row ${t.ref} (${inText})`);
     }
   }
 });
@@ -63,7 +63,13 @@ test('walkway, table and aisle sums', () => {
 
 test('pieces wider than the space: level bad, clear message, no NaN', () => {
   const r = quickCheck('table', { room: 60, tableW: 70, sides: '2' });
-  assert.equal(r.level, 'bad'); assert.match(r.summary, /Does not fit/);
+  assert.equal(r.level, 'bad'); assert.match(r.summary, /Does not fit: the pieces are 10 in wider/);
+  // the overhang is the whole difference, also when two sides share the remainder
+  assert.match(quickCheck('bed', { wall: 50, bedW: 60, depth: 144, bedL: 80, sides: '2' }).summary, /pieces are 10 in wider than the space/);
+  assert.match(quickCheck('table', { room: 30, tableW: 42, sides: '2' }).summary, /pieces are 12 in wider than the space/);
+  assert.match(quickCheck('table', { room: 30, tableW: 42, sides: '1' }).summary, /pieces are 12 in wider/);
+  assert.match(quickCheck('bed', { wall: 120, bedW: 60, depth: 70, bedL: 80, sides: '2' }).summary, /pieces are 10 in wider/, 'bed longer than the room');
+  assert.match(summaryOf(quickCheck('aisle', { room: 40, runA: 25, runB: 25 }), 'cm'), /pieces are 25\.4 cm wider/);
   const z = quickCheck('walkway', { gap: 32, zoneA: '32', zoneB: '0' });
   assert.equal(z.level, 'bad'); assert.match(z.summary, /nothing to spare/);
   assert.doesNotMatch(resultText(r) + resultText(z), /NaN|undefined|Infinity/);
@@ -105,13 +111,17 @@ test('share link round trip', () => {
 });
 
 test('share link: hostile or foreign fragments are ignored', () => {
-  for (const f of ['', '#', '#faq', '#c=bed', '#c=bed&wall=<script>alert(1)</script>&bedW=60&depth=1&bedL=1', '#c=bed&wall=1e9&bedW=60&depth=144&bedL=80',
-    '#c=constructor&wall=1', '#c=__proto__', '#' + 'a'.repeat(5000), '#c=bed&wall=%00&bedW=60']) {
-    assert.equal(decodeQuick(f), null, f.slice(0, 60));
+  for (const f of ['', '#', '#faq', '#c=constructor&wall=1', '#c=__proto__', '#' + 'a'.repeat(5000)]) assert.equal(decodeQuick(f), null, f.slice(0, 60));
+  // a link that names a known check but carries unusable numbers is reported as broken – no values are taken over
+  for (const f of ['#c=bed', '#c=bed&wall=<script>alert(1)</script>&bedW=60&depth=1&bedL=1', '#c=bed&wall=1e9&bedW=60&depth=144&bedL=80', '#c=bed&wall=%00&bedW=60']) {
+    const d = decodeQuick(f); assert.equal(d.broken, true, f.slice(0, 60)); assert.equal(d.values, undefined); assert.equal(d.key, 'bed');
   }
   // an option value that is not on the list falls back to the first listed choice – never passed through
-  assert.equal(decodeQuick('#c=bed&wall=120&bedW=60&depth=144&bedL=80&sides=javascript:alert(1)').values.sides, '2');
-  assert.equal(decodeQuick('#c=walkway&gap=60&zoneA=999&zoneB=<i>').values.zoneA, '0');
+  const bad = decodeQuick('#c=bed&wall=120&bedW=60&depth=144&bedL=80&sides=javascript:alert(1)');
+  assert.equal(bad.values.sides, '2'); assert.deepEqual(bad.ignored, ['Sides you get in from'], 'and the caller is told which option was ignored');
+  const two = decodeQuick('#c=walkway&gap=60&zoneA=999&zoneB=<i>');
+  assert.equal(two.values.zoneA, '0'); assert.equal(two.ignored.length, 2);
+  assert.deepEqual(decodeQuick('#c=bed&wall=120&bedW=60&depth=144&bedL=80&sides=1').ignored, []);
   const ok = decodeQuick('#c=bed&u=xx&wall=120&bedW=60&depth=144&bedL=80&evil=<b>');
   assert.equal(ok.unit, 'in'); assert.deepEqual(Object.keys(ok.values).sort(), ['bedL', 'bedW', 'depth', 'sides', 'wall']);
 });
@@ -125,4 +135,17 @@ test('delivery share link: round trip, optional diagonal, hostile input', () => 
   for (const f of ['', '#faq', '#method', '#W=84', '#W=84&D=35&H=<svg onload=alert(1)>', '#W=84&D=35&H=-3', '#W=1e5&D=35&H=34', '#' + 'W=1&'.repeat(400)]) assert.equal(deliveryFromFragment(f), null, f.slice(0, 50));
   const partial = deliveryFromFragment('#W=84&D=35&H=34&doorW=abc&useDoor=yes&hallA=999999');
   assert.deepEqual(Object.keys(partial.lengths).sort(), ['D', 'H', 'W', 'diag']); assert.deepEqual(partial.checks, {});
+  assert.deepEqual(partial.dropped, ['doorW', 'hallA', 'useDoor'], 'unusable values are named');
+  assert.deepEqual(back.dropped, []);
+});
+
+test('reference widths are minimums: their display is rounded up, never down', () => {
+  assert.equal(fmtMin(750 / 25.4), '29.53 in'); assert.equal(fmtMin(900 / 25.4), '35.44 in'); assert.equal(fmtMin(1000 / 25.4), '39.38 in');
+  assert.equal(fmtMin(1200 / 25.4), '47.25 in'); assert.equal(fmtMin(36), '36 in'); assert.equal(fmtMin(28), '28 in');
+  assert.equal(fmtMin(750 / 25.4, 'cm'), '75 cm'); assert.equal(fmtMin(36, 'cm'), '91.5 cm'); assert.equal(fmtMin(32, 'cm'), '81.3 cm');
+  for (const k of SCENARIO_KEYS) for (const t of thresholdsOf(k)) {
+    assert.ok(parseFloat(fmtMin(t.need)) >= t.need - 1e-9, `${k}: ${fmtMin(t.need)} understates ${t.need}`);
+    assert.ok(parseFloat(fmtMin(t.need, 'cm')) >= t.need * 2.54 - 1e-9);
+  }
+  assert.match(resultText(quickCheck('bed', { wall: 120, bedW: 60, depth: 144, bedL: 80, sides: '2' })), /meets  29\.53 in/);
 });

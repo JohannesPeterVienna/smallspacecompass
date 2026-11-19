@@ -103,8 +103,12 @@ for (const [cfg, decision, wantGA, name] of [
 {
   const s = await session({ hidden: true });
   await s.page.addInitScript(() => {
-    window.__cls = 0;
-    new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: 'layout-shift', buffered: true });
+    // Only shifts from the moment the statistics window is shown count here. Earlier shifts (for example the ad
+    // slot below the lede settling) have nothing to do with the window and made this check flaky.
+    window.__shifts = []; window.__statsShown = null;
+    new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__shifts.push([e.startTime, e.value]); }).observe({ type: 'layout-shift', buffered: true });
+    const watch = () => { const n = document.getElementById('ssc-stats'); if (n && !n.hidden) window.__statsShown = performance.now(); else requestAnimationFrame(watch); };
+    requestAnimationFrame(watch);
     document.cookie = '_ga=GA1.1.1.1; path=/'; document.cookie = '_ga_T00HRG2YVF=GS1.1; path=/';
   });
   await s.go();
@@ -112,9 +116,10 @@ for (const [cfg, decision, wantGA, name] of [
   check(!(await visible()), 'hidden CMP: no window during the first 3 s');
   await s.page.waitForTimeout(3200);
   check(await visible(), 'hidden CMP: window appears after about 3 s');
+  await s.page.waitForTimeout(400); // let the browser report shifts of the frames in which the window appeared
   const box = await s.page.evaluate(() => {
     const n = document.getElementById('ssc-stats'), b = [...n.querySelectorAll('.statnote-pick')].filter((x) => x.offsetParent).map((x) => x.getBoundingClientRect());
-    return { pos: getComputedStyle(n).position, h: b.map((r) => Math.round(r.height)), w: b.map((r) => Math.round(r.width)), cls: window.__cls };
+    return { pos: getComputedStyle(n).position, h: b.map((r) => Math.round(r.height)), w: b.map((r) => Math.round(r.width)), cls: window.__statsShown === null ? -1 : window.__shifts.filter(([t]) => t >= window.__statsShown - 50).reduce((a, [, v]) => a + v, 0) };
   });
   check(box.pos === 'fixed' && box.cls === 0, `window is fixed and causes no layout shift (CLS ${box.cls})`);
   check(box.h.every((x) => x >= 44) && box.w[0] === box.w[1] && box.h[0] === box.h[1], `Allow and Decline equal and at least 44 px (${box.w}×${box.h})`);

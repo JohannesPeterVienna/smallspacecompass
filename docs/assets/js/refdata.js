@@ -44,10 +44,16 @@ export const SOURCES = {
   }
 };
 
-const mm = (inch) => `${Math.round(inch * 25.4)} mm`;
-const inch = (millis) => `${+(millis / 25.4).toFixed(1)} in`;
-const sqft = (m2) => `${+(m2 / 0.09290304).toFixed(1)} sq ft`;
-const m2 = (ft2) => `${+(ft2 * 0.09290304).toFixed(1)} m²`;
+/* Conversions. A converted minimum is rounded UP and a converted maximum DOWN, so the converted figure never
+   understates the document; sizes that are neither (furniture, ranges of products) go to the nearest step. */
+const up = (v, d) => Math.ceil(+(v * 10 ** d).toFixed(6)) / 10 ** d, down = (v, d) => Math.floor(+(v * 10 ** d).toFixed(6)) / 10 ** d;
+const mm = (inch) => `${up(inch * 25.4, 0)} mm`;            // minimum given in inches
+const mmMax = (inch) => `${down(inch * 25.4, 0)} mm`;       // maximum given in inches
+const inch = (millis) => `${up(millis / 25.4, 2)} in`;      // minimum given in millimetres
+const inchMax = (millis) => `${down(millis / 25.4, 2)} in`; // maximum given in millimetres
+const inchSize = (millis) => `${+(millis / 25.4).toFixed(1)} in`; // a size, not a limit
+const sqft = (m2) => `${up(m2 / 0.09290304, 1)} sq ft`;
+const m2 = (ft2) => `${up(ft2 * 0.09290304, 2)} m²`;
 // rows: [id, topic, what, imperial, metric, source, section, note, conv]
 const rows = [
   // ---- walkways and halls
@@ -84,9 +90,9 @@ const rows = [
   ['ada-surface', 'Reach & heights', 'Top of an accessible dining or work surface', '28–34 in', '710–865 mm', 'ada', '902.3', 'Above the finish floor.'],
   ['ada-bench', 'Reach & heights', 'Bench seat (dressing and locker rooms)', '17–19 in high, 20–24 in deep, at least 42 in long', '430–485 mm high, 510–610 mm deep, 1065 mm long', 'ada', '903.5', 'Size in 903.3. A reference for a bench you sit on to put on shoes.'],
   ['ada-knee', 'Reach & heights', 'Knee clearance zone under a table or counter', '9–27 in above the floor', '230–685 mm', 'ada', '306.3.1', 'Space in this height range under an element counts as knee clearance.'],
-  ['adm-switch', 'Reach & heights', 'Centre line of switches and sockets in habitable rooms', `${inch(450)}–${inch(1200)}`, '450–1200 mm', 'adm', 'M4(1) 1.18a', 'Above floor level. M4(2) 2.30b adds: at least 300 mm from an inside corner.', 'imp'],
-  ['adm-window', 'Reach & heights', 'Window handle in the principal living area', `${inch(450)}–${inch(1200)}`, '450–1200 mm', 'adm', 'M4(2) 2.30c', 'Above floor level; other windows up to 1400 mm (2.30d).', 'imp'],
-  ['hud-window', 'Reach & heights', 'Bottom of an egress window opening in a manufactured-home bedroom', '36 in', mm(36), 'hud', '§ 3280.106(b)', 'Maximum above the floor; latches and handles needed to exit at most 54 in (§ 3280.106(c)).', 'met'],
+  ['adm-switch', 'Reach & heights', 'Centre line of switches and sockets in habitable rooms', `${inch(450)}–${inchMax(1200)}`, '450–1200 mm', 'adm', 'M4(1) 1.18a', 'Above floor level. M4(2) 2.30b adds: at least 300 mm from an inside corner.', 'imp'],
+  ['adm-window', 'Reach & heights', 'Window handle in the principal living area', `${inch(450)}–${inchMax(1200)}`, '450–1200 mm', 'adm', 'M4(2) 2.30c', 'Above floor level; other windows up to 1400 mm (2.30d).', 'imp'],
+  ['hud-window', 'Reach & heights', 'Bottom of an egress window opening in a manufactured-home bedroom', '36 in', mmMax(36), 'hud', '§ 3280.106(b)', 'Maximum above the floor; latches and handles needed to exit at most 54 in (§ 3280.106(c)).', 'met'],
   // ---- bedrooms
   ['adm-bed-route', 'Bedrooms', 'Clear access route from the bedroom door to the window', inch(750), '750 mm', 'adm', 'M4(2) 2.25a', 'Minimum width, every bedroom.', 'imp'],
   ['adm-bed-principal', 'Bedrooms', 'Clear access zone around the bed in the principal double bedroom', `${inch(750)} on both sides and at the foot`, '750 mm on both sides and at the foot', 'adm', 'M4(2) 2.25b', 'Minimum. Diagram 2.4 allows bedside furniture inside the side zones.', 'imp'],
@@ -101,7 +107,7 @@ const rows = [
   ['ndss-1p', 'Room size & ceilings', 'Whole dwelling for one person, one storey (1b1p)', `${sqft(39)} (${sqft(37)} with a shower room instead of a bathroom)`, '39 m² (37 m²)', 'ndss', 'Table 1', 'Minimum gross internal area, including 1.0 m² of built-in storage.', 'imp'],
   ['ndss-2p', 'Room size & ceilings', 'Whole dwelling for two people, one storey (1b2p)', sqft(50), '50 m²', 'ndss', 'Table 1', 'Minimum gross internal area, including 1.5 m² of built-in storage.', 'imp'],
   ['ndss-ceiling', 'Room size & ceilings', 'Floor-to-ceiling height', inch(2300), '2.3 m for at least 75 % of the gross internal area', 'ndss', 'para 10i', 'Minimum.', 'imp'],
-  ['ndss-headroom', 'Room size & ceilings', 'Floor area under low headroom', `under ${inch(1500)}: not counted`, 'under 1.5 m: not counted unless used solely for storage', 'ndss', 'para 10f–g', 'Storage-only areas with 900–1500 mm headroom count at 50 %; below 900 mm not at all.', 'imp'],
+  ['ndss-headroom', 'Room size & ceilings', 'Floor area under low headroom', `under ${inchMax(1500)}: not counted`, 'under 1.5 m: not counted unless used solely for storage', 'ndss', 'para 10f–g', 'Storage-only areas with 900–1500 mm headroom count at 50 %; below 900 mm not at all.', 'imp'],
   ['hud-living', 'Room size & ceilings', 'Living area of a manufactured home', '150 sq ft', m2(150), 'hud', '§ 3280.109(a)', 'At least one living area of this gross floor area.', 'met'],
   ['hud-mindim', 'Room size & ceilings', 'Smallest horizontal dimension of a required room area', '5 ft', '1524 mm', 'hud', '§ 3280.110', 'No clear horizontal dimension of the required gross floor area may be less.', 'met'],
   ['hud-ceiling', 'Room size & ceilings', 'Ceiling height of habitable rooms and bathrooms in a manufactured home', '7 ft 0 in over at least 50 % of the floor area', `${mm(84)}`, 'hud', '§ 3280.104(a)', 'The rest at least 5 ft 0 in; under ducts and beams 6 ft 4 in; hallways and foyers 6 ft 6 in (§ 3280.104(b)).', 'met'],
@@ -139,12 +145,12 @@ const rows = [
   ['adm-storage', 'Storage', 'General built-in storage in a wheelchair user dwelling', `${sqft(1.5)} with one bedroom, ${sqft(2.0)} with two`, '1.5 m², 2.0 m² (rising 0.5 m² per bedroom to 4.0 m²)', 'adm', 'M4(3) Table 3.1', 'Minimum area.', 'imp'],
   ['nkba-storage', 'Storage', 'Kitchen shelf and drawer frontage', '1400 in for a small kitchen (under 150 sq ft)', '35,560 mm', 'nkbaK', 'Guideline 27', 'Recommended total; 1700 in for a medium kitchen. Storage more than 84 in (2134 mm) above the floor counts as miscellaneous.'],
   // ---- furniture sizes used by a regulator
-  ['adm-f-double', 'Furniture sizes', 'Double bed, as assumed when checking a bedroom layout', `${inch(2000)} × ${inch(1500)} (principal) · ${inch(1900)} × ${inch(1350)} (other)`, '2000 × 1500 mm · 1900 × 1350 mm', 'adm', 'Appendix D', 'Furniture schedule: the sizes a layout drawing must show.', 'imp'],
-  ['adm-f-single', 'Furniture sizes', 'Single bed', `${inch(1900)} × ${inch(900)}`, '1900 × 900 mm', 'adm', 'Appendix D', 'Furniture schedule.', 'imp'],
-  ['adm-f-bedroom', 'Furniture sizes', 'Bedside table · chest of drawers · double wardrobe · desk and chair', `${inch(400)} sq · ${inch(450)} × ${inch(750)} · ${inch(600)} × ${inch(1200)} · ${inch(500)} × ${inch(1050)}`, '400 × 400 · 450 × 750 · 600 × 1200 · 500 × 1050 mm', 'adm', 'Appendix D', 'Furniture schedule.', 'imp'],
-  ['adm-f-living', 'Furniture sizes', 'Armchair · two-seat settee · three-seat settee · coffee table', `${inch(850)} sq · ${inch(850)} × ${inch(1300)} · ${inch(850)} × ${inch(1850)} · ${inch(500)} × ${inch(1050)}`, '850 × 850 · 850 × 1300 · 850 × 1850 · 500 × 1050 mm', 'adm', 'Appendix D', 'Furniture schedule; the coffee table may instead be 750 mm in diameter.', 'imp'],
-  ['adm-f-dining', 'Furniture sizes', 'Dining table for 2 / 4 / 6 bedspaces', `${inch(800)} × ${inch(800)} / ${inch(1200)} / ${inch(1500)}`, '800 × 800 / 800 × 1200 / 800 × 1500 mm', 'adm', 'Appendix D', 'Furniture schedule: 800 mm deep, length by number of bedspaces (3: 1000, 5: 1350, 7: 1650 mm).', 'imp'],
-  ['adm-f-bath', 'Furniture sizes', 'WC with cistern · bath · wash hand basin', `${inch(500)} × ${inch(700)} · ${inch(700)} × ${inch(1700)} · ${inch(600)} × ${inch(450)}`, '500 × 700 · 700 × 1700 · 600 × 450 mm', 'adm', 'Appendix D', 'Furniture schedule.', 'imp'],
+  ['adm-f-double', 'Furniture sizes', 'Double bed, as assumed when checking a bedroom layout', `${inchSize(2000)} × ${inchSize(1500)} (principal) · ${inchSize(1900)} × ${inchSize(1350)} (other)`, '2000 × 1500 mm · 1900 × 1350 mm', 'adm', 'Appendix D', 'Furniture schedule: the sizes a layout drawing must show.', 'imp'],
+  ['adm-f-single', 'Furniture sizes', 'Single bed', `${inchSize(1900)} × ${inchSize(900)}`, '1900 × 900 mm', 'adm', 'Appendix D', 'Furniture schedule.', 'imp'],
+  ['adm-f-bedroom', 'Furniture sizes', 'Bedside table · chest of drawers · double wardrobe · desk and chair', `${inchSize(400)} sq · ${inchSize(450)} × ${inchSize(750)} · ${inchSize(600)} × ${inchSize(1200)} · ${inchSize(500)} × ${inchSize(1050)}`, '400 × 400 · 450 × 750 · 600 × 1200 · 500 × 1050 mm', 'adm', 'Appendix D', 'Furniture schedule.', 'imp'],
+  ['adm-f-living', 'Furniture sizes', 'Armchair · two-seat settee · three-seat settee · coffee table', `${inchSize(850)} sq · ${inchSize(850)} × ${inchSize(1300)} · ${inchSize(850)} × ${inchSize(1850)} · ${inchSize(500)} × ${inchSize(1050)}`, '850 × 850 · 850 × 1300 · 850 × 1850 · 500 × 1050 mm', 'adm', 'Appendix D', 'Furniture schedule; the coffee table may instead be 750 mm in diameter.', 'imp'],
+  ['adm-f-dining', 'Furniture sizes', 'Dining table for 2 / 4 / 6 bedspaces', `${inchSize(800)} × ${inchSize(800)} / ${inchSize(1200)} / ${inchSize(1500)}`, '800 × 800 / 800 × 1200 / 800 × 1500 mm', 'adm', 'Appendix D', 'Furniture schedule: 800 mm deep, length by number of bedspaces (3: 1000, 5: 1350, 7: 1650 mm).', 'imp'],
+  ['adm-f-bath', 'Furniture sizes', 'WC with cistern · bath · wash hand basin', `${inchSize(500)} × ${inchSize(700)} · ${inchSize(700)} × ${inchSize(1700)} · ${inchSize(600)} × ${inchSize(450)}`, '500 × 700 · 700 × 1700 · 600 × 450 mm', 'adm', 'Appendix D', 'Furniture schedule.', 'imp'],
   // ---- stairs
   ['hud-stair', 'Stairs', 'Stairway built into a manufactured home', '36 in clear width', mm(36), 'hud', '§ 3280.114(a)(2)', 'Minimum above handrail height; at and below the handrail 31½ in with one handrail, 27 in with two.', 'met'],
   ['adm-stair', 'Stairs', 'Stair from the entrance storey – accessible and adaptable dwelling', inch(850), '850 mm', 'adm', 'M4(2) 2.23c', 'Minimum clear width, measured 450 mm above the pitch line, so that a stair-lift can be fitted.', 'imp']

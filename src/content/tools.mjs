@@ -58,6 +58,7 @@ export const quickShell = `<section class="tool quick" data-quick aria-label="Cl
 <div class="panel">
 <div class="row"><div class="seg" role="group" aria-label="What to check" data-q-scen></div><div class="seg" role="group" aria-label="Units" data-q-units></div></div>
 <div class="row" data-q-ex aria-label="Examples"></div>
+<div data-q-note></div>
 <div class="fields" data-q-fields></div>
 <div class="row no-print"><button class="btn small ghost" type="button" data-q-act="copy">Copy result</button><button class="btn small ghost" type="button" data-q-act="link">Copy link</button><button class="btn small ghost" type="button" data-q-act="print">Print</button><span class="note-small" data-q-msg role="status"></span></div>
 <p class="note-small no-print" style="margin:0">Nothing is stored or uploaded. “Copy link” puts your numbers into the link itself, after the # sign; whoever opens it sees the same numbers.</p>
@@ -67,7 +68,7 @@ export const quickShell = `<section class="tool quick" data-quick aria-label="Cl
 
 export const TOOLS = [
   {
-    path: '/tools/clearance-check/', short: 'Clearance Check', script: 'quick.js', updated: true,
+    path: '/tools/clearance-check/', short: 'Clearance Check', script: 'quick.js', updated: '2026-11-19',
     title: 'Clearance Check: Bed, Walkway, Table & Kitchen Aisle Widths',
     description: 'Type in a wall and a bed, a gap, a table or a kitchen width: the check shows the subtraction, the clear width that is left and which published reference widths it meets – in inches or centimeters.',
     h1: 'Clearance Check', lede: 'Four quick sums for the questions that come up before any drawing: is there room beside the bed, is this gap still a walkway, how wide may the table be, is the kitchen aisle wide enough? Each result shows its working and is compared with published widths from five primary documents, each linked to its entry in the reference table.',
@@ -86,12 +87,12 @@ export const TOOLS = [
 <p>“Next step” names the largest piece – or the smallest room – that would still reach the next width up, so you know what to change. A sum on one section cannot see door swings, a second piece of furniture further along or a route that turns a corner; for that, draw the room in the <a href="/tools/clearance-planner/">Clearance Planner</a>.</p>
 <h2 id="limits">Limits</h2>
 <ul><li>One straight section, rectangles only. Skirting boards, radiators, handles and bed frames wider than the mattress have to be included in the numbers you type.</li>
-<li>Metric figures from the English documents are compared exactly (750 mm = 29.5 in); inch figures from the U.S. documents likewise. Results are rounded to 0.1 in or 0.1 cm for display only.</li>
+<li>Metric figures from the English documents are compared exactly (750 mm, not a rounded 29.5 in); inch figures from the U.S. documents likewise. Results are rounded to 0.1 in or 0.1 cm for display; a converted reference width is always rounded up (750 mm is shown as 29.53 in), so the display never understates a minimum.</li>
 <li>Meeting a width here is not a statement that a room complies with any code or accessibility standard.</li></ul>`,
     faq: [
-      ['Is 24 inches beside a bed a rule?', 'No. It is this site’s planning assumption. The only bedside figure we found in a primary document is the 750 mm (29.5 in) clear access zone of England’s Approved Document M for accessible and adaptable dwellings, and 1000 mm for wheelchair user dwellings; the check shows both.'],
+      ['Is 24 inches beside a bed a rule?', 'No. It is this site’s planning assumption. The only bedside figure we found in a primary document is the 750 mm (29.53 in) clear access zone of England’s Approved Document M for accessible and adaptable dwellings, and 1000 mm for wheelchair user dwellings; the check shows both.'],
       ['Why does the kitchen check list both 40 and 42 inches?', 'They come from different documents: 40 in is the minimum clearance in a pass-through kitchen in the 2010 ADA Standards (§804.2.1), 42 in is the work aisle the NKBA recommends for one cook (guideline 6).'],
-      ['What does “Copy link” contain?', 'The check you chose, the unit and the numbers you typed, written after the # sign of the link. Browsers do not send that part to the web server. Nothing is stored on this site.']
+      ['What does “Copy link” contain?', 'The check you chose, the unit and the numbers you typed, written after the # sign of the link. Browsers do not send that part to the web server. Nothing is stored on this site. If a link carries a value the check does not know, it says so and shows its default instead.']
     ],
     sources: [
       ['2010 ADA Standards for Accessible Design, §403.5.1, §804.2.1 (U.S. Access Board)', 'https://www.access-board.gov/ada/#ada-403_5_1', 'retrieved 2026-11-18'],
@@ -139,7 +140,7 @@ export const TOOLS = [
     sources: [['2010 ADA Standards for Accessible Design, §403.5.1, §404.2.3 (U.S. Access Board)', 'https://www.access-board.gov/ada/chapter/ch04/'], ['NKBA Kitchen Planning Guidelines with Access Standards (PDF)', 'https://kb.nkba.org/uploads/2022/05/Kitchen-Planning-Guidelines.pdf', 'guidelines 6, 7 and 8']]
   },
   {
-    path: '/tools/will-it-fit/', short: 'Will It Fit?', script: 'delivery.js', updated: true,
+    path: '/tools/will-it-fit/', short: 'Will It Fit?', script: 'delivery.js', updated: '2026-11-19',
     title: 'Will It Fit? Sofa, Mattress & Wardrobe Delivery Check',
     description: 'Check whether a sofa, mattress or wardrobe can be carried through your door, around a 90° hallway corner and up a stair landing – straight, tilted or turned – with a drawing of the move.',
     h1: 'Will It Fit? Delivery Check', lede: 'Type in the outside dimensions of a sofa, mattress or wardrobe and the narrowest parts of the route into your home. The check tries every orientation – straight, on its side, on end, tilted – and draws the one that works.',
@@ -162,7 +163,7 @@ export const TOOLS = [
 <p>Each checkpoint shows whether it passes and how: which side leads, which side is vertical, how far the item has to be tilted and how much room is left. If a corner fails, the result says by how much the item is too long even when tilted within the ceiling height. That number tells you what to ask the retailer: a sofa with removable arms or legs, a split box spring, a modular or “sofa-in-a-box” design.</p>
 <p>The form opens with a sofa that makes it: 84 in long, 35 in deep, 34 in high, 31 in diagonal depth, through a 32 in door and around a corner between two 36 in halls. Change the depth to 37 in – the <a href="/guides/will-my-sofa-fit-through-the-door/#example">worked example in the sofa guide</a> – and the same sofa still passes the door but fails at the hallway corner by about an inch. Those 2 in of depth are exactly what to ask the retailer about. Both cases are among the “worked routes” buttons above the form; they are constructed examples, not measurements of real buildings.</p>
 <h2 id="share">Sending the result to someone</h2>
-<p>“Copy result” puts the verdict for every checkpoint on the clipboard as plain text – for a message to the retailer or the movers. “Copy link” creates a link that reopens the check with your dimensions: they are written after the # sign of the address, which browsers do not transmit to the web server, and nothing is stored on this site. “Print” prints the form, the result and the sketches without navigation and ads.</p>`,
+<p>“Copy result” puts the verdict for every checkpoint on the clipboard as plain text – for a message to the retailer or the movers. “Copy link” creates a link that reopens the check with your dimensions: they are written after the # sign of the address, which browsers do not transmit to the web server, and nothing is stored on this site. Whoever opens the link sees your numbers without losing their own: the check they had saved in their browser is only replaced once they change a value. “Print” prints the form, the result and the sketches without navigation and ads.</p>`,
     faq: [
       ['What is the diagonal depth of a sofa?', 'The distance from the top of the back frame to the front edge of the seat, measured in a straight line from the side. Many retailers list it; otherwise measure with a straightedge across the side profile.'],
       ['Does the check account for people carrying the item?', 'No. It checks the rigid geometry of a box with the dimensions you enter. Allow a couple of inches for hands, straps and packaging.'],
@@ -172,7 +173,7 @@ export const TOOLS = [
     sources: [['2010 ADA Standards, §404.2.3 Clear Width (measuring doors)', ADA + '#ada-404_2_3']]
   },
   {
-    path: '/tools/day-night-swap/', short: 'Day/Night Floor Swap', script: 'planner.js',
+    path: '/tools/day-night-swap/', short: 'Day/Night Floor Swap', script: 'planner.js', updated: true,
     title: 'Day/Night Floor Swap – check a wall bed, sofa bed or drop-leaf table in both positions',
     description: 'Plan fold-away furniture twice: the planner checks your room with the wall bed or sofa bed folded and open, and flags anything that blocks the bed, the door or the walkway at night.',
     h1: 'Day/Night Floor Swap', lede: 'A wall bed, sofa bed or drop-leaf table changes the room twice a day. This tool shows the same plan in both states and runs the full clearance check on each – so the coffee table that is fine at noon does not end up under the mattress at midnight.',

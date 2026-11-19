@@ -1,5 +1,5 @@
 /* Clearance Check UI (home page and /tools/clearance-check/). Logic lives in quickfit.js. */
-import { SCENARIOS, SCENARIO_KEYS, quickCheck, summaryOf, resultText, encodeQuick, decodeQuick, fmt, CM } from './quickfit.js';
+import { SCENARIOS, SCENARIO_KEYS, quickCheck, summaryOf, resultText, encodeQuick, decodeQuick, fmt, fmtMin, CM } from './quickfit.js';
 import { refById, SOURCES } from './refdata.js';
 
 const app = document.querySelector('[data-quick]');
@@ -16,11 +16,15 @@ function start() {
 
   function form() {
     const sc = SCENARIOS[key];
+    // the controls are rebuilt below: remember which one has the keyboard focus and give it back afterwards
+    const a = document.activeElement, d = a && app.contains(a) ? a.dataset : null;
+    const back = !d ? '' : d.scen ? `[data-scen="${key}"]` : d.unit ? `[data-unit="${unit}"]` : d.ex ? `[data-ex="${Number(d.ex) || 0}"]` : a.name && /^[A-Za-z]+$/.test(a.name) ? `[name="${a.name}"]` : '';
     $('[data-q-scen]').innerHTML = SCENARIO_KEYS.map(k => `<button type="button" data-scen="${k}" aria-pressed="${k === key}">${esc(SCENARIOS[k].short)}</button>`).join('');
     $('[data-q-units]').innerHTML = ['in', 'cm'].map(u => `<button type="button" data-unit="${u}" aria-pressed="${u === unit}">${u}</button>`).join('');
     $('[data-q-ex]').innerHTML = sc.examples.map((e, i) => `<button class="btn small ghost" type="button" data-ex="${i}">${esc(e[0])}</button>`).join('');
     $('[data-q-fields]').innerHTML = sc.fields.map(([n, label]) => `<label class="f"><span class="lb">${esc(label)}&nbsp;(${unit})</span><input type="number" inputmode="decimal" step="any" min="0" name="${n}" value="${show(V[n])}"></label>`).join('')
       + sc.options.map(([n, label, choices, isLen]) => `<label class="f"><span class="lb">${esc(label)}</span><select name="${n}">${choices.map(([val, text]) => `<option value="${val}"${String(V[n]) === val ? ' selected' : ''}>${esc(text)}${isLen && Number(val) > 0 ? ` (${fmt(Number(val), unit)})` : ''}</option>`).join('')}</select></label>`).join('');
+    if (back) $(back)?.focus();
   }
 
   function bar(b) {
@@ -47,10 +51,10 @@ function start() {
     const rows = res.checks.map(c => {
       const r = c.ref ? refById[c.ref] : null;
       const src = r ? `<a href="/reference/#${r.id}">${esc(SOURCES[r.src].short)} ${esc(r.sec)}</a>` : 'site assumption, not a standard';
-      return `<tr><td class="num"><span class="dot ${c.pass ? 'ok' : 'bad'}"></span> ${f(c.need)}<br><span class="note-small">${c.pass ? 'meets' : 'below'}, ${c.pass ? '+' + f(c.margin) : '−' + f(-c.margin)}</span></td><td>${esc(c.label)}<br><span class="note-small">${src}</span></td></tr>`;
+      return `<tr><td class="num"><span class="dot ${c.pass ? 'ok' : 'bad'}"></span> ${fmtMin(c.need, unit)}<br><span class="note-small">${c.pass ? 'meets' : 'below'}, ${c.pass ? '+' + f(c.margin) : '−' + f(-c.margin)}</span></td><td>${esc(c.label)}<br><span class="note-small">${src}</span></td></tr>`;
     }).join('');
     const want = res.next || res.checks[res.checks.length - 1];
-    const lim = want.limit.value > 0 ? `${esc(want.limit.label)} that still leaves ${f(want.need)}: <b>${f(want.limit.value)}</b>.` : `${f(want.need)} cannot be reached with these measurements.`;
+    const lim = want.limit.value > 0 ? `${esc(want.limit.label)} that still leaves ${fmtMin(want.need, unit)}: <b>${f(want.limit.value)}</b>.` : `${fmtMin(want.need, unit)} cannot be reached with these measurements.`;
     const tight = res.measures.length > 1 ? ` The table uses the tighter one: ${esc(res.tightest.label.toLowerCase())}.` : '';
     out.innerHTML = `<div class="status ${res.level === 'bad' ? 'bad' : res.level === 'good' ? 'good' : ''}" role="status"><span class="big">${esc(summaryOf(res, unit))}</span></div>
 ${bar(res.bar)}
@@ -75,10 +79,11 @@ ${bar(res.bar)}
 
   app.addEventListener('input', (e) => {
     const t = e.target; if (!t.name) return;
-    V[t.name] = t.tagName === 'SELECT' ? t.value : read(t.value); run();
+    V[t.name] = t.tagName === 'SELECT' ? t.value : read(t.value); $('[data-q-note]').textContent = ''; run();
   });
   app.addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.scen || b.dataset.ex) $('[data-q-note]').textContent = '';
     if (b.dataset.scen) set(b.dataset.scen);
     else if (b.dataset.unit && b.dataset.unit !== unit) { unit = b.dataset.unit; form(); run(); }
     else if (b.dataset.ex) set(key, SCENARIOS[key].examples[+b.dataset.ex][1]);
@@ -89,6 +94,12 @@ ${bar(res.bar)}
 
   // a shared link carries its numbers in the fragment; take them over, then clean the address bar
   const shared = decodeQuick(location.hash);
-  if (shared) { set(shared.key, shared.values, shared.unit); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignore */ } }
-  else set('bed');
+  if (shared) {
+    set(shared.key, shared.broken ? null : shared.values, shared.unit);
+    // say so when the link carried something this check does not know – never apply or drop it silently
+    const note = shared.broken ? 'The link was incomplete or contained numbers this check cannot use. The example values are shown instead.'
+      : shared.ignored.length ? `The link contained an option this check does not know (${shared.ignored.join(', ')}). The default is shown instead.` : '';
+    if (note) $('[data-q-note]').innerHTML = `<p class="status bad" role="alert">${esc(note)}</p>`;
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignore */ }
+  } else set('bed');
 }
