@@ -91,7 +91,7 @@ for (const [from, to] of redirects) {
 for (const f of ['ads.txt', 'robots.txt', 'sitemap.xml', 'CNAME', '.nojekyll', '404.html']) if (!existsSync(join(DOCS, f))) err(f, 'missing');
 if (readFileSync(join(DOCS, 'CNAME'), 'utf8') !== 'smallspacecompass.com') err('CNAME', 'must be exactly smallspacecompass.com without newline');
 // lastmod: 2026-11-04 for untouched pages, 2026-11-18 for pages changed in that revision – and never a date in between
-for (const m of readFileSync(join(DOCS, 'sitemap.xml'), 'utf8').matchAll(/<lastmod>([^<]*)<\/lastmod>/g)) if (!['2026-11-04', '2026-11-18', '2026-11-19'].includes(m[1])) { err('sitemap', 'lastmod ' + m[1]); break; }
+for (const m of readFileSync(join(DOCS, 'sitemap.xml'), 'utf8').matchAll(/<lastmod>([^<]*)<\/lastmod>/g)) if (!['2026-11-04', '2026-11-18', '2026-11-19', '2026-11-22'].includes(m[1])) { err('sitemap', 'lastmod ' + m[1]); break; }
 // reference table: every row is in the page with an anchor, a source link and the retrieval date; redirect pages stay out of the sitemap
 {
   const { REFERENCE, SOURCES, RETRIEVED } = await import('../docs/assets/js/refdata.js');
