@@ -1,5 +1,5 @@
 // Static site generator for smallspacecompass.com → docs/
-import { writeFileSync, mkdirSync, rmSync, existsSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { planSVG, elevationSVG, esc } from '../docs/assets/js/render.js';
@@ -12,6 +12,8 @@ import { layoutNotes } from '../src/content/layout-notes.mjs';
 import { figPlan } from './figs.mjs';
 import { REFERENCE, SOURCES, TOPICS, RETRIEVED, refUrl } from '../docs/assets/js/refdata.js';
 import { quickShell } from '../src/content/tools.mjs';
+
+const shopLink = readFileSync(new URL('./shop-link.html', import.meta.url), 'utf8');
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'docs');
@@ -86,7 +88,7 @@ ${p.body}
 <div><h2>Small Space Compass</h2><p>Small-space planning from the tape measure up: guides that state their measurements and tools that check whether you can still move once the furniture is in. A geometric aid only – check building rules and your own measurements before you buy or build.</p></div>
 <div><h2>Tools</h2><ul><li><a href="/tools/clearance-planner/">Clearance Planner</a></li><li><a href="/tools/clearance-check/">Clearance Check</a></li><li><a href="/tools/will-it-fit/">Will It Fit? Delivery Check</a></li><li><a href="/tools/day-night-swap/">Day/Night Floor Swap</a></li><li><a href="/tools/storage-wall/">Storage Wall Audit</a></li><li><a href="/layouts/">Measured Layout Library</a></li></ul></div>
 <div><h2>Site</h2><ul><li><a href="/guides/">All guides</a></li><li><a href="/reference/">Clearance reference</a></li><li><a href="/about/">About &amp; method</a></li><li><a href="/contact/">Contact</a></li><li><a href="/imprint/">Imprint</a></li><li><a href="/privacy/">Privacy</a></li><li><button type="button" class="linklike" data-privacy-settings>Privacy settings</button></li></ul></div>
-</div></footer>
+${shopLink}</div></footer>
 ${p.scripts || ''}
 </body>
 </html>
