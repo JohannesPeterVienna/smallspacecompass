@@ -136,6 +136,16 @@ function layoutTable(L, state) {
   return { a, html: `<div class="table-scroll"><table class="data"><caption class="sr">Route widths${state ? ' (' + state + ')' : ''}</caption><thead><tr><th>Route${state ? ` (${state})` : ''}</th><th>Narrowest width</th><th>vs. ADA §403.5.1</th></tr></thead><tbody>${rows}</tbody></table></div>
 <div class="table-scroll"><table class="data"><thead><tr><th>Floor area</th><th>Furniture footprint</th><th>Use zones</th><th>Free floor</th></tr></thead><tbody><tr><td class="num">${ft2(a.area)}</td><td class="num">${ft2(a.footprint)}</td><td class="num">${ft2(a.zones)}</td><td class="num">${ft2(a.free)} (${Math.round(a.freePct * 100)}%)</td></tr></tbody></table></div>` };
 }
+function routeComparison(layout, state) {
+  const result = analyzePlan(layout, { state });
+  const blocked = result.routes.filter(route => !route.found);
+  const measured = result.routes.filter(route => route.found && route.width != null);
+  const narrowest = Math.min(...measured.map(route => route.width));
+  const labels = rows => rows.map(route => esc(route.label)).join(', ');
+  const pinch = measured.length ? `${fmtLen(narrowest)} to ${labels(measured.filter(route => route.width === narrowest))}` : 'No measured pinch';
+  return `<tr><th scope="row"><a href="/layouts/${layout.slug}/#${state || 'numbers'}">${esc(layout.short)}${state ? ' · ' + state : ''}</a></th><td>${pinch}</td><td>${labels(blocked) || 'None'}</td><td>${Math.round(100 * result.freePct)}%</td></tr>`;
+}
+
 function layoutPages() {
   for (const L of LAYOUTS) {
     const path = `/layouts/${L.slug}/`, note = layoutNotes[L.slug];
@@ -146,7 +156,7 @@ function layoutPages() {
     }).join('');
     const items = L.items.map(i => `<tr><td>${esc(i.label)}</td><td class="num">${fmtLen(i.w)} × ${fmtLen(i.d)}</td><td class="num">${fmtLen(i.w, 'cm')} × ${fmtLen(i.d, 'cm')}</td><td>${(i.zones || []).map(z => `${z.kind} ${z.depth} in`).join(', ') || '–'}</td></tr>`).join('');
     page({
-      path, title: `${L.title} – measured plan`, description: note.description, ads: false, updated: note.updated || false,
+      path, title: `${L.title} – measured plan`, description: note.description, ads: false, updated: "2026-11-22",
       crumbs: [['Layouts', '/layouts/'], [L.short, path]],
       body: `<article class="sheet" style="max-width:none" data-words><header class="titleblock"><span class="kicker">Measured layout</span><h1>${esc(L.title)}</h1><p class="lede">${note.lede}</p>
 <p class="row no-print"><a class="btn" href="/tools/${L.states ? 'day-night-swap' : 'clearance-planner'}/?layout=${L.slug}">Open in the ${L.states ? 'Day/Night Floor Swap' : 'Clearance Planner'}</a></p></header>
@@ -154,19 +164,22 @@ function layoutPages() {
 <h2 id="why">Why it is laid out this way</h2>${note.body}
 ${note.more || ''}
 <h2 id="pieces">Pieces and their use zones</h2><div class="table-scroll"><table class="data"><thead><tr><th>Piece</th><th>Size (in)</th><th>Size (cm)</th><th>Use zone in front</th></tr></thead><tbody>${items}</tbody></table></div>
-<p class="note-small">Room inside wall faces: ${fmtLen(L.room.W)} × ${fmtLen(L.room.D)} (${fmtLen(L.room.W, 'cm')} × ${fmtLen(L.room.D, 'cm')}). Results are computed by the same code as the planner and compared with the 36 in clear width of ADA 2010 §403.5.1 as a reference, not as a compliance statement.</p>
+<p class="note-small">Room inside wall faces: ${fmtLen(L.room.W)} × ${fmtLen(L.room.D)} (${fmtLen(L.room.W, 'cm')} × ${fmtLen(L.room.D, 'cm')}). For the same measurements across rooms, <a href="/layouts/#compare">compare reachable widths and blocked destinations</a>. The 36 in benchmark is a planning reference.</p>
 <p class="reviewed">Last reviewed: November 2026</p></div></article>`
     });
   }
   const cards = LAYOUTS.map(L => `<a class="card" href="/layouts/${L.slug}/"><span class="k">${L.kind}${L.states ? ' · day/night' : ''}</span>${planSVG(L, analyzePlan(L, { state: L.states?.[0] }), { dims: false, noPinch: true, pad: 8, title: L.title })}<h3>${esc(L.title)}</h3></a>`).join('');
   page({
     path: '/layouts/', title: 'Measured Layout Library – small studio, bedroom and kitchen plans', description: 'Nine measured small-space floor plans with walkway widths, door swings and free-floor figures. Open any of them in the Clearance Planner and adapt it to your room.',
-    crumbs: [['Layouts', '/layouts/']], ads: false,
+    crumbs: [['Layouts', '/layouts/']], ads: false, updated: '2026-11-22',
     body: `<header class="titleblock"><span class="kicker">Measured Layout Library</span><h1>Measured layouts you can open and edit</h1><p class="lede">Each plan below is drawn to the inch, with door swings, chair and drawer zones and the narrowest point on the way from the entry to the bed, desk and window. Use them as starting points: open one in the planner, type in your own wall lengths and see what changes.</p></header>
 <div class="intro" style="max-width:74ch"><h2 id="read">How to read the plans</h2>
 <p>Every plan is measured on the inside faces of the walls and drawn at the same scale on its own page. Furniture appears as its real footprint; the lighter areas in front of it are use zones – the 32 in a desk chair rolls back, the 24 in strip beside a bed, the 18 in a dresser drawer needs, the arc of each door. The yellow line is the widest route from the entry to the bed, the desk and the window, and the marker sits where that route is narrowest. Each page lists that narrowest width in inches and centimeters and compares it with the 36 in clear width from §403.5.1 of the 2010 ADA Standards, used here as a reference line, not as a compliance test.</p>
 <p>Below the drawing you also find the floor area, the furniture footprint, the area taken by use zones and the free floor that is left, plus a short note on why the pieces sit where they do. The library covers six studios between 15 × 15 ft and 24 × 14 ft, two 12 × 10 ft bedrooms and a galley kitchen; the wall-bed and sofa-bed studios are checked twice, in their day and their night position.</p>
 <p>To adapt a plan, open it in the <a href="/tools/clearance-planner/">Clearance Planner</a> (or the <a href="/tools/day-night-swap/">Day/Night Floor Swap</a> for fold-away furniture), change the room size and the pieces to your own measurements and watch the route widths update. For the reasoning behind the numbers, start with the guide to <a href="/guides/studio-apartment-layouts/">studio apartment layouts</a>.</p>
+<h2 id="compare">Compare routes before choosing a plan</h2>
+<p>A room can have plenty of free floor and still have a blocked route to one piece of furniture. Read the blocked destinations first, then compare the narrowest reachable route. For folding furniture, check both positions. The percentage describes the whole modeled room.</p>
+<div class="table-scroll"><table class="data"><caption>Entry routes computed from each furnished plan</caption><thead><tr><th>Plan and position</th><th>Narrowest measured route</th><th>Blocked destinations</th><th>Free floor</th></tr></thead><tbody>${LAYOUTS.flatMap(layout => (layout.states || [undefined]).map(state => routeComparison(layout, state))).join('')}</tbody></table></div>
 <h2 id="which">Which plan for which room</h2>
 <div class="table-scroll"><table class="data"><caption class="sr">Layouts by room type</caption><thead><tr><th>Your room</th><th>Start with</th><th>Why</th></tr></thead><tbody>
 <tr><td>Studio, roughly square, queen bed</td><td><a href="/layouts/studio-20x15-queen-corner/">20 × 15 ft, bed in the corner</a></td><td>Bed away from the door, living area by the window</td></tr>
@@ -277,7 +290,7 @@ ${Object.entries(groups).map(([g, list]) => `<h2>${esc(g)}</h2><div class="cards
   const hero = layoutBySlug['studio-20x15-queen-corner'];
   page({
     path: '/', title: 'Small Space Compass – small-space planning from the tape measure up', description: 'Check a bed, walkway, table or kitchen aisle against published clearances in seconds, then plan the room: free clearance planner, delivery check and measured guides for small homes.',
-    ads: false, updated: true,
+    ads: false, updated: "2026-11-22",
     ld: [{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'Small Space Compass', url: ORIGIN + '/', inLanguage: 'en' }],
     scripts: `<script type="module" src="/assets/js/quick.js?v=${VERSION}"></script>`,
     body: `<header class="titleblock home-head"><span class="kicker">Small living, measured</span><h1>Will it leave enough room?</h1>
@@ -291,7 +304,10 @@ ${quickShell}
 ${figPlan(hero, '20 × 15 ft studio. Yellow: route from the entry; markers: narrowest points, measured.', {})}</section>
 <h2>What the tools check</h2>
 <ol class="steps"><li><b>Clearances.</b> Furniture as measured rectangles, door swing arcs and pull-out zones for chairs, drawers and wardrobe doors. Overlaps turn signal red.</li><li><b>Walkways.</b> A distance field over the floor finds the widest route from the entry to every target and reports the pinch point in inches or centimeters.</li><li><b>Deliveries.</b> Straight, tilted or turned: the delivery check tests a sofa, mattress or wardrobe against the door, a 90° hallway corner and a stair landing.</li><li><b>Fold-away days.</b> Wall beds, sofa beds and drop-leaf tables are checked twice – in their day and their night position.</li></ol>
-<h2>Start with a guide</h2><div class="cards">${['walkway-space-around-furniture', 'will-my-sofa-fit-through-the-door', 'studio-apartment-layouts', 'how-to-measure-a-room-for-furniture', 'small-kitchen-clearances', 'murphy-bed-room-size'].map(s => ARTICLES.find(a => a.slug === s)).map(a => `<a class="card" href="/guides/${a.slug}/"><span class="k">${esc(a.kicker || 'Guide')}</span><h3>${esc(a.h1)}</h3><p>${esc(a.description)}</p></a>`).join('')}</div>
+<h2>What needs to fit?</h2><ul>
+<li><a href="/guides/will-my-sofa-fit-through-the-door/">A sofa through a doorway</a> — measure the frame and the first turn on the delivery route.</li>
+<li><a href="/guides/how-to-measure-a-room-for-furniture/">Furniture against an existing wall</a> — record the usable span between the skirting and door trim.</li>
+<li><a href="/layouts/#compare">Two activities in one room</a> — compare which routes stay open when a bed or chair is in use.</li></ul>
 <p><a href="/guides/">All ${ARTICLES.length} guides →</a> · <a href="/layouts/">Measured Layout Library →</a> · <a href="/reference/">Clearance reference →</a></p>
 <h2>Where the numbers come from</h2>
 <p>Every guide states its numbers and says where they come from. Where a figure is published – the ADA walking-surface width, the NKBA kitchen aisles, the bedroom access zones of England’s Approved Document M, the room minimums of the U.S. manufactured-home standard – we link the primary document and the section. Where it is our own working assumption, such as a 24 in strip beside a bed, we say so. Nothing on this site was measured in a test room or tried out on products; the plans and examples are constructed and computed.</p>
