@@ -108,7 +108,7 @@ const sm = readFileSync(join(DOCS, 'sitemap.xml'), 'utf8');
 for (const [from] of redirects) if (sm.includes(from)) err('sitemap', `contains redirect ${from}`);
 for (const [from, to] of redirects.filter(r => r[0].startsWith('/guides/'))) if (!to.includes('#')) err(from, 'merged guide must redirect to its section');
 const imp = readFileSync(fileOf('/imprint/'), 'utf8');
-for (const s of ['Seilerstätte 8', 'ATU54682507', 'office@adstern.com', 'Magistratisches Bezirksamt', 'WKO', 'ris.bka.gv.at']) if (!imp.includes(s)) err('/imprint/', 'missing ' + s);
+for (const s of ['Seilerstätte 8', 'ATU54682507', 'office@adstern.com', 'Johannes Peter', 'kontakt.php', 'Magistratisches Bezirksamt', 'Fachgruppe Werbung und Marktkommunikation', 'ris.bka.gv.at']) if (!imp.includes(s)) err('/imprint/', 'missing ' + s);
 if (/\+43|tel:/i.test(imp)) err('/imprint/', 'phone number present');
 const pr = readFileSync(fileOf('/privacy/'), 'utf8');
 for (const s of ['Third-party vendors, including Google, use cookies to serve ads based on', 'adssettings.google.com', 'aboutads.info', 'youronlinechoices', 'Barichgasse 40–42', 'Do Not Sell or Share', 'GitHub Pages', 'data-privacy-settings', 'local storage']) if (!pr.includes(s)) err('/privacy/', 'missing ' + s);
